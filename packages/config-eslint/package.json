@@ -1,0 +1,11 @@
+{
+  "name": "@logistics/config-eslint",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.mjs",
+  "type": "module",
+  "peerDependencies": {
+    "eslint": "^9.18.0",
+    "typescript-eslint": "^8.20.0"
+  }
+}

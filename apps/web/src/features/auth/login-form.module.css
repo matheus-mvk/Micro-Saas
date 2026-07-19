@@ -1,0 +1,31 @@
+.form {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+}
+
+.form div {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.form label {
+  font-weight: 700;
+}
+
+.form input {
+  min-height: 46px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0 0.8rem;
+}
+
+.form input[aria-invalid="true"] {
+  border-color: var(--color-red);
+}
+
+.form p {
+  margin: 0;
+  color: var(--color-red);
+  font-size: 0.9rem;
+}

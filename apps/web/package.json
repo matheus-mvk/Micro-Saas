@@ -1,0 +1,40 @@
+{
+  "name": "@logistics/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev -p ${WEB_PORT:-3000}",
+    "start": "next start -p ${WEB_PORT:-3000}",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run tests/http-client.test.ts && vitest run tests/error-state.test.tsx && vitest run tests/accessibility.test.tsx && vitest run tests/provider.test.tsx && vitest run tests/landing-page.test.tsx && vitest run tests/login-page.test.tsx",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@logistics/shared": "workspace:*",
+    "@tanstack/react-query": "^5.64.2",
+    "lucide-react": "^0.468.0",
+    "next": "^15.1.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@logistics/config-typescript": "workspace:*",
+    "@playwright/test": "^1.49.1",
+    "@tanstack/react-query-devtools": "^5.64.2",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.6.0",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.4",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint-config-next": "^15.1.4",
+    "jsdom": "^25.0.1",
+    "vitest": "^2.1.8"
+  }
+}

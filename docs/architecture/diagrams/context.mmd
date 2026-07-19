@@ -1,0 +1,7 @@
+flowchart LR
+  User[Usuario] --> Web[Next.js]
+  Web --> API[NestJS API]
+  API --> MySQL[(MySQL)]
+  API --> Redis[(Redis)]
+  API --> Queue[BullMQ]
+  API --> Realtime[Socket.IO]

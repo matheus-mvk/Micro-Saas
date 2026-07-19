@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "ci-${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install and run package checks
+        shell: bash
+        env:
+          HUSKY: 0
+        run: |
+          set -euo pipefail
+
+          if [ ! -f package.json ]; then
+            echo "package.json not found; skipping Node.js checks."
+            exit 0
+          fi
+
+          corepack enable
+          package_manager="$(node -p "(require('./package.json').packageManager || '').split('@')[0]")"
+
+          if [ -f pnpm-lock.yaml ] || [ "$package_manager" = "pnpm" ]; then
+            if [ -f pnpm-lock.yaml ]; then
+              pnpm install --frozen-lockfile
+            else
+              pnpm install --no-frozen-lockfile
+            fi
+            run_script() { pnpm "$1"; }
+          elif [ -f yarn.lock ] || [ "$package_manager" = "yarn" ]; then
+            if [ -f yarn.lock ]; then
+              yarn install --immutable || yarn install --frozen-lockfile
+            else
+              yarn install
+            fi
+            run_script() { yarn "$1"; }
+          elif [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            npm ci
+            run_script() { npm run "$1"; }
+          elif [ "$package_manager" = "npm" ]; then
+            npm install
+            run_script() { npm run "$1"; }
+          elif [ -f pnpm-workspace.yaml ]; then
+            if [ -f pnpm-lock.yaml ]; then
+              pnpm install --frozen-lockfile
+            else
+              pnpm install --no-frozen-lockfile
+            fi
+            run_script() { pnpm "$1"; }
+          else
+            npm install
+            run_script() { npm run "$1"; }
+          fi
+
+          has_script() {
+            node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts[process.argv[1]] ? 0 : 1)" "$1"
+          }
+
+          if has_script prisma:generate; then
+            echo "Running prisma:generate"
+            run_script prisma:generate
+          fi
+
+          for script in lint typecheck test build; do
+            if has_script "$script"; then
+              echo "Running $script"
+              run_script "$script"
+            else
+              echo "Skipping missing script: $script"
+            fi
+          done
+
+      - name: Validate Docker Compose
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          compose_args=()
+          for file in docker-compose.yml docker-compose.yaml compose.yml compose.yaml; do
+            if [ -f "$file" ]; then
+              compose_args+=("-f" "$file")
+            fi
+          done
+
+          if [ "${#compose_args[@]}" -eq 0 ]; then
+            echo "No Docker Compose file found; skipping compose validation."
+            exit 0
+          fi
+
+          docker compose "${compose_args[@]}" config
