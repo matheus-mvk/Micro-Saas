@@ -98,12 +98,16 @@ export function AppShell({ children, user }: { children: ReactNode; user: Sessio
           </div>
           <div className={styles.identity} aria-label="Sessão atual">
             <div>
-              <strong>{user.name}</strong>
-              <span>{user.tenant.name}</span>
+              <Link className={styles.profileLink} href="/settings/profile">
+                {user.name}
+              </Link>
+              <Link className={styles.tenantLink} href="/onboarding">
+                {user.tenant.name}
+              </Link>
             </div>
-            <div className={styles.profile} aria-hidden="true">
+            <Link className={styles.profile} href="/settings/profile" aria-label="Abrir perfil">
               <span>{initials || 'NF'}</span>
-            </div>
+            </Link>
           </div>
           <button className={styles.iconButton} aria-label="Sair" onClick={() => void handleLogout()} type="button">
             <LogOut size={20} aria-hidden="true" />

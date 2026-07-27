@@ -208,7 +208,7 @@ export function FreightSimulationWorkspace() {
           {packages.map((item, index) => (
             <div className={styles.packageGrid} key={index}>
               <label>
-                Qtde
+                <span className={styles.labelHelp} title="Quantidade de volumes iguais nesta linha. Multiplica peso e dimensoes no calculo total.">Quantidade</span>
                 <input
                   type="number"
                   min={1}
@@ -219,7 +219,7 @@ export function FreightSimulationWorkspace() {
                 />
               </label>
               <label>
-                Peso kg
+                <span className={styles.labelHelp} title="Peso real de cada volume em quilogramas. Usado junto com a cubagem para definir o peso cobrado.">Peso (kg)</span>
                 <input
                   type="number"
                   min={0.001}
@@ -231,7 +231,7 @@ export function FreightSimulationWorkspace() {
                 />
               </label>
               <label>
-                C
+                <span className={styles.labelHelp} title="Comprimento do volume em centimetros. Entra no calculo de cubagem do frete.">Comprimento (cm)</span>
                 <input
                   type="number"
                   min={1}
@@ -242,7 +242,7 @@ export function FreightSimulationWorkspace() {
                 />
               </label>
               <label>
-                L
+                <span className={styles.labelHelp} title="Largura do volume em centimetros. Entra no calculo de cubagem do frete.">Largura (cm)</span>
                 <input
                   type="number"
                   min={1}
@@ -253,7 +253,7 @@ export function FreightSimulationWorkspace() {
                 />
               </label>
               <label>
-                A
+                <span className={styles.labelHelp} title="Altura do volume em centimetros. Entra no calculo de cubagem do frete.">Altura (cm)</span>
                 <input
                   type="number"
                   min={1}

@@ -83,14 +83,54 @@
 
 .linkButton {
   align-items: center;
+  background: #fff;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   color: var(--color-text);
+  cursor: pointer;
   display: inline-flex;
   font-weight: 800;
+  gap: 0.4rem;
   min-height: 2.4rem;
   padding: 0.5rem 0.75rem;
   text-decoration: none;
+}
+
+.linkButton:hover {
+  border-color: #64748b;
+  box-shadow: 0 8px 16px rgb(15 23 42 / 8%);
+}
+
+.contextPanel {
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+}
+
+.contextPanel strong {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.contextPanel dl {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.contextPanel dt {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.contextPanel dd {
+  margin: 0.15rem 0 0;
 }
 
 .INFO {

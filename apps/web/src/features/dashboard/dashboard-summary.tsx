@@ -12,23 +12,10 @@ import { EmptyState } from '@/components/feedback/empty-state';
 import { Button } from '@/components/ui/button';
 import { publicEnv } from '@/lib/env';
 import { dashboardQueryKeys, getDashboardSummary } from '@/services/dashboard-service';
+import { formatShipmentStatus, shipmentStatusLabels } from '@/utils/shipment-status';
 
 const numberFormat = new Intl.NumberFormat('pt-BR');
 const currencyFormat = new Intl.NumberFormat('pt-BR', { currency: 'BRL', style: 'currency' });
-
-const statusLabels: Record<ShipmentStatus, string> = {
-  ARRIVED_AT_HUB: 'No hub',
-  CANCELED: 'Cancelado',
-  CREATED: 'Criado',
-  DELIVERED: 'Entregue',
-  DELIVERY_FAILED: 'Falha',
-  IN_TRANSIT: 'Em transito',
-  OUT_FOR_DELIVERY: 'Saiu para entrega',
-  PICKED_UP: 'Coletado',
-  PICKUP_SCHEDULED: 'Coleta agendada',
-  RETURNED: 'Devolvido',
-  RETURNING: 'Retornando',
-};
 
 export function DashboardSummary() {
   const queryClient = useQueryClient();
@@ -118,7 +105,7 @@ export function DashboardSummary() {
         <FilterField label="Status">
           <select value={filters.status ?? ''} onChange={(event) => setFilters((current) => updateStatusFilter(current, event.target.value))}>
             <option value="">Todos</option>
-            {Object.values(ShipmentStatus).map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
+            {Object.values(ShipmentStatus).map((status) => <option key={status} value={status}>{shipmentStatusLabels[status]}</option>)}
           </select>
         </FilterField>
         <Button type="button" variant="secondary" onClick={() => setFilters(defaultDashboardFilters())}>Limpar</Button>
@@ -196,7 +183,7 @@ export function DashboardSummary() {
             </ChartPanel>
 
             <ChartPanel title="Status dos Shipments" description="Distribuicao operacional dos embarques filtrados.">
-              <BarList values={data.charts.shipmentStatus.map((status) => ({ label: statusLabels[status.label as ShipmentStatus] ?? status.label, value: status.value }))} />
+              <BarList values={data.charts.shipmentStatus.map((status) => ({ label: formatShipmentStatus(status.label), value: status.value }))} />
             </ChartPanel>
 
             <ChartPanel title="Importacoes" description="Taxa de erro por arquivo recente.">

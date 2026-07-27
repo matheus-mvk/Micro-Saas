@@ -2,7 +2,7 @@
 
 import { InsightCategory, InsightSeverity, InsightStatus } from '@logistics/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, RefreshCw, X } from 'lucide-react';
+import { Check, ExternalLink, Info, RefreshCw, X } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -47,6 +47,7 @@ export function InsightsWorkspace() {
     startDate: '',
     status: '' as InsightStatus | '',
   });
+  const [openContextId, setOpenContextId] = useState<string | null>(null);
   const summaryQuery = useQuery({ queryKey: insightsQueryKeys.summary, queryFn: getInsightSummary });
   const insightsQuery = useQuery({ queryKey: insightsQueryKeys.list(filters), queryFn: () => listInsights(filters) });
   const refreshMutation = useMutation({
@@ -152,8 +153,24 @@ export function InsightsWorkspace() {
                 Periodo: {new Date(insight.periodStart).toLocaleDateString('pt-BR')} ate {new Date(insight.periodEnd).toLocaleDateString('pt-BR')}
               </p>
               <p className={styles.muted}>Evidencia: {formatEvidence(insight.evidence)}</p>
+              {openContextId === insight.id ? (
+                <div className={styles.contextPanel}>
+                  <div>
+                    <strong><Info size={15} aria-hidden="true" /> Contexto do insight</strong>
+                    <p>{contextDescription(insight.actionUrl)}</p>
+                  </div>
+                  <dl>
+                    <div><dt>Periodo analisado</dt><dd>{new Date(insight.periodStart).toLocaleDateString('pt-BR')} ate {new Date(insight.periodEnd).toLocaleDateString('pt-BR')}</dd></div>
+                    {insight.resourceType ? <div><dt>Recurso</dt><dd>{insight.resourceType}{insight.resourceId ? ` / ${insight.resourceId}` : ''}</dd></div> : null}
+                    <div><dt>Evidencias</dt><dd>{formatEvidence(insight.evidence)}</dd></div>
+                  </dl>
+                  {insight.actionUrl ? <Link className={styles.linkButton} href={insight.actionUrl as never}><ExternalLink size={15} /> Ir para tela relacionada</Link> : null}
+                </div>
+              ) : null}
               <div className={styles.actions}>
-                {insight.actionUrl ? <Link className={styles.linkButton} href={insight.actionUrl as never}>Abrir contexto</Link> : null}
+                <button className={styles.linkButton} type="button" onClick={() => setOpenContextId((current) => current === insight.id ? null : insight.id)}>
+                  <Info size={15} /> {openContextId === insight.id ? 'Fechar contexto' : 'Abrir contexto'}
+                </button>
                 {insight.status === InsightStatus.NEW ? <Button type="button" variant="secondary" disabled={readMutation.isPending} onClick={() => readMutation.mutate(insight.id)}><Check size={15} /> Lido</Button> : null}
                 <Button type="button" variant="secondary" disabled={dismissMutation.isPending} onClick={() => dismissMutation.mutate(insight.id)}><X size={15} /> Dispensar</Button>
               </div>
@@ -202,4 +219,14 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
 
 function formatEvidence(evidence: Record<string, unknown>): string {
   return Object.entries(evidence).slice(0, 4).map(([key, value]) => `${key}: ${String(value)}`).join(' | ');
+}
+
+function contextDescription(actionUrl: string | null): string {
+  if (!actionUrl) return 'Este insight nao possui tela relacionada cadastrada pela API; use as evidencias abaixo para orientar a investigacao.';
+  if (actionUrl.startsWith('/imports/')) return 'Abra a importacao relacionada para revisar arquivo, linhas processadas e erros.';
+  if (actionUrl.startsWith('/freight/history')) return 'Use o historico de fretes para comparar rotas, transportadoras, custos e conversoes.';
+  if (actionUrl.startsWith('/freight/simulate')) return 'Use a simulacao para recalcular cenarios com os dados operacionais atuais.';
+  if (actionUrl.startsWith('/customers')) return 'Revise os clientes relacionados e seus enderecos operacionais.';
+  if (actionUrl.startsWith('/dashboard')) return 'Compare os indicadores do dashboard no periodo citado pelo insight.';
+  return 'A tela relacionada abre dados operacionais que ajudam a investigar este insight.';
 }
