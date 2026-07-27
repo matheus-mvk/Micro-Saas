@@ -17,7 +17,7 @@ export default function LoginPage() {
         <div>
           <p className={styles.eyebrow}>Acesso administrativo</p>
           <h1>Entrar</h1>
-          <p>Acesse sua operacao logistica com uma sessao segura e auditavel.</p>
+          <p>Acesse sua operação logística com uma sessão segura e auditável.</p>
         </div>
         <Suspense fallback={null}>
           <LoginForm />

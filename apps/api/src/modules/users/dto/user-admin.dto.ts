@@ -87,3 +87,8 @@ export class UpdateAdminUserDto {
   @IsEnum(UserStatus)
   status?: UserStatus;
 }
+
+export class ApproveUserDto {
+  @IsEnum(UserRole)
+  role!: UserRole;
+}

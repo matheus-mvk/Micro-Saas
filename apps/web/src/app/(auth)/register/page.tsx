@@ -14,12 +14,12 @@ export default function RegisterPage() {
           <strong>Nexora Freight</strong>
         </Link>
         <div>
-          <p className={styles.eyebrow}>Nova organizacao</p>
+          <p className={styles.eyebrow}>Nova organização</p>
           <h1>Criar conta</h1>
-          <p>Crie sua empresa e entre como administrador do tenant com uma sessao segura.</p>
+          <p>Crie sua empresa por e-mail ou registre-se com OAuth para solicitar aprovação B2B.</p>
         </div>
         <RegisterForm />
-        <Link href="/login">Ja tenho conta</Link>
+        <Link href="/login">Já tenho conta</Link>
       </section>
       <section className={styles.preview}>
         <PlatformPreview />

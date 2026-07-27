@@ -61,7 +61,7 @@ export function FreightSimulationWorkspace() {
     onSuccess: async (result) => {
       setSimulation(result);
       setSuccessMessage('Simulação calculada e salva no histórico.');
-      await queryClient.invalidateQueries({ queryKey: freightQueryKeys.history });
+      await queryClient.invalidateQueries({ queryKey: freightQueryKeys.historyRoot });
     },
   });
   const selectMutation = useMutation({

@@ -5,7 +5,10 @@ export enum UserRole {
 }
 
 export enum UserStatus {
+  INCOMPLETE = 'INCOMPLETE',
+  PENDING = 'PENDING',
   ACTIVE = 'ACTIVE',
+  BLOCKED = 'BLOCKED',
   INVITED = 'INVITED',
   DISABLED = 'DISABLED',
   DELETED = 'DELETED',
@@ -188,7 +191,42 @@ export interface MfaRequiredResponseDto {
   userHint: string;
 }
 
-export type LoginResponseDto = AuthResponseDto | MfaRequiredResponseDto;
+export interface PendingApprovalResponseDto {
+  pendingApproval: true;
+  message: string;
+}
+
+export interface IncompleteRegistrationResponseDto {
+  incompleteRegistration: true;
+  completionToken: string;
+}
+
+export type LoginResponseDto = AuthResponseDto | MfaRequiredResponseDto | PendingApprovalResponseDto | IncompleteRegistrationResponseDto;
+
+export interface TenantOptionDto {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface CompleteOAuthRegistrationDto {
+  tenantSlug: string;
+  token: string;
+}
+
+export interface OAuthProviderAvailabilityDto {
+  configured: boolean;
+  provider: 'google' | 'github';
+}
+
+export interface OAuthStatusDto {
+  github: OAuthProviderAvailabilityDto;
+  google: OAuthProviderAvailabilityDto;
+}
+
+export interface ApproveUserDto {
+  role: UserRole;
+}
 
 export interface MeResponseDto {
   user: AuthenticatedUserDto;
@@ -566,6 +604,7 @@ export interface CarrierDto {
   name: string;
   services?: CarrierTransportServiceDto[];
   legalName?: string | null;
+  logoUrl?: string | null;
   email?: string | null;
   phone?: string | null;
   contactName?: string | null;

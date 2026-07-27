@@ -22,8 +22,14 @@ RUN pnpm --filter @logistics/web build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-RUN addgroup -S nodeapp && adduser -S nodeapp -G nodeapp && corepack enable
-COPY --from=builder --chown=nodeapp:nodeapp /app /app
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+ENV WEB_PORT=3000
+ENV NODE_OPTIONS=--max-old-space-size=192
+RUN addgroup -S nodeapp && adduser -S nodeapp -G nodeapp
+COPY --from=builder --chown=nodeapp:nodeapp /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nodeapp:nodeapp /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nodeapp:nodeapp /app/apps/web/public ./apps/web/public
 USER nodeapp
 EXPOSE 3000
-CMD ["pnpm", "--filter", "@logistics/web", "start"]
+CMD ["node", "apps/web/server.js"]

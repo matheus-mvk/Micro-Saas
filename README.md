@@ -60,11 +60,17 @@ O seed também cria usuários `ADMIN`, `MANAGER` e `OPERATOR`, incluindo supervi
 
 Implementado: fundacao compilavel, contratos compartilhados, health checks, base de seguranca, base de multi-tenancy, landing inicial, login local, layout autenticado, dashboard resumido com dados do banco, cadastro/listagem basica de clientes tenant-scoped, enderecos de clientes, cadastros iniciais de filiais, transportadoras, servicos, coberturas, tabelas de frete, motor deterministico de precificacao, simulacao de frete com opcoes persistidas, historico, selecao de opcao, geracao de Shipment a partir da opcao selecionada, seed narrativo e Docker/documentacao.
 
-Implementado parcialmente: autenticacao por e-mail e senha com cookies HttpOnly, access token, refresh token rotativo, logout, `/auth/me`, auditoria de login/falha/logout, bloqueio temporario por tentativas usando Redis, refresh recusando usuario nao ativo, realtime com sala derivada da autenticacao, `/dashboard/summary` com isolamento por tenant, `/customers` com persistencia real no MySQL, `/freight/simulate` e `/freight/history` integradas ao backend.
+Implementado parcialmente: autenticacao por e-mail e senha com cookies HttpOnly, access token, refresh token rotativo, logout, `/auth/me`, auditoria de login/falha/logout, bloqueio temporario por tentativas usando Redis, refresh recusando usuario nao ativo, OAuth Google/GitHub com state/callback/linking e fluxo B2B de aprovacao, MFA/TOTP com desafio de login, realtime com sala derivada da autenticacao, `/dashboard/summary` com isolamento por tenant, `/customers` com persistencia real no MySQL, `/freight/simulate` e `/freight/history` integradas ao backend.
+
+Uploads usam duas estratégias: planilhas CSV/XLSX são importações assíncronas com BullMQ/Redis, enquanto imagens pequenas como logos de transportadoras usam upload síncrono via API. A decisão está documentada em `docs/architecture/uploads.md`.
 
 Preparado: RBAC, importacoes, auditoria consultavel, dashboard completo, insights, tracking completo e integracoes externas configuraveis.
 
-Nao implementado nesta etapa: OAuth, MFA, recuperacao de senha, importacao completa, tracking completo, insights finais e dashboard final com todos os indicadores. A integracao de CEP usa ViaCEP com fallback; a distancia usa calculo deterministico local quando nao ha coordenadas/chave externa configurada.
+Dependencias externas: OAuth Google/GitHub exige `GOOGLE_*` e `GITHUB_*` reais nos ambientes de deploy. A integracao de CEP usa ViaCEP com fallback; a distancia usa calculo deterministico local quando nao ha coordenadas/chave externa configurada.
+
+## Fluxo B2B de identidade
+
+O registro publico por e-mail cria um tenant novo e transforma o primeiro usuario em `ADMIN`. O cadastro interno e convites mantem o usuario dentro do tenant autenticado. Ja o registro publico via OAuth cria primeiro um usuario `INCOMPLETE`, direciona para `/completar-cadastro`, vincula o tenant escolhido e muda o status para `PENDING`; somente um `ADMIN` do tenant pode aprovar o acesso em `/users`. Usuarios `PENDING`, `INCOMPLETE`, `BLOCKED`, `DISABLED` ou `DELETED` nao recebem JWT final.
 
 ## Decisão de segurança do Prisma
 

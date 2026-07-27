@@ -3,14 +3,15 @@ import { UserStatus, type Prisma, type RefreshToken, type Tenant, type User } fr
 
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 
-export type AuthUserRecord = User & { tenant: Tenant };
+export type AuthenticatedUserRecord = User & { tenant: Tenant };
+export type AuthUserRecord = User & { tenant: Tenant | null };
 export type RefreshTokenRecord = RefreshToken & { user: AuthUserRecord };
 
 @Injectable()
 export class AuthRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findActiveLoginCandidates(email: string, tenantSlug?: string): Promise<AuthUserRecord[]> {
+  async findActiveLoginCandidates(email: string, tenantSlug?: string): Promise<AuthenticatedUserRecord[]> {
     return this.prisma.user.findMany({
       where: {
         email,
@@ -22,10 +23,25 @@ export class AuthRepository {
       },
       include: { tenant: true },
       take: 2,
-    });
+    }) as Promise<AuthenticatedUserRecord[]>;
   }
 
-  async findActiveUserById(userId: string, tenantId: string): Promise<AuthUserRecord | null> {
+  async findLoginCandidates(email: string, tenantSlug?: string): Promise<AuthUserRecord[]> {
+    return this.prisma.user.findMany({
+      where: {
+        email,
+        status: { not: UserStatus.DELETED },
+        tenant: {
+          active: true,
+          ...(tenantSlug ? { slug: tenantSlug } : {}),
+        },
+      },
+      include: { tenant: true },
+      take: 3,
+    }) as Promise<AuthUserRecord[]>;
+  }
+
+  async findActiveUserById(userId: string, tenantId: string): Promise<AuthenticatedUserRecord | null> {
     return this.prisma.user.findFirst({
       where: {
         id: userId,
@@ -34,7 +50,7 @@ export class AuthRepository {
         tenant: { active: true },
       },
       include: { tenant: true },
-    });
+    }) as Promise<AuthenticatedUserRecord | null>;
   }
 
   async findRefreshTokenByHash(tokenHash: string): Promise<RefreshTokenRecord | null> {

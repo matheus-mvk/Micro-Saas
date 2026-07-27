@@ -15,6 +15,13 @@ export interface OAuthIdentity {
 export class OAuthService {
   constructor(private readonly config: AppConfigService) {}
 
+  status(): { github: { configured: boolean; provider: 'github' }; google: { configured: boolean; provider: 'google' } } {
+    return {
+      github: { configured: Boolean(this.config.githubClientId && this.config.githubClientSecret), provider: 'github' },
+      google: { configured: Boolean(this.config.googleClientId && this.config.googleClientSecret), provider: 'google' },
+    };
+  }
+
   authorizationUrl(provider: OAuthProvider, state: string): string {
     const callbackUrl = this.callbackUrl(provider);
 

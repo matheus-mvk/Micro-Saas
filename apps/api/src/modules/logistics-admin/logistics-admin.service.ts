@@ -1,5 +1,5 @@
 import type { PaginatedResult } from '@logistics/shared';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { AuditAction, Prisma, ShipmentStatus, TrackingEventType } from '@prisma/client';
 
 import { PrismaService } from '../../infrastructure/database/prisma.service';
@@ -32,12 +32,12 @@ export class LogisticsAdminService {
 
   async createRateTable(tenantId: string, actorId: string, input: RateTableInputDto, previousVersionId?: string): Promise<unknown> {
     validateRanges(input.ranges);
-    if (input.validTo && new Date(input.validTo) <= new Date(input.validFrom)) throw new NotFoundException('Vigencia da tabela invalida.');
+    if (input.validTo && new Date(input.validTo) <= new Date(input.validFrom)) throw new BadRequestException('Vigência da tabela inválida.');
     const service = await this.prisma.carrierService.findFirst({ where: { id: input.carrierServiceId, tenantId }, include: { carrier: true } });
     if (!service || !service.carrier.active) throw new NotFoundException('Servico ou transportadora nao encontrado.');
     const coverageIds = input.coverageIds ?? [];
     const coverages = await this.prisma.carrierCoverage.findMany({ where: { tenantId, id: { in: coverageIds }, carrierServiceId: input.carrierServiceId } });
-    if (coverages.length !== coverageIds.length) throw new NotFoundException('Uma ou mais coberturas nao pertencem ao servico.');
+    if (coverages.length !== coverageIds.length) throw new BadRequestException('Uma ou mais coberturas não pertencem ao serviço.');
     const version = previousVersionId ? ((await this.prisma.freightRateTable.aggregate({ where: { tenantId, carrierServiceId: input.carrierServiceId }, _max: { version: true } }))._max.version ?? 0) + 1 : 1;
     const table = await this.prisma.$transaction(async (tx) => {
       const created = await tx.freightRateTable.create({ data: { tenantId, carrierServiceId: input.carrierServiceId, name: input.name.trim(), currency: input.currency.toUpperCase(), validFrom: new Date(input.validFrom), validTo: input.validTo ? new Date(input.validTo) : undefined, notes: input.notes?.trim(), status: input.status ?? 'INACTIVE', version, previousVersionId, ranges: { create: input.ranges.map((range) => ({ tenantId, minWeightKg: range.minWeightKg, maxWeightKg: range.maxWeightKg, basePrice: range.basePrice, pricePerKg: range.pricePerKg, excessPricePerKg: range.excessPricePerKg, deadlineDays: range.deadlineDays, priority: range.priority ?? 0 })) }, charges: { create: input.charges.map((charge) => ({ tenantId, type: charge.type, name: charge.name.trim(), fixedAmount: charge.fixedAmount, percentage: charge.percentage, active: charge.active ?? true })) }, coverages: { create: coverageIds.map((coverageId) => ({ tenantId, coverageId })) } }, include: { ranges: true, charges: true, coverages: true } });
@@ -51,14 +51,14 @@ export class LogisticsAdminService {
     const current = await this.prisma.freightRateTable.findFirst({ where: { id, tenantId } });
     if (!current) throw new NotFoundException('Freight rate table was not found.');
     const used = await this.prisma.freightSimulationOption.count({ where: { tenantId, rateTableId: id } });
-    if (used > 0) throw new NotFoundException('Tabela ja utilizada. Crie uma nova versao para preservar o historico.');
+    if (used > 0) throw new BadRequestException('Tabela já utilizada. Crie uma nova versão para preservar o histórico.');
     validateRanges(input.ranges);
-    if (input.validTo && new Date(input.validTo) <= new Date(input.validFrom)) throw new NotFoundException('Vigencia da tabela invalida.');
+    if (input.validTo && new Date(input.validTo) <= new Date(input.validFrom)) throw new BadRequestException('Vigência da tabela inválida.');
     const service = await this.prisma.carrierService.findFirst({ where: { id: input.carrierServiceId, tenantId }, include: { carrier: true } });
     if (!service || !service.carrier.active) throw new NotFoundException('Servico ou transportadora nao encontrado.');
     const coverageIds = input.coverageIds ?? [];
     const coverages = await this.prisma.carrierCoverage.findMany({ where: { tenantId, id: { in: coverageIds }, carrierServiceId: input.carrierServiceId } });
-    if (coverages.length !== coverageIds.length) throw new NotFoundException('Uma ou mais coberturas nao pertencem ao servico.');
+    if (coverages.length !== coverageIds.length) throw new BadRequestException('Uma ou mais coberturas não pertencem ao serviço.');
     await this.prisma.$transaction(async (tx) => {
       await tx.freightRateRange.deleteMany({ where: { tenantId, rateTableId: id } });
       await tx.freightAdditionalCharge.deleteMany({ where: { tenantId, rateTableId: id } });
@@ -78,7 +78,7 @@ export class LogisticsAdminService {
   async updateRateTableStatus(tenantId: string, actorId: string, id: string, status: 'ACTIVE' | 'INACTIVE'): Promise<unknown> {
     const table = await this.prisma.freightRateTable.findFirst({ where: { id, tenantId }, include: { ranges: true } });
     if (!table) throw new NotFoundException('Freight rate table was not found.');
-    if (status === 'ACTIVE' && table.ranges.length === 0) throw new NotFoundException('Tabela ativa precisa de ao menos uma faixa.');
+    if (status === 'ACTIVE' && table.ranges.length === 0) throw new BadRequestException('Tabela ativa precisa de ao menos uma faixa.');
     const updated = await this.prisma.freightRateTable.update({ where: { id }, data: { status } });
     await this.audit.record({ action: AuditAction.FREIGHT_PRICING_CHANGED, actorId, entityId: id, entityType: 'FreightRateTable', metadata: { operation: status === 'ACTIVE' ? 'activate' : 'deactivate' }, tenantId });
     return { id: updated.id, status: updated.status };
@@ -119,7 +119,7 @@ export class LogisticsAdminService {
   async createTrackingEvent(tenantId: string, actorId: string, shipmentId: string, input: CreateTrackingEventDto): Promise<unknown> {
     const current = await this.prisma.shipment.findFirst({ where: { id: shipmentId, tenantId } });
     if (!current) throw new NotFoundException('Shipment was not found.');
-    if (input.status && !isValidTransition(current.status, input.status)) throw new NotFoundException('Transicao de tracking nao permitida.');
+    if (input.status && !isValidTransition(current.status, input.status)) throw new BadRequestException('Transição de tracking não permitida.');
     try {
       const result = await this.prisma.$transaction(async (tx) => {
         const event = await tx.trackingEvent.create({ data: { tenantId, shipmentId, createdById: actorId, eventType: input.eventType, status: input.status, description: input.description?.trim(), occurredAt: new Date(input.occurredAt), location: input.location?.trim(), externalCode: input.externalCode?.trim(), idempotencyKey: input.idempotencyKey?.trim() } });
@@ -130,7 +130,7 @@ export class LogisticsAdminService {
       this.notifications.emitTrackingUpdate(tenantId, shipmentId, { eventId: result.event.id, status: result.shipment.status, eventType: result.event.eventType });
       return { id: result.event.id, shipmentId, status: result.shipment.status, eventType: result.event.eventType, occurredAt: result.event.occurredAt.toISOString() };
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') throw new NotFoundException('Evento duplicado para esta operacao.');
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') throw new BadRequestException('Evento duplicado para esta operação.');
       throw error;
     }
   }
@@ -183,12 +183,12 @@ function inRange(value: string, start: string | null, end: string | null): boole
 function validateRanges(ranges: Array<{ minWeightKg: number; maxWeightKg: number; basePrice: number; pricePerKg: number; deadlineDays: number }>): void {
   const ordered = [...ranges].sort((a, b) => a.minWeightKg - b.minWeightKg);
   for (const range of ordered) {
-    if (range.maxWeightKg <= range.minWeightKg || range.basePrice < 0 || range.pricePerKg < 0 || range.deadlineDays < 1) throw new NotFoundException('Faixa de peso invalida.');
+    if (range.maxWeightKg <= range.minWeightKg || range.basePrice < 0 || range.pricePerKg < 0 || range.deadlineDays < 1) throw new BadRequestException('Faixa de peso inválida.');
   }
   for (let index = 1; index < ordered.length; index += 1) {
     const previous = ordered[index - 1];
     const current = ordered[index];
-    if (previous && current && previous.maxWeightKg >= current.minWeightKg) throw new NotFoundException('Faixas de peso sobrepostas.');
+    if (previous && current && previous.maxWeightKg >= current.minWeightKg) throw new BadRequestException('Faixas de peso sobrepostas.');
   }
 }
 

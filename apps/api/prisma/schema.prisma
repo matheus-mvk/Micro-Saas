@@ -14,7 +14,10 @@ enum UserRole {
 }
 
 enum UserStatus {
+  INCOMPLETE
+  PENDING
   ACTIVE
+  BLOCKED
   INVITED
   DISABLED
   DELETED
@@ -283,7 +286,7 @@ model Branch {
 
 model User {
   id           String     @id @default(uuid()) @db.Char(36)
-  tenantId     String     @map("tenant_id") @db.Char(36)
+  tenantId     String?    @map("tenant_id") @db.Char(36)
   branchId     String?    @map("branch_id") @db.Char(36)
   name         String     @db.VarChar(140)
   email        String     @db.VarChar(180)
@@ -309,7 +312,7 @@ model User {
   passwordResetTokens       PasswordResetToken[]
   refreshTokens             RefreshToken[]
   trackingEvents            TrackingEvent[]
-  tenant                    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant                    Tenant?             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, email])
   @@index([tenantId, status])
@@ -320,7 +323,7 @@ model User {
 
 model OAuthAccount {
   id             String        @id @default(uuid()) @db.Char(36)
-  tenantId       String        @map("tenant_id") @db.Char(36)
+  tenantId       String?       @map("tenant_id") @db.Char(36)
   userId         String        @map("user_id") @db.Char(36)
   provider       OAuthProvider
   providerUserId String        @map("provider_user_id") @db.VarChar(160)
@@ -328,7 +331,7 @@ model OAuthAccount {
   createdAt      DateTime      @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt      DateTime      @updatedAt @map("updated_at") @db.DateTime(3)
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerUserId])
@@ -508,6 +511,8 @@ model Carrier {
   contactName String?  @map("contact_name") @db.VarChar(120)
   site        String?  @db.VarChar(180)
   notes       String?  @db.Text
+  logoUrl     String?  @map("logo_url") @db.VarChar(500)
+  logoStorageKey String? @map("logo_storage_key") @db.VarChar(255)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.DateTime(3)

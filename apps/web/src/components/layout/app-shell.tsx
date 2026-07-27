@@ -13,14 +13,14 @@ import type { SessionUser } from '@/types/session';
 
 const navItems = [
   { label: 'Dashboard', icon: ChartNoAxesCombined, href: '/dashboard', implemented: true },
-  { label: 'Usuarios', icon: Users, href: '/users', implemented: true, roles: ['ADMIN', 'MANAGER'] },
+  { label: 'Usuários', icon: Users, href: '/users', implemented: true, roles: ['ADMIN', 'MANAGER'] },
   { label: 'Clientes', icon: Building2, href: '/customers', implemented: true },
   { label: 'Filiais', icon: Warehouse, href: '/branches', implemented: true, roles: ['ADMIN', 'MANAGER'] },
-  { label: 'Simulacao', icon: Calculator, href: '/freight/simulate', implemented: true },
-  { label: 'Historico', icon: FileClock, href: '/freight/history', implemented: true },
+  { label: 'Simulação', icon: Calculator, href: '/freight/simulate', implemented: true },
+  { label: 'Histórico', icon: FileClock, href: '/freight/history', implemented: true },
   { label: 'Shipments', icon: Truck, href: '/shipments', implemented: true },
   { label: 'Transportadoras', icon: Truck, href: '/carriers', implemented: true, roles: ['ADMIN', 'MANAGER', 'OPERATOR'] },
-  { label: 'Importacoes', icon: FileUp, href: '/imports', implemented: true },
+  { label: 'Importações', icon: FileUp, href: '/imports', implemented: true },
   { label: 'Insights', icon: Lightbulb, href: '/insights', implemented: true },
   { label: 'Tabelas de frete', icon: Calculator, href: '/freight-tables', implemented: true, roles: ['ADMIN', 'MANAGER'] },
   { label: 'Auditoria', icon: FileClock, href: '/audit', implemented: true, roles: ['ADMIN', 'MANAGER'] },
@@ -48,12 +48,12 @@ export function AppShell({ children, user }: { children: ReactNode; user: Sessio
 
   return (
     <div className={styles.shell}>
-      <aside className={classNames(styles.sidebar, isNavigationOpen ? styles.sidebarOpen : undefined)} aria-label="Navegacao administrativa">
+      <aside className={classNames(styles.sidebar, isNavigationOpen ? styles.sidebarOpen : undefined)} aria-label="Navegação administrativa">
         <div className={styles.brand}>
           <span className={styles.mark}>NF</span>
           <strong>Nexora Freight</strong>
         </div>
-        <nav className={styles.nav} aria-label="Navegacao administrativa">
+        <nav className={styles.nav} aria-label="Navegação administrativa">
           {navItems.filter((item) => !item.roles || item.roles.includes(user.role)).map((item) =>
             item.implemented && item.href ? (
               <Link
@@ -71,7 +71,7 @@ export function AppShell({ children, user }: { children: ReactNode; user: Sessio
                 type="button"
                 className={classNames(styles.navItem, styles.navItemDisabled)}
                 aria-disabled="true"
-                title="Modulo ainda nao implementado"
+                title="Módulo ainda não implementado"
               >
                 <item.icon aria-hidden="true" size={18} />
                 <span>{item.label}</span>
@@ -85,7 +85,7 @@ export function AppShell({ children, user }: { children: ReactNode; user: Sessio
           <button
             className={styles.iconButton}
             aria-expanded={isNavigationOpen}
-            aria-label="Alternar navegacao"
+            aria-label="Alternar navegação"
             onClick={() => {
               setIsNavigationOpen((current) => !current);
             }}
@@ -93,10 +93,10 @@ export function AppShell({ children, user }: { children: ReactNode; user: Sessio
           >
             <Menu size={20} aria-hidden="true" />
           </button>
-          <div className={styles.headerContext} aria-label="Contexto da operacao">
-            <span>Operacao logistica</span>
+          <div className={styles.headerContext} aria-label="Contexto da operação">
+            <span>Operação logística</span>
           </div>
-          <div className={styles.identity} aria-label="Sessao atual">
+          <div className={styles.identity} aria-label="Sessão atual">
             <div>
               <strong>{user.name}</strong>
               <span>{user.tenant.name}</span>

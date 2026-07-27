@@ -12,7 +12,7 @@ import { AuthService } from './auth.service';
 import type { AuthRequestMetadata, AuthResult } from './auth.types';
 import { LoginDto } from './dto/login.dto';
 import { ConfirmMfaDto, VerifyMfaLoginDto } from './dto/mfa.dto';
-import { OAuthCallbackDto, StartOAuthDto } from './dto/oauth.dto';
+import { CompleteOAuthRegistrationDto, OAuthCallbackDto, StartOAuthDto } from './dto/oauth.dto';
 import { UpdateOnboardingDto } from './dto/onboarding.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { ChangePasswordDto, UpdateProfileDto } from './dto/profile.dto';
@@ -36,7 +36,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const result = await this.authService.login(dto, this.metadataFrom(request));
-    if ('mfaRequired' in result) {
+    if ('mfaRequired' in result || 'pendingApproval' in result || 'incompleteRegistration' in result) {
       return result;
     }
     if (!result.refreshToken) {
@@ -93,6 +93,19 @@ export class AuthController {
   @HttpCode(200)
   resetPassword(@Body() dto: ResetPasswordDto, @Req() request: RequestWithContext) {
     return this.authService.resetPassword(dto, this.metadataFrom(request));
+  }
+
+  @Public()
+  @Get('tenants')
+  tenants(@Query('search') search?: string) {
+    return this.authService.listTenantOptions(search);
+  }
+
+  @Public()
+  @Post('oauth/complete-registration')
+  @HttpCode(200)
+  completeOAuthRegistration(@Body() dto: CompleteOAuthRegistrationDto) {
+    return this.authService.completeOAuthRegistration(dto);
   }
 
   @Public()
@@ -210,6 +223,12 @@ export class AuthController {
   updateOnboarding(@Req() request: RequestWithContext, @Body() dto: UpdateOnboardingDto) {
     const { tenantId, userId } = requireContext(request);
     return this.authService.updateOnboarding(tenantId, userId, dto);
+  }
+
+  @Public()
+  @Get('oauth/status')
+  oauthStatus() {
+    return this.authService.getOAuthStatus();
   }
 
   @Public()

@@ -12,7 +12,7 @@ import { AuthCookieService } from '../auth/auth-cookie.service';
 import { AuthTokenService } from '../auth/auth-token.service';
 import type { AuthRequestMetadata, AuthResult } from '../auth/auth.types';
 
-import { AcceptInviteDto, CreateAdminUserDto, InviteUserDto, ListUsersDto, UpdateAdminUserDto } from './dto/user-admin.dto';
+import { AcceptInviteDto, ApproveUserDto, CreateAdminUserDto, InviteUserDto, ListUsersDto, UpdateAdminUserDto } from './dto/user-admin.dto';
 import { UsersService } from './users.service';
 
 @ApiBearerAuth()
@@ -65,6 +65,13 @@ export class UsersController {
     @Body() dto: UpdateAdminUserDto,
   ): Promise<AdminUserDto> {
     return this.users.update(tenantId, requireUserId(request), userId, dto);
+  }
+
+  @Post(':id/approve')
+  @HttpCode(200)
+  @Roles(UserRole.ADMIN)
+  approve(@CurrentTenant() tenantId: string, @Req() request: RequestWithContext, @Param('id') userId: string, @Body() dto: ApproveUserDto): Promise<AdminUserDto> {
+    return this.users.approve(tenantId, requireUserId(request), userId, dto.role);
   }
 
   @Post(':id/revoke-sessions')

@@ -21,6 +21,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3333
 ENV API_PORT=3333
+ENV NODE_OPTIONS=--max-old-space-size=256
 RUN apk add --no-cache dumb-init \
   && addgroup -S nodeapp \
   && adduser -S nodeapp -G nodeapp \
@@ -28,4 +29,4 @@ RUN apk add --no-cache dumb-init \
 COPY --from=builder --chown=nodeapp:nodeapp /app /app
 USER nodeapp
 EXPOSE 3333
-CMD ["dumb-init", "sh", "-c", "pnpm --filter @logistics/api start:prod"]
+CMD ["dumb-init", "node", "apps/api/dist/src/main.js"]

@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsString, Length } from 'class-validator';
+import { IsIn, IsOptional, IsString, Length, MinLength } from 'class-validator';
 
 export class StartOAuthDto {
   @IsIn(['login', 'register', 'link'])
@@ -16,4 +16,14 @@ export class OAuthCallbackDto {
 
   @IsString()
   state!: string;
+}
+
+export class CompleteOAuthRegistrationDto {
+  @IsString()
+  @MinLength(24)
+  token!: string;
+
+  @IsString()
+  @Length(2, 80)
+  tenantSlug!: string;
 }

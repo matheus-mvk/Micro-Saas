@@ -109,6 +109,14 @@ export class FreightSimulationsService {
       ...(query.customerId ? { customerId: query.customerId } : {}),
       ...(query.originPostalCode ? { originPostalCode: normalizePostalCode(query.originPostalCode) } : {}),
       ...(query.destinationPostalCode ? { destinationPostalCode: normalizePostalCode(query.destinationPostalCode) } : {}),
+      ...(query.startDate || query.endDate
+        ? {
+            createdAt: {
+              ...(query.startDate ? { gte: new Date(`${query.startDate}T00:00:00.000Z`) } : {}),
+              ...(query.endDate ? { lte: new Date(`${query.endDate}T23:59:59.999Z`) } : {}),
+            },
+          }
+        : {}),
     };
     const [simulations, total] = await this.prisma.$transaction([
       this.prisma.freightSimulation.findMany({

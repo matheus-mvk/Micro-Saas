@@ -1,4 +1,4 @@
-import type { AcceptInviteDto, AdminUserDto, AuthResponseDto, CreateAdminUserDto, InviteUserDto, InviteUserResponseDto, PaginatedResult, UpdateAdminUserDto } from '@logistics/shared';
+import type { AcceptInviteDto, AdminUserDto, ApproveUserDto, AuthResponseDto, CreateAdminUserDto, InviteUserDto, InviteUserResponseDto, PaginatedResult, UpdateAdminUserDto } from '@logistics/shared';
 
 import { apiRequest } from './http-client';
 
@@ -20,6 +20,10 @@ export function acceptInvite(values: AcceptInviteDto): Promise<AuthResponseDto> 
 
 export function updateUser(userId: string, values: UpdateAdminUserDto): Promise<AdminUserDto> {
   return apiRequest<AdminUserDto>(`/users/${userId}`, { method: 'PATCH', body: JSON.stringify(values) });
+}
+
+export function approveUser(userId: string, values: ApproveUserDto): Promise<AdminUserDto> {
+  return apiRequest<AdminUserDto>(`/users/${userId}/approve`, { method: 'POST', body: JSON.stringify(values) });
 }
 
 export function revokeUserSessions(userId: string): Promise<{ ok: true }> {

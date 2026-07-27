@@ -19,11 +19,11 @@ import { AuditService } from '../audit/audit.service';
 import { AuthLoginAttemptService, tooManyLoginAttempts } from './auth-login-attempt.service';
 import { AuthTokenService } from './auth-token.service';
 import { presentAuthResult, presentUser } from './auth.presenter';
-import { AuthRepository, type AuthUserRecord, type RefreshTokenRecord } from './auth.repository';
+import { AuthRepository, type AuthenticatedUserRecord, type AuthUserRecord, type RefreshTokenRecord } from './auth.repository';
 import { EmailDeliveryService } from './email-delivery.service';
 import type { AuthRequestMetadata, AuthResult, AuthenticatedUser } from './auth.types';
 import type { ConfirmMfaDto, VerifyMfaLoginDto } from './dto/mfa.dto';
-import type { StartOAuthDto } from './dto/oauth.dto';
+import type { CompleteOAuthRegistrationDto, StartOAuthDto } from './dto/oauth.dto';
 import type { UpdateOnboardingDto } from './dto/onboarding.dto';
 import type { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 import type { ChangePasswordDto, UpdateProfileDto } from './dto/profile.dto';
@@ -125,7 +125,7 @@ export class AuthService {
       throw error;
     }
 
-    const candidates = await this.authRepository.findActiveLoginCandidates(email, tenantSlug);
+    const candidates = await this.authRepository.findLoginCandidates(email, tenantSlug);
     const user = candidates.length === 1 ? candidates[0] : undefined;
     const isPasswordValid =
       user?.passwordHash !== null && user?.passwordHash !== undefined
@@ -134,7 +134,7 @@ export class AuthService {
 
     if (!user || !isPasswordValid) {
       const isLocked = await this.loginAttempts.recordFailedAttempt(attemptIdentifier);
-      await this.recordAuthFailure(metadata, user?.tenantId, user?.id, isLocked ? 'rate_limited' : 'invalid_credentials');
+      await this.recordAuthFailure(metadata, user?.tenantId ?? undefined, user?.id, isLocked ? 'rate_limited' : 'invalid_credentials');
 
       if (isLocked) {
         throw tooManyLoginAttempts();
@@ -145,13 +145,21 @@ export class AuthService {
 
     await this.loginAttempts.clear(attemptIdentifier);
 
+    const blocked = await this.blockNonActiveLogin(user, undefined, metadata);
+    if (blocked) return blocked;
+
+    if (!hasActiveTenant(user)) {
+      await this.recordAuthFailure(metadata, user.tenantId ?? undefined, user.id, 'inactive_tenant');
+      throw new UnauthorizedException(GENERIC_LOGIN_ERROR);
+    }
+
     if (user.mfaEnabled && user.mfaSecret) {
       const challengeToken = randomToken();
       await this.prisma.mfaChallenge.create({
         data: {
           challengeTokenHash: this.tokenService.hashOpaqueToken(challengeToken),
           expiresAt: expiresIn(300),
-          tenantId: user.tenantId,
+          tenantId: user.tenant.id,
           userId: user.id,
         },
       });
@@ -166,6 +174,52 @@ export class AuthService {
     return this.issueSession(presentableUser(user), metadata, 'login');
   }
 
+  async listTenantOptions(search?: string): Promise<Array<{ id: string; name: string; slug: string }>> {
+    const term = search?.trim();
+    const tenants = await this.prisma.tenant.findMany({
+      where: { active: true, ...(term ? { OR: [{ name: { contains: term } }, { slug: { contains: term.toLowerCase() } }] } : {}) },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, slug: true },
+      take: 25,
+    });
+    return tenants;
+  }
+
+  getOAuthStatus(): ReturnType<OAuthService['status']> {
+    return this.oauth.status();
+  }
+
+  async completeOAuthRegistration(dto: CompleteOAuthRegistrationDto): Promise<{ ok: true; pendingApproval: true }> {
+    const state = await this.prisma.oAuthState.findFirst({
+      where: {
+        expiresAt: { gt: new Date() },
+        mode: 'complete_registration',
+        stateHash: this.tokenService.hashOpaqueToken(dto.token),
+        usedAt: null,
+      },
+    });
+    if (!state?.userId) throw new BadRequestException('Cadastro OAuth inválido ou expirado.');
+    const tenantSlug = dto.tenantSlug.trim();
+    const tenant = await this.prisma.tenant.findFirst({ where: { active: true, slug: tenantSlug } });
+    if (!tenant) throw new NotFoundException('Empresa não encontrada.');
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: state.userId }, data: { role: UserRole.OPERATOR, status: UserStatus.PENDING, tenantId: tenant.id } }),
+      this.prisma.oAuthAccount.updateMany({ where: { userId: state.userId }, data: { tenantId: tenant.id } }),
+      this.prisma.oAuthState.update({ where: { id: state.id }, data: { tenantId: tenant.id, usedAt: new Date() } }),
+      this.prisma.auditLog.create({
+        data: {
+          action: AuditAction.USER_UPDATED,
+          actorId: state.userId,
+          entityId: state.userId,
+          entityType: 'User',
+          metadata: { operation: 'oauth_complete_registration', status: 'PENDING' },
+          tenantId: tenant.id,
+        },
+      }),
+    ]);
+    return { ok: true, pendingApproval: true };
+  }
+
   async verifyMfaLogin(dto: VerifyMfaLoginDto, metadata: AuthRequestMetadata): Promise<AuthResult & { refreshToken: string }> {
     const challenge = await this.prisma.mfaChallenge.findFirst({
       where: {
@@ -176,19 +230,24 @@ export class AuthService {
       include: { user: { include: { tenant: true } } },
     });
 
-    if (!challenge || !challenge.user.mfaSecret || !challenge.user.mfaEnabled || challenge.user.status !== UserStatus.ACTIVE || !challenge.user.tenant.active) {
+    if (!challenge) {
+      await this.recordAuthFailure(metadata, undefined, undefined, 'invalid_mfa_challenge');
+      throw new UnauthorizedException('MFA challenge is invalid.');
+    }
+    const challengeUser = challenge.user;
+    if (!challengeUser.mfaSecret || !challengeUser.mfaEnabled || !hasActiveTenant(challengeUser)) {
       await this.recordAuthFailure(metadata, challenge?.tenantId, challenge?.userId, 'invalid_mfa_challenge');
       throw new UnauthorizedException('MFA challenge is invalid.');
     }
 
-    const verified = await this.verifyMfaOrRecovery(challenge.tenantId, challenge.userId, challenge.user.mfaSecret, dto.code);
+    const verified = await this.verifyMfaOrRecovery(challenge.tenantId, challenge.userId, challengeUser.mfaSecret, dto.code);
     if (!verified) {
       await this.recordAuthFailure(metadata, challenge.tenantId, challenge.userId, 'invalid_mfa_code');
       throw new UnauthorizedException('MFA code is invalid.');
     }
 
     await this.prisma.mfaChallenge.update({ where: { id: challenge.id }, data: { usedAt: new Date() } });
-    return this.issueSession(challenge.user, metadata, 'login_mfa');
+    return this.issueSession(challengeUser, metadata, 'login_mfa');
   }
 
   async refresh(refreshToken: string | undefined, metadata: AuthRequestMetadata): Promise<AuthResult & { refreshToken: string }> {
@@ -257,7 +316,7 @@ export class AuthService {
       ipHash: this.tokenService.hashMetadata(metadata.ip),
       metadata: { result: 'accepted' },
       requestId: metadata.requestId,
-      tenantId: user.tenantId,
+      tenantId: user.tenantId ?? undefined,
     });
 
     const delivery = await this.emailDelivery.sendPasswordReset({
@@ -311,6 +370,7 @@ export class AuthService {
       include: { oauthAccounts: true, refreshTokens: { orderBy: { createdAt: 'desc' }, take: 20 }, tenant: true },
     });
     if (!user) throw new UnauthorizedException('Authentication context is required.');
+    if (!user.tenant) throw new UnauthorizedException('Authentication context is required.');
     const currentHash = currentRefreshToken ? this.tokenService.hashRefreshToken(currentRefreshToken) : undefined;
     return {
       email: user.email,
@@ -451,9 +511,6 @@ export class AuthService {
     if (dto.mode === 'link' && (!input?.tenantId || !input.userId)) {
       throw new UnauthorizedException('Authentication is required to link providers.');
     }
-    if (dto.mode === 'register' && !dto.companyName?.trim()) {
-      throw new BadRequestException('Company name is required for OAuth registration.');
-    }
     const state = randomToken();
     await this.prisma.oAuthState.create({
       data: {
@@ -463,7 +520,6 @@ export class AuthService {
         stateHash: this.tokenService.hashOpaqueToken(state),
         ...(input?.tenantId ? { tenantId: input.tenantId } : {}),
         ...(input?.userId ? { userId: input.userId } : {}),
-        ...(dto.companyName ? { metadata: { companyName: dto.companyName.trim() } } : {}),
       },
     });
     return { authorizationUrl: this.oauth.authorizationUrl(provider, state) };
@@ -493,15 +549,22 @@ export class AuthService {
       include: { user: { include: { tenant: true } } },
     });
     if (existingAccount) {
+      const blocked = await this.blockNonActiveLogin(existingAccount.user, provider, metadata);
+      if (blocked) {
+        if ('pendingApproval' in blocked) {
+          return { redirectUrl: `${this.config.webPublicUrl}/login?reason=pending-approval` };
+        }
+        if ('incompleteRegistration' in blocked) {
+          return { redirectUrl: `${this.config.webPublicUrl}/completar-cadastro?token=${encodeURIComponent(blocked.completionToken)}` };
+        }
+      }
       const result = await this.issueSession(existingAccount.user, metadata, 'oauth_login');
       return { redirectUrl: `${this.config.webPublicUrl}/dashboard`, session: result };
     }
 
     if (storedState.mode === 'register') {
-      const companyName = readCompanyName(storedState.metadata);
-      if (!companyName) throw new BadRequestException('Company name is required for OAuth registration.');
-      const result = await this.registerOAuthTenant(identity, companyName, metadata);
-      return { redirectUrl: `${this.config.webPublicUrl}/onboarding`, session: result };
+      const token = await this.createIncompleteOAuthUser(identity, metadata);
+      return { redirectUrl: `${this.config.webPublicUrl}/completar-cadastro?token=${encodeURIComponent(token)}` };
     }
 
     throw new NotFoundException('No linked account was found for this provider.');
@@ -522,53 +585,46 @@ export class AuthService {
     return { ok: true };
   }
 
-  private async registerOAuthTenant(identity: { email: string; name: string; provider: OAuthProvider; providerUserId: string }, companyName: string, metadata: AuthRequestMetadata): Promise<AuthResult & { refreshToken: string }> {
-    const existingUser = await this.prisma.user.findFirst({ where: { email: identity.email } });
+  /**
+   * OAuth public registration intentionally does not issue a platform JWT yet.
+   * The user must choose an existing tenant and then wait for an ADMIN approval,
+   * preventing arbitrary self-enrollment into another company's workspace.
+   */
+  private async createIncompleteOAuthUser(identity: { email: string; name: string; provider: OAuthProvider; providerUserId: string }, metadata: AuthRequestMetadata): Promise<string> {
+    const existingUser = await this.prisma.user.findFirst({ where: { email: identity.email, status: { not: UserStatus.DELETED } } });
     if (existingUser) throw new ConflictException('This e-mail is already registered.');
-    const tenantSlug = await this.uniqueTenantSlug(companyName);
+    const completionToken = randomToken();
     const user = await this.prisma.$transaction(async (tx) => {
-      const tenant = await tx.tenant.create({
-        data: {
-          active: true,
-          name: companyName,
-          slug: tenantSlug,
-          settings: { create: { country: 'BR', currency: 'BRL', timezone: 'America/Sao_Paulo' } },
-          onboarding: { create: { companyDone: true, currentStep: 'branch' } },
-        },
-      });
       const createdUser = await tx.user.create({
         data: {
           email: identity.email,
           name: identity.name,
-          role: UserRole.ADMIN,
-          status: UserStatus.ACTIVE,
-          tenantId: tenant.id,
+          role: UserRole.OPERATOR,
+          status: UserStatus.INCOMPLETE,
         },
-        include: { tenant: true },
       });
       await tx.oAuthAccount.create({
         data: {
           email: identity.email,
           provider: identity.provider,
           providerUserId: identity.providerUserId,
-          tenantId: tenant.id,
           userId: createdUser.id,
         },
       });
-      await tx.auditLog.create({
+      await tx.oAuthState.create({
         data: {
-          action: AuditAction.TENANT_REGISTERED,
-          actorId: createdUser.id,
-          entityId: tenant.id,
-          entityType: 'Tenant',
-          metadata: { provider: identity.provider, source: 'oauth_register' },
-          requestId: metadata.requestId,
-          tenantId: tenant.id,
+          expiresAt: expiresIn(3600),
+          mode: 'complete_registration',
+          provider: identity.provider,
+          stateHash: this.tokenService.hashOpaqueToken(completionToken),
+          userId: createdUser.id,
+          metadata: { email: identity.email, requestId: metadata.requestId },
         },
       });
       return createdUser;
     });
-    return this.issueSession(user, metadata, 'oauth_register');
+    await this.audit.record({ action: AuditAction.USER_CREATED, actorId: user.id, entityId: user.id, entityType: 'User', metadata: { status: 'INCOMPLETE', source: 'oauth_register' } });
+    return completionToken;
   }
 
   private async linkProvider(userId: string, tenantId: string, identity: { email: string; provider: OAuthProvider; providerUserId: string }): Promise<void> {
@@ -597,6 +653,9 @@ export class AuthService {
     auditResult: string,
     rotatedSession?: RefreshTokenRecord,
   ): Promise<AuthResult & { refreshToken: string }> {
+    if (!hasActiveTenant(user)) {
+      throw new UnauthorizedException('User is not active.');
+    }
     const authUser = presentUser(user);
     const { token: accessToken, expiresAt: accessTokenExpiresAt } = this.tokenService.createAccessToken(authUser);
     const refresh = this.tokenService.createRefreshToken();
@@ -643,6 +702,37 @@ export class AuthService {
     return { ...presentAuthResult({ accessToken, accessTokenExpiresAt, user: authUser }), refreshToken: refresh.token };
   }
 
+  /**
+   * Central gate for B2B approval. Non-active users never receive final JWTs:
+   * PENDING/INVITED users get a safe waiting response, while INCOMPLETE OAuth
+   * users get a short-lived registration-completion token.
+   */
+  private async blockNonActiveLogin(user: AuthUserRecord, provider?: OAuthProvider, metadata?: AuthRequestMetadata): Promise<LoginResponseDto | null> {
+    if (user.status === UserStatus.ACTIVE) return null;
+    if (user.status === UserStatus.PENDING || user.status === UserStatus.INVITED) {
+      return { message: 'Aguardando aprovação do Administrador.', pendingApproval: true };
+    }
+    if (user.status === UserStatus.INCOMPLETE) {
+      return { completionToken: await this.createCompletionToken(user.id, provider ?? OAuthProvider.GOOGLE, metadata), incompleteRegistration: true };
+    }
+    throw new UnauthorizedException(GENERIC_LOGIN_ERROR);
+  }
+
+  private async createCompletionToken(userId: string, provider: OAuthProvider, metadata?: AuthRequestMetadata): Promise<string> {
+    const completionToken = randomToken();
+    await this.prisma.oAuthState.create({
+      data: {
+        expiresAt: expiresIn(3600),
+        mode: 'complete_registration',
+        provider,
+        stateHash: this.tokenService.hashOpaqueToken(completionToken),
+        userId,
+        metadata: { requestId: metadata?.requestId ?? null },
+      },
+    });
+    return completionToken;
+  }
+
   private async getValidRefreshSession(refreshToken: string | undefined, metadata: AuthRequestMetadata): Promise<RefreshTokenRecord> {
     if (!refreshToken) {
       await this.recordAuthFailure(metadata);
@@ -658,7 +748,7 @@ export class AuthService {
       await this.recordAuthFailure(metadata, session.tenantId, session.userId);
       throw new UnauthorizedException('Refresh session is invalid.');
     }
-    if (session.expiresAt.getTime() <= Date.now() || session.user.status !== UserStatus.ACTIVE || !session.user.tenant.active) {
+    if (session.expiresAt.getTime() <= Date.now() || !hasActiveTenant(session.user)) {
       await this.recordAuthFailure(metadata, session.tenantId, session.userId);
       throw new UnauthorizedException('Refresh session is invalid.');
     }
@@ -735,16 +825,12 @@ function presentOnboarding(input: { branchDone: boolean; companyDone: boolean; c
   };
 }
 
-function readCompanyName(metadata: Prisma.JsonValue | null): string | null {
-  if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
-    const value = (metadata as Record<string, unknown>).companyName;
-    if (typeof value === 'string') return value.trim();
-  }
-  return null;
-}
-
 function presentableUser(user: AuthUserRecord): AuthUserRecord {
   return user;
+}
+
+function hasActiveTenant(user: AuthUserRecord): user is AuthenticatedUserRecord {
+  return user.status === UserStatus.ACTIVE && user.tenant !== null && user.tenant.active;
 }
 
 function randomToken(): string {

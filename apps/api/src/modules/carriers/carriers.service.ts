@@ -1,15 +1,22 @@
 import type { CarrierDto, CarrierTransportServiceDto, PaginatedResult } from '@logistics/shared';
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { AuditAction, CarrierServiceStatus, Prisma } from '@prisma/client';
 
+import { AppConfigService } from '../../config/app-config.service';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { AuditService } from '../audit/audit.service';
 
+import { CarrierImageStorageService } from './carrier-image-storage.service';
 import type { CreateCarrierDto, CreateCarrierServiceDto, ListCarriersDto } from './dto/carrier.dto';
 
 @Injectable()
 export class CarriersService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+    private readonly config: AppConfigService,
+    private readonly imageStorage: CarrierImageStorageService,
+  ) {}
 
   async list(tenantId: string, query: ListCarriersDto): Promise<PaginatedResult<CarrierDto>> {
     const page = query.page;
@@ -40,6 +47,7 @@ export class CarriersService {
         document: carrier.document,
         id: carrier.id,
         name: carrier.name,
+        logoUrl: carrier.logoUrl,
         services: carrier.services.map(presentService),
       })),
       meta: { page, perPage, total, totalPages: Math.ceil(total / perPage) },
@@ -81,6 +89,7 @@ export class CarriersService {
         contactName: carrier.contactName,
         email: carrier.email,
         legalName: carrier.legalName,
+        logoUrl: carrier.logoUrl,
         notes: carrier.notes,
         phone: carrier.phone,
         site: carrier.site,
@@ -102,6 +111,34 @@ export class CarriersService {
     return presentCarrier(carrier);
   }
 
+  async uploadLogo(tenantId: string, actorId: string, carrierId: string, file: Express.Multer.File | undefined): Promise<CarrierDto> {
+    const upload = this.validateLogo(file);
+    const carrier = await this.prisma.carrier.findFirst({ where: { id: carrierId, tenantId } });
+    if (!carrier) throw new NotFoundException('Transportadora não encontrada.');
+    const stored = await this.imageStorage.save({ buffer: upload.buffer, carrierId, filename: upload.originalname, tenantId });
+    const logoUrl = `${this.config.apiPublicUrl}/carriers/${carrierId}/logo`;
+    const updated = await this.prisma.carrier.update({
+      where: { id: carrierId },
+      data: { logoStorageKey: stored.key, logoUrl },
+      include: { services: { orderBy: { name: 'asc' } } },
+    });
+    await this.audit.record({
+      action: AuditAction.CARRIER_CHANGED,
+      actorId,
+      entityId: carrierId,
+      entityType: 'Carrier',
+      metadata: { operation: 'logo_upload', size: stored.size },
+      tenantId,
+    });
+    return presentCarrier(updated);
+  }
+
+  async readLogo(tenantId: string, carrierId: string): Promise<{ buffer: Buffer; contentType: string }> {
+    const carrier = await this.prisma.carrier.findFirst({ where: { id: carrierId, tenantId }, select: { logoStorageKey: true } });
+    if (!carrier?.logoStorageKey) throw new NotFoundException('Logo da transportadora não encontrado.');
+    return this.imageStorage.read(tenantId, carrier.logoStorageKey);
+  }
+
   async updateStatus(tenantId: string, actorId: string, id: string, active: boolean): Promise<CarrierDto> {
     const current = await this.prisma.carrier.findFirst({ where: { id, tenantId } });
     if (!current) throw new NotFoundException('Carrier was not found.');
@@ -116,26 +153,33 @@ export class CarriersService {
       throw new NotFoundException('Carrier was not found.');
     }
     if (input.maxWeightKg !== undefined && input.minWeightKg !== undefined && input.maxWeightKg <= input.minWeightKg) throw new ConflictException('Maximum weight must be greater than minimum weight.');
-    const service = await this.prisma.carrierService.create({
-      data: {
-        carrierId,
-        code: input.code.trim(),
-        cubicFactor: input.cubicFactor,
-        defaultDeadlineDays: input.defaultDeadlineDays,
-        maxWeightKg: input.maxWeightKg,
-        maxLengthCm: input.maxLengthCm,
-        maxWidthCm: input.maxWidthCm,
-        maxHeightCm: input.maxHeightCm,
-        minWeightKg: input.minWeightKg,
-        minimumValue: input.minimumValue,
-        modality: input.modality.trim(),
-        name: input.name.trim(),
-        description: normalizeOptional(input.description),
-        status: CarrierServiceStatus.ACTIVE,
-        tenantId,
-      },
-    });
-    return presentService(service);
+    try {
+      const service = await this.prisma.carrierService.create({
+        data: {
+          carrierId,
+          code: input.code.trim(),
+          cubicFactor: input.cubicFactor,
+          defaultDeadlineDays: input.defaultDeadlineDays,
+          maxWeightKg: input.maxWeightKg,
+          maxLengthCm: input.maxLengthCm,
+          maxWidthCm: input.maxWidthCm,
+          maxHeightCm: input.maxHeightCm,
+          minWeightKg: input.minWeightKg,
+          minimumValue: input.minimumValue,
+          modality: input.modality.trim(),
+          name: input.name.trim(),
+          description: normalizeOptional(input.description),
+          status: input.status ?? CarrierServiceStatus.ACTIVE,
+          tenantId,
+        },
+      });
+      return presentService(service);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('Código de serviço já existe nesta transportadora.');
+      }
+      throw error;
+    }
   }
 
   async updateService(tenantId: string, actorId: string, carrierId: string, serviceId: string, input: CreateCarrierServiceDto & { status?: CarrierServiceStatus }): Promise<CarrierTransportServiceDto> {
@@ -146,10 +190,20 @@ export class CarriersService {
     await this.audit.record({ action: AuditAction.CARRIER_CHANGED, actorId, entityId: serviceId, entityType: 'CarrierService', metadata: { operation: 'update', carrierId }, tenantId });
     return presentService(updated);
   }
+
+  private validateLogo(file: Express.Multer.File | undefined): Express.Multer.File {
+    if (!file) throw new BadRequestException('Arquivo de imagem obrigatório.');
+    if (file.size <= 0 || file.buffer.length <= 0) throw new BadRequestException('Arquivo de imagem vazio.');
+    if (file.size > 2 * 1024 * 1024) throw new BadRequestException('Imagem excede o tamanho máximo de 2 MB.');
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype)) {
+      throw new BadRequestException('Formato inválido. Envie PNG, JPG ou WebP.');
+    }
+    return file;
+  }
 }
 
-function presentCarrier(carrier: { active: boolean; code: string | null; contactName: string | null; document: string | null; email: string | null; id: string; legalName: string | null; name: string; notes: string | null; phone: string | null; site: string | null; stateRegistration?: string | null; services: Array<Parameters<typeof presentService>[0]> }): CarrierDto {
-  return { active: carrier.active, code: carrier.code, contactName: carrier.contactName, document: carrier.document, email: carrier.email, id: carrier.id, legalName: carrier.legalName, name: carrier.name, notes: carrier.notes, phone: carrier.phone, site: carrier.site, stateRegistration: carrier.stateRegistration, services: carrier.services.map(presentService) };
+function presentCarrier(carrier: { active: boolean; code: string | null; contactName: string | null; document: string | null; email: string | null; id: string; legalName: string | null; logoUrl?: string | null; name: string; notes: string | null; phone: string | null; site: string | null; stateRegistration?: string | null; services: Array<Parameters<typeof presentService>[0]> }): CarrierDto {
+  return { active: carrier.active, code: carrier.code, contactName: carrier.contactName, document: carrier.document, email: carrier.email, id: carrier.id, legalName: carrier.legalName, logoUrl: carrier.logoUrl, name: carrier.name, notes: carrier.notes, phone: carrier.phone, site: carrier.site, stateRegistration: carrier.stateRegistration, services: carrier.services.map(presentService) };
 }
 
 function presentService(service: {

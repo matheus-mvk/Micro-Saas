@@ -112,6 +112,10 @@ export class CreateCarrierServiceDto {
   @IsString()
   @MaxLength(255)
   description?: string;
+
+  @IsOptional()
+  @IsEnum(CarrierServiceStatus)
+  status?: CarrierServiceStatus;
 }
 
 export class UpdateCarrierDto extends CreateCarrierDto {}
@@ -121,8 +125,4 @@ export class UpdateCarrierStatusDto {
   active!: boolean;
 }
 
-export class UpdateCarrierServiceDto extends CreateCarrierServiceDto {
-  @IsOptional()
-  @IsEnum(CarrierServiceStatus)
-  status?: CarrierServiceStatus;
-}
+export class UpdateCarrierServiceDto extends CreateCarrierServiceDto {}

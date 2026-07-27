@@ -1,6 +1,7 @@
 import type {
   AuthResponseDto,
   ChangePasswordDto,
+  CompleteOAuthRegistrationDto,
   ConfirmMfaDto,
   ConfirmMfaResponseDto,
   ForgotPasswordDto,
@@ -9,10 +10,12 @@ import type {
   LogoutResponseDto,
   MeResponseDto,
   MfaSetupDto,
+  OAuthStatusDto,
   ProfileDto,
   RegisterTenantDto,
   ResetPasswordDto,
   TenantOnboardingDto,
+  TenantOptionDto,
   UpdateOnboardingDto,
   UpdateProfileDto,
   VerifyMfaLoginDto,
@@ -69,6 +72,23 @@ export function resetPassword(values: ResetPasswordDto): Promise<{ ok: true }> {
     method: 'POST',
     body: JSON.stringify(values),
   });
+}
+
+export function listTenantOptions(search = ''): Promise<TenantOptionDto[]> {
+  const params = new URLSearchParams();
+  if (search.trim()) params.set('search', search.trim());
+  return apiRequest<TenantOptionDto[]>(`/auth/tenants?${params.toString()}`);
+}
+
+export function completeOAuthRegistration(values: CompleteOAuthRegistrationDto): Promise<{ ok: true; pendingApproval: true }> {
+  return apiRequest<{ ok: true; pendingApproval: true }>('/auth/oauth/complete-registration', {
+    method: 'POST',
+    body: JSON.stringify(values),
+  });
+}
+
+export function getOAuthStatus(): Promise<OAuthStatusDto> {
+  return apiRequest<OAuthStatusDto>('/auth/oauth/status');
 }
 
 export function getProfile(): Promise<ProfileDto> {

@@ -1,6 +1,10 @@
 import { UserRole, type CarrierDto, type CarrierTransportServiceDto, type PaginatedResult } from '@logistics/shared';
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, Header, Param, Patch, Post, Query, Req, Res, UnauthorizedException, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes, ApiOkResponse, ApiProduces } from '@nestjs/swagger';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
+import { memoryStorage } from 'multer';
 
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -24,6 +28,15 @@ export class CarriersController {
   @Get(':id')
   get(@CurrentTenant() tenantId: string, @Param('id') id: string): Promise<CarrierDto> { return this.carriers.get(tenantId, id); }
 
+  @Get(':id/logo')
+  @ApiProduces('image/png', 'image/jpeg', 'image/webp')
+  @Header('cache-control', 'private, max-age=300')
+  /** Streams the tenant-authorized carrier logo through the API instead of exposing raw storage paths. */
+  async logo(@CurrentTenant() tenantId: string, @Param('id') id: string, @Res() response: Response): Promise<void> {
+    const image = await this.carriers.readLogo(tenantId, id);
+    response.type(image.contentType).send(image.buffer);
+  }
+
   @Post()
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   create(@CurrentTenant() tenantId: string, @Body() body: CreateCarrierDto): Promise<CarrierDto> {
@@ -38,6 +51,30 @@ export class CarriersController {
     @Body() body: CreateCarrierServiceDto,
   ): Promise<CarrierTransportServiceDto> {
     return this.carriers.createService(tenantId, carrierId, body);
+  }
+
+  @Post(':id/logo')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiOkResponse({ description: 'Carrier logo uploaded and carrier data updated.' })
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 2 * 1024 * 1024 }, storage: memoryStorage() }))
+  /** Uploads a small carrier logo synchronously and updates the Carrier record in the same request. */
+  uploadLogo(
+    @CurrentTenant() tenantId: string,
+    @Req() request: RequestWithContext,
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ): Promise<CarrierDto> {
+    return this.carriers.uploadLogo(tenantId, requireUserId(request), id, file);
   }
 
   @Patch(':id')

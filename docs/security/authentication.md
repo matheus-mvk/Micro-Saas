@@ -61,6 +61,10 @@ Rotas implementadas:
 - `POST /api/v1/auth/refresh`: rota publica, le refresh token via cookie `HttpOnly`, rotaciona o token e revoga o token anterior.
 - `POST /api/v1/auth/logout`: rota publica por decisao explicita para permitir encerramento mesmo com access token expirado; revoga o refresh token do cookie presente e limpa cookies.
 - `GET /api/v1/auth/me`: rota privada, retorna somente dados seguros do usuario autenticado.
+- `GET /api/v1/auth/oauth/:provider/start`: inicia login, registro ou vinculacao OAuth com state de uso unico.
+- `GET /api/v1/auth/oauth/:provider/callback`: valida callback Google/GitHub e aplica linking, MFA ou bloqueio de aprovacao.
+- `POST /api/v1/auth/oauth/complete-registration`: vincula usuario OAuth `INCOMPLETE` a um tenant existente e muda o status para `PENDING`.
+- `POST /api/v1/auth/mfa/setup`, `/confirm`, `/login/verify`: cobrem ativacao TOTP, codigos de recuperacao e desafio de login.
 
 Decisoes atuais:
 
@@ -70,12 +74,12 @@ Decisoes atuais:
 - `tenantId`, `userId` e `role` sao derivados do token verificado e do usuario ativo no banco.
 - Headers `x-tenant-id`, `x-user-id` e `x-user-role` nao sao mais fonte de identidade.
 - Erro de login e generico para reduzir enumeracao.
+- Usuarios `INCOMPLETE`, `PENDING`, `BLOCKED`, `DISABLED` e `DELETED` nao recebem JWT final.
+- OAuth publico cria cadastro incompleto e exige aprovacao administrativa antes do acesso ao tenant.
+- Usuarios com MFA ativo recebem token temporario de desafio; a sessao final so e emitida apos TOTP ou codigo de recuperacao valido.
 
 Pendencias:
 
-- Rate limiting progressivo.
 - CSRF dedicado para mutacoes baseadas em cookie.
-- MFA/TOTP.
-- OAuth Google/GitHub.
-- Logout global por dispositivo/familia com tela de gerenciamento.
 - Invalidacao automatica de sessoes em troca de senha, papel, status ou MFA.
+- Validacao externa real depende das credenciais OAuth configuradas por ambiente.

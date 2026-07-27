@@ -14,7 +14,8 @@ import { apiRequest } from './http-client';
 export const freightQueryKeys = {
   branches: ['freight', 'branches'] as const,
   carriers: ['freight', 'carriers'] as const,
-  history: ['freight', 'history'] as const,
+  historyRoot: ['freight', 'history'] as const,
+  history: (filters: { endDate?: string; startDate?: string }) => ['freight', 'history', filters] as const,
 };
 
 export function lookupAddress(postalCode: string): Promise<AddressDto> {
@@ -36,8 +37,11 @@ export function createFreightSimulation(input: FreightSimulationCreateDto): Prom
   });
 }
 
-export function getFreightSimulationHistory(): Promise<PaginatedResult<FreightSimulationListItemDto>> {
-  return apiRequest<PaginatedResult<FreightSimulationListItemDto>>('/freight-simulations?perPage=20');
+export function getFreightSimulationHistory(filters: { endDate?: string; startDate?: string } = {}): Promise<PaginatedResult<FreightSimulationListItemDto>> {
+  const params = new URLSearchParams({ perPage: '20' });
+  if (filters.startDate) params.set('startDate', filters.startDate);
+  if (filters.endDate) params.set('endDate', filters.endDate);
+  return apiRequest<PaginatedResult<FreightSimulationListItemDto>>(`/freight-simulations?${params.toString()}`);
 }
 
 export function selectFreightOption(simulationId: string, optionId: string): Promise<FreightSimulationDto> {

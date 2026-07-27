@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Eye, EyeOff, Github } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -8,7 +8,7 @@ import { useState } from 'react';
 import styles from './identity.module.css';
 
 import { Button } from '@/components/ui/button';
-import { authQueryKeys, registerTenant, startOAuth } from '@/services/auth-service';
+import { authQueryKeys, getOAuthStatus, registerTenant, startOAuth } from '@/services/auth-service';
 import { ApiClientError } from '@/services/http-client';
 
 export function RegisterForm() {
@@ -32,23 +32,31 @@ export function RegisterForm() {
     },
   });
   const oauthMutation = useMutation({
-    mutationFn: (provider: 'google' | 'github') => startOAuth(provider, 'register', form.companyName),
+    mutationFn: (provider: 'google' | 'github') => startOAuth(provider, 'register'),
     onSuccess: ({ authorizationUrl }) => {
       window.location.href = authorizationUrl;
     },
   });
+  const oauthStatus = useQuery({ queryKey: ['auth', 'oauth-status'], queryFn: getOAuthStatus, staleTime: 60_000 });
   const canSubmit = form.acceptedTerms && form.acceptedPrivacy && form.password === form.passwordConfirmation && form.password.length >= 10;
+  const googleConfigured = oauthStatus.data?.google.configured === true;
+  const githubConfigured = oauthStatus.data?.github.configured === true;
+  const oauthUnavailable =
+    oauthStatus.isSuccess && (!googleConfigured || !githubConfigured)
+      ? 'Cadastro com OAuth depende das credenciais Google/GitHub configuradas no backend.'
+      : null;
   const error =
     registerMutation.error instanceof ApiClientError
       ? registerMutation.error.response.message
       : registerMutation.error
-        ? 'Nao foi possivel criar a conta.'
+        ? 'Não foi possível criar a conta.'
         : null;
 
   return (
     <div className={styles.stack}>
       {error ? <p className={styles.error} role="alert">{error}</p> : null}
-      {oauthMutation.error ? <p className={styles.error} role="alert">Nao foi possivel iniciar o cadastro com este provedor.</p> : null}
+      {oauthMutation.error ? <p className={styles.error} role="alert">Não foi possível iniciar o cadastro com este provedor.</p> : null}
+      {oauthUnavailable ? <p className={styles.notice}>{oauthUnavailable}</p> : null}
       <form
         className={styles.form}
         onSubmit={(event) => {
@@ -87,17 +95,17 @@ export function RegisterForm() {
         </label>
         <label className={styles.check}>
           <input type="checkbox" checked={form.acceptedPrivacy} onChange={(event) => setForm({ ...form, acceptedPrivacy: event.target.checked })} />
-          Aceito a politica de privacidade.
+          Aceito a política de privacidade.
         </label>
         <Button type="submit" disabled={!canSubmit || registerMutation.isPending}>
           {registerMutation.isPending ? 'Criando conta' : 'Criar conta'}
         </Button>
       </form>
       <div className={styles.actions}>
-        <Button type="button" variant="secondary" disabled={!form.companyName.trim() || oauthMutation.isPending} onClick={() => oauthMutation.mutate('google')}>
+        <Button type="button" variant="secondary" disabled={oauthMutation.isPending || oauthStatus.isPending || !googleConfigured} onClick={() => oauthMutation.mutate('google')}>
           Registrar com Google
         </Button>
-        <Button type="button" variant="secondary" disabled={!form.companyName.trim() || oauthMutation.isPending} onClick={() => oauthMutation.mutate('github')}>
+        <Button type="button" variant="secondary" disabled={oauthMutation.isPending || oauthStatus.isPending || !githubConfigured} onClick={() => oauthMutation.mutate('github')}>
           <Github size={18} /> Registrar com GitHub
         </Button>
       </div>

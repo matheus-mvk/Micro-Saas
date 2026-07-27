@@ -29,6 +29,7 @@ const environmentSchema = z.object({
   ROUTE_DISTANCE_PROVIDER: z.enum(['openroute', 'fallback']).default('fallback'),
   LOGISTICS_INTEGRATION_TIMEOUT_MS: z.coerce.number().int().positive().default(2500),
   IMPORT_STORAGE_DIR: z.string().min(1).default('/tmp/nexora-freight-imports'),
+  IMAGE_STORAGE_DIR: z.string().min(1).default('/tmp/nexora-freight-images'),
   IMPORT_MAX_FILE_SIZE_BYTES: z.coerce.number().int().positive().default(5 * 1024 * 1024),
   IMPORT_MAX_ROWS: z.coerce.number().int().positive().default(5000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),

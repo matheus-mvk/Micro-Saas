@@ -147,4 +147,12 @@ export class ListFreightSimulationsDto extends PaginationDto {
   @IsString()
   @MaxLength(16)
   destinationPostalCode?: string;
+
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
 }

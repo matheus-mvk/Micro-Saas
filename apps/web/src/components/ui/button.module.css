@@ -25,12 +25,13 @@
 }
 
 .secondary {
-  background: var(--color-surface);
-  color: var(--color-ink);
-  border-color: var(--color-border);
+  background: #ecfdf5;
+  color: var(--color-primary-dark, #0f766e);
+  border-color: #99f6e4;
 }
 
 .secondary:hover {
+  background: #d1fae5;
   border-color: var(--color-green);
 }
 

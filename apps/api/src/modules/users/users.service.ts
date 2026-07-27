@@ -10,7 +10,7 @@ import { AuditService } from '../audit/audit.service';
 import { AuthTokenService } from '../auth/auth-token.service';
 import { presentAuthResult, presentUser } from '../auth/auth.presenter';
 import type { AuthRequestMetadata, AuthResult } from '../auth/auth.types';
-import type { AuthUserRecord } from '../auth/auth.repository';
+import type { AuthenticatedUserRecord } from '../auth/auth.repository';
 import { EmailDeliveryService } from '../auth/email-delivery.service';
 import { PasswordService } from '../auth/password.service';
 
@@ -166,7 +166,9 @@ export class UsersService {
       });
       return createdUser;
     });
-    return this.issueSession(user, metadata);
+    if (!user.tenant) throw new BadRequestException('Invitation tenant is invalid.');
+    const activeUser: AuthenticatedUserRecord = { ...user, tenant: user.tenant };
+    return this.issueSession(activeUser, metadata);
   }
 
   async update(tenantId: string, actorId: string, targetUserId: string, dto: UpdateAdminUserDto): Promise<AdminUserDto> {
@@ -199,13 +201,38 @@ export class UsersService {
     return presentAdminUser(user);
   }
 
+  async approve(tenantId: string, actorId: string, targetUserId: string, role: UserRole): Promise<AdminUserDto> {
+    assertRole(role);
+    const current = await this.prisma.user.findFirst({ where: { id: targetUserId, tenantId }, include: { oauthAccounts: true } });
+    if (!current) throw new NotFoundException('User was not found.');
+    if (current.status !== UserStatus.PENDING && current.status !== UserStatus.INVITED) {
+      throw new BadRequestException('Only pending or invited users can be approved.');
+    }
+    const user = await this.prisma.user.update({
+      where: { id: targetUserId },
+      data: { role, status: UserStatus.ACTIVE },
+      include: { oauthAccounts: true },
+    });
+    await this.audit.record({
+      action: AuditAction.USER_UPDATED,
+      actorId,
+      entityId: targetUserId,
+      entityType: 'User',
+      metadata: { operation: 'approve', role },
+      tenantId,
+    });
+    return presentAdminUser(user);
+  }
+
   async revokeSessions(tenantId: string, actorId: string, targetUserId: string): Promise<{ ok: true }> {
+    await this.assertTargetUserExists(tenantId, targetUserId);
     await this.prisma.refreshToken.updateMany({ where: { tenantId, userId: targetUserId, revokedAt: null }, data: { revokedAt: new Date() } });
     await this.audit.record({ action: AuditAction.SESSION_REVOKED, actorId, entityId: targetUserId, entityType: 'User', tenantId });
     return { ok: true };
   }
 
   async resetMfa(tenantId: string, actorId: string, targetUserId: string): Promise<{ ok: true }> {
+    await this.assertTargetUserExists(tenantId, targetUserId);
     await this.prisma.$transaction([
       this.prisma.user.update({ where: { id: targetUserId }, data: { mfaEnabled: false, mfaSecret: null } }),
       this.prisma.mfaRecoveryCode.deleteMany({ where: { tenantId, userId: targetUserId } }),
@@ -215,7 +242,7 @@ export class UsersService {
     return { ok: true };
   }
 
-  private async issueSession(user: AuthUserRecord, metadata: AuthRequestMetadata): Promise<AuthResult & { refreshToken: string }> {
+  private async issueSession(user: AuthenticatedUserRecord, metadata: AuthRequestMetadata): Promise<AuthResult & { refreshToken: string }> {
     const authUser = presentUser(user);
     const { token: accessToken, expiresAt: accessTokenExpiresAt } = this.tokenService.createAccessToken(authUser);
     const refresh = this.tokenService.createRefreshToken();
@@ -243,6 +270,11 @@ export class UsersService {
     if (!demotesAdmin && !disablesAdmin) return;
     const activeAdmins = await this.prisma.user.count({ where: { tenantId, role: UserRole.ADMIN, status: UserStatus.ACTIVE } });
     if (activeAdmins <= 1) throw new ForbiddenException('The last active administrator cannot be removed.');
+  }
+
+  private async assertTargetUserExists(tenantId: string, targetUserId: string): Promise<void> {
+    const user = await this.prisma.user.findFirst({ where: { id: targetUserId, tenantId, status: { not: UserStatus.DELETED } }, select: { id: true } });
+    if (!user) throw new NotFoundException('User was not found.');
   }
 }
 

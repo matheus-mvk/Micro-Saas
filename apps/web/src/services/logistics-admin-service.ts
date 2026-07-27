@@ -10,47 +10,47 @@ export const logisticsAdminQueryKeys = {
 export interface BranchInput {
   name: string;
   code: string;
-  postalCode?: string;
-  street?: string;
-  number?: string;
-  district?: string;
-  city?: string;
-  state?: string;
-  main?: boolean;
-  email?: string;
-  phone?: string;
-  complement?: string;
-  country?: string;
-  active?: boolean;
+  postalCode?: string | undefined;
+  street?: string | undefined;
+  number?: string | undefined;
+  district?: string | undefined;
+  city?: string | undefined;
+  state?: string | undefined;
+  main?: boolean | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
+  complement?: string | undefined;
+  country?: string | undefined;
+  active?: boolean | undefined;
 }
 
 export interface CarrierInput {
   name: string;
-  code?: string;
-  document?: string;
-  legalName?: string;
-  email?: string;
-  phone?: string;
-  contactName?: string;
-  site?: string;
-  notes?: string;
-  stateRegistration?: string;
+  code?: string | undefined;
+  document?: string | undefined;
+  legalName?: string | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
+  contactName?: string | undefined;
+  site?: string | undefined;
+  notes?: string | undefined;
+  stateRegistration?: string | undefined;
 }
 
 export interface ServiceInput {
   code: string;
   name: string;
   modality: string;
-  description?: string;
+  description?: string | undefined;
   defaultDeadlineDays: number;
   cubicFactor: number;
-  minWeightKg?: number;
-  maxWeightKg?: number;
+  minWeightKg?: number | undefined;
+  maxWeightKg?: number | undefined;
   minimumValue: number;
-  maxLengthCm?: number;
-  maxWidthCm?: number;
-  maxHeightCm?: number;
-  status?: 'ACTIVE' | 'INACTIVE';
+  maxLengthCm?: number | undefined;
+  maxWidthCm?: number | undefined;
+  maxHeightCm?: number | undefined;
+  status?: 'ACTIVE' | 'INACTIVE' | undefined;
 }
 
 export function getBranches(search = ''): Promise<PaginatedResult<BranchDto>> {
@@ -81,4 +81,10 @@ export function toggleCarrier(id: string, active: boolean): Promise<CarrierDto> 
 
 export function saveCarrierService(carrierId: string, input: ServiceInput, id?: string): Promise<CarrierTransportServiceDto> {
   return apiRequest<CarrierTransportServiceDto>(id ? `/carriers/${carrierId}/services/${id}` : `/carriers/${carrierId}/services`, { method: id ? 'PATCH' : 'POST', body: JSON.stringify(input) });
+}
+
+export function uploadCarrierLogo(carrierId: string, file: File): Promise<CarrierDto> {
+  const formData = new FormData();
+  formData.set('file', file);
+  return apiRequest<CarrierDto>(`/carriers/${carrierId}/logo`, { method: 'POST', body: formData });
 }

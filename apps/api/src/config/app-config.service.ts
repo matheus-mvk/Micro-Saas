@@ -107,6 +107,10 @@ export class AppConfigService {
     return this.configService.get('IMPORT_STORAGE_DIR', { infer: true });
   }
 
+  get imageStorageDir(): string {
+    return this.configService.get('IMAGE_STORAGE_DIR', { infer: true });
+  }
+
   get importMaxFileSizeBytes(): number {
     return this.configService.get('IMPORT_MAX_FILE_SIZE_BYTES', { infer: true });
   }
