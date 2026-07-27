@@ -2,7 +2,7 @@
 
 import type { AddressDto, FreightPackageInputDto, FreightSimulationDto } from '@logistics/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, MapPin, PackagePlus, RefreshCw, Route, Send, ShipWheel } from 'lucide-react';
+import { CheckCircle2, MapPin, PackagePlus, RefreshCw, Route, Send, ShipWheel, Trash2 } from 'lucide-react';
 import { useMemo, useState, type SyntheticEvent } from 'react';
 
 import styles from './freight-simulation-workspace.module.css';
@@ -112,6 +112,7 @@ export function FreightSimulationWorkspace() {
             <h2 id="simulation-form-title">Nova simulação</h2>
           </div>
           <button
+            className={styles.secondaryButton}
             type="button"
             onClick={() => {
               void Promise.all([customers.refetch(), branches.refetch(), carriers.refetch()]);
@@ -142,139 +143,228 @@ export function FreightSimulationWorkspace() {
         ) : null}
 
         <form className={styles.form} onSubmit={handleSubmit}>
-          <label>
-            Cliente
-            <select
-              value={customerId}
-              onChange={(event) => {
-                setCustomerId(event.target.value);
-              }}
-            >
-              <option value="">Cliente opcional</option>
-              {customers.data?.data.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className={styles.formSection}>
+            <div className={styles.sectionTitle}>
+              <span>1</span>
+              <div>
+                <h3>Dados da carga</h3>
+                <p>Informe cliente e valor para calcular taxas proporcionais.</p>
+              </div>
+            </div>
+            <div className={styles.introGrid}>
+              <label>
+                Cliente
+                <select
+                  value={customerId}
+                  onChange={(event) => {
+                    setCustomerId(event.target.value);
+                  }}
+                >
+                  <option value="">Cliente opcional</option>
+                  {customers.data?.data.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-          <label>
-            Valor da carga
-            <input
-              inputMode="decimal"
-              value={cargoValue}
-              onChange={(event) => {
-                setCargoValue(event.target.value);
-              }}
-              required
-            />
-          </label>
-
-          <AddressFields
-            title="Origem"
-            address={origin}
-            pending={originLookup.isPending}
-            onLookup={() => {
-              originLookup.mutate(origin.postalCode);
-            }}
-            onChange={setOrigin}
-          />
-          <AddressFields
-            title="Destino"
-            address={destination}
-            pending={destinationLookup.isPending}
-            onLookup={() => {
-              destinationLookup.mutate(destination.postalCode);
-            }}
-            onChange={setDestination}
-          />
-
-          <div className={styles.packageHeader}>
-            <h3>Volumes</h3>
-            <button
-              type="button"
-              onClick={() => {
-                setPackages((current) => [
-                  ...current,
-                  { ...initialPackage, description: `Volume ${String(current.length + 1)}` },
-                ]);
-              }}
-            >
-              <PackagePlus size={16} aria-hidden="true" />
-              Adicionar
-            </button>
-          </div>
-          {packages.map((item, index) => (
-            <div className={styles.packageGrid} key={index}>
               <label>
-                <span className={styles.labelHelp} title="Quantidade de volumes iguais nesta linha. Multiplica peso e dimensoes no calculo total.">Quantidade</span>
+                Valor da carga
                 <input
-                  type="number"
-                  min={1}
-                  value={item.quantity}
+                  inputMode="decimal"
+                  value={cargoValue}
                   onChange={(event) => {
-                    updatePackage(setPackages, index, { quantity: Number(event.target.value) });
+                    setCargoValue(event.target.value);
                   }}
-                />
-              </label>
-              <label>
-                <span className={styles.labelHelp} title="Peso real de cada volume em quilogramas. Usado junto com a cubagem para definir o peso cobrado.">Peso (kg)</span>
-                <input
-                  type="number"
-                  min={0.001}
-                  step="0.001"
-                  value={item.weightKg}
-                  onChange={(event) => {
-                    updatePackage(setPackages, index, { weightKg: Number(event.target.value) });
-                  }}
-                />
-              </label>
-              <label>
-                <span className={styles.labelHelp} title="Comprimento do volume em centimetros. Entra no calculo de cubagem do frete.">Comprimento (cm)</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={item.lengthCm}
-                  onChange={(event) => {
-                    updatePackage(setPackages, index, { lengthCm: Number(event.target.value) });
-                  }}
-                />
-              </label>
-              <label>
-                <span className={styles.labelHelp} title="Largura do volume em centimetros. Entra no calculo de cubagem do frete.">Largura (cm)</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={item.widthCm}
-                  onChange={(event) => {
-                    updatePackage(setPackages, index, { widthCm: Number(event.target.value) });
-                  }}
-                />
-              </label>
-              <label>
-                <span className={styles.labelHelp} title="Altura do volume em centimetros. Entra no calculo de cubagem do frete.">Altura (cm)</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={item.heightCm}
-                  onChange={(event) => {
-                    updatePackage(setPackages, index, { heightCm: Number(event.target.value) });
-                  }}
+                  required
                 />
               </label>
             </div>
-          ))}
-
-          <div className={styles.metrics} aria-label="Resumo dos volumes">
-            <span>Peso real: {formatNumber(packageMetrics.realWeight)} kg</span>
-            <span>Volume: {formatNumber(packageMetrics.volume)} m3</span>
           </div>
 
-          <button className={styles.primary} type="submit" disabled={createMutation.isPending || !operationalDataReady}>
-            <Send size={16} aria-hidden="true" />
-            {createMutation.isPending ? 'Calculando' : 'Calcular frete'}
-          </button>
+          <div className={styles.formSection}>
+            <div className={styles.sectionTitle}>
+              <span>2</span>
+              <div>
+                <h3>Rota</h3>
+                <p>Busque por CEP e revise cidade, UF e logradouro antes do cálculo.</p>
+              </div>
+            </div>
+            <div className={styles.routeGrid}>
+              <AddressFields
+                title="Origem"
+                address={origin}
+                pending={originLookup.isPending}
+                onLookup={() => {
+                  originLookup.mutate(origin.postalCode);
+                }}
+                onChange={setOrigin}
+              />
+              <AddressFields
+                title="Destino"
+                address={destination}
+                pending={destinationLookup.isPending}
+                onLookup={() => {
+                  destinationLookup.mutate(destination.postalCode);
+                }}
+                onChange={setDestination}
+              />
+            </div>
+          </div>
+
+          <div className={styles.formSection}>
+            <div className={styles.packageHeader}>
+              <div className={styles.sectionTitle}>
+                <span>3</span>
+                <div>
+                  <h3>Volumes</h3>
+                  <p>Cadastre cada grupo de volumes com mesmas medidas.</p>
+                </div>
+              </div>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => {
+                  setPackages((current) => [
+                    ...current,
+                    { ...initialPackage, description: `Volume ${String(current.length + 1)}` },
+                  ]);
+                }}
+              >
+              <PackagePlus size={16} aria-hidden="true" />
+              Adicionar volume
+            </button>
+          </div>
+            {packages.map((item, index) => (
+              <div className={styles.packageCard} key={index}>
+                <div className={styles.packageCardHeader}>
+                  <strong>Volume {index + 1}</strong>
+                  {packages.length > 1 ? (
+                    <button
+                      className={styles.ghostButton}
+                      type="button"
+                      onClick={() => {
+                        setPackages((current) => current.filter((_, itemIndex) => itemIndex !== index));
+                      }}
+                    >
+                      <Trash2 size={15} aria-hidden="true" />
+                      Remover
+                    </button>
+                  ) : null}
+                </div>
+                <div className={styles.packageGrid}>
+                  <label>
+                    <span
+                      className={styles.labelHelp}
+                      title="Quantidade de volumes iguais nesta linha. Multiplica peso e dimensoes no calculo total."
+                    >
+                      Quantidade
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={item.quantity}
+                      onChange={(event) => {
+                        updatePackage(setPackages, index, { quantity: Number(event.target.value) });
+                      }}
+                    />
+                  </label>
+                  <label>
+                    <span
+                      className={styles.labelHelp}
+                      title="Peso real de cada volume em quilogramas. Usado junto com a cubagem para definir o peso cobrado."
+                    >
+                      Peso (kg)
+                    </span>
+                    <input
+                      type="number"
+                      min={0.001}
+                      step="0.001"
+                      value={item.weightKg}
+                      onChange={(event) => {
+                        updatePackage(setPackages, index, { weightKg: Number(event.target.value) });
+                      }}
+                    />
+                  </label>
+                  <label>
+                    <span
+                      className={styles.labelHelp}
+                      title="Comprimento do volume em centimetros. Entra no calculo de cubagem do frete."
+                    >
+                      Comprimento (cm)
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={item.lengthCm}
+                      onChange={(event) => {
+                        updatePackage(setPackages, index, { lengthCm: Number(event.target.value) });
+                      }}
+                    />
+                  </label>
+                  <label>
+                    <span
+                      className={styles.labelHelp}
+                      title="Largura do volume em centimetros. Entra no calculo de cubagem do frete."
+                    >
+                      Largura (cm)
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={item.widthCm}
+                      onChange={(event) => {
+                        updatePackage(setPackages, index, { widthCm: Number(event.target.value) });
+                      }}
+                    />
+                  </label>
+                  <label>
+                    <span
+                      className={styles.labelHelp}
+                      title="Altura do volume em centimetros. Entra no calculo de cubagem do frete."
+                    >
+                      Altura (cm)
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={item.heightCm}
+                      onChange={(event) => {
+                        updatePackage(setPackages, index, { heightCm: Number(event.target.value) });
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+
+            <div className={styles.metrics} aria-label="Resumo dos volumes">
+              <span>
+                <strong>Peso real</strong>
+                {formatNumber(packageMetrics.realWeight)} kg
+              </span>
+              <span>
+                <strong>Volume</strong>
+                {formatNumber(packageMetrics.volume)} m3
+              </span>
+              <span>
+                <strong>Linhas de volume</strong>
+                {packages.length}
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.submitBar}>
+            <div>
+              <strong>Pronto para comparar?</strong>
+              <span>O cálculo usa regras persistidas no backend e salva o resultado no histórico.</span>
+            </div>
+            <button className={styles.primary} type="submit" disabled={createMutation.isPending || !operationalDataReady}>
+              <Send size={16} aria-hidden="true" />
+              {createMutation.isPending ? 'Calculando' : 'Calcular frete'}
+            </button>
+          </div>
         </form>
       </section>
 
