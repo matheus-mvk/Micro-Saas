@@ -1,0 +1,23 @@
+CREATE TABLE `tracking_events` (
+  `id` CHAR(36) NOT NULL,
+  `tenant_id` CHAR(36) NOT NULL,
+  `shipment_id` CHAR(36) NOT NULL,
+  `created_by_id` CHAR(36) NULL,
+  `event_type` ENUM('STATUS_CHANGED','ETA_UPDATED','LOCATION_UPDATED','NOTE_ADDED','EXCEPTION_REPORTED','CORRECTION_CREATED') NOT NULL,
+  `status` ENUM('CREATED','PICKUP_SCHEDULED','PICKED_UP','IN_TRANSIT','ARRIVED_AT_HUB','OUT_FOR_DELIVERY','DELIVERED','DELIVERY_FAILED','RETURNING','RETURNED','CANCELED') NULL,
+  `description` VARCHAR(500) NULL,
+  `occurred_at` DATETIME(3) NOT NULL,
+  `received_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `location` VARCHAR(180) NULL,
+  `external_code` VARCHAR(120) NULL,
+  `metadata` JSON NULL,
+  `idempotency_key` VARCHAR(180) NULL,
+  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tracking_events_tenant_shipment_idempotency_key_key` (`tenant_id`,`shipment_id`,`idempotency_key`),
+  KEY `tracking_events_tenant_shipment_occurred_idx` (`tenant_id`,`shipment_id`,`occurred_at`),
+  KEY `tracking_events_tenant_type_created_idx` (`tenant_id`,`event_type`,`created_at`),
+  CONSTRAINT `tracking_events_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tracking_events_shipment_fk` FOREIGN KEY (`shipment_id`) REFERENCES `shipments` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tracking_events_user_fk` FOREIGN KEY (`created_by_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

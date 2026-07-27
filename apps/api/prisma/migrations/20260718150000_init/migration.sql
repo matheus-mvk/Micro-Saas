@@ -117,7 +117,7 @@ CREATE TABLE `freight_simulations` (
   `updated_at` DATETIME(3) NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `freight_simulations_tenant_id_status_created_at_idx` (`tenant_id`, `status`, `created_at`),
-  INDEX `freight_simulations_tenant_id_origin_postal_code_destination_postal_code_idx` (`tenant_id`, `origin_postal_code`, `destination_postal_code`),
+  INDEX `freight_simulations_tenant_route_idx` (`tenant_id`, `origin_postal_code`, `destination_postal_code`),
   CONSTRAINT `freight_simulations_tenant_id_fkey` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `freight_simulations_customer_id_fkey` FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `freight_simulations_carrier_id_fkey` FOREIGN KEY (`carrier_id`) REFERENCES `carriers`(`id`) ON DELETE SET NULL ON UPDATE CASCADE

@@ -55,7 +55,7 @@ Banco:
 
 - Tabelas de negocio possuem `tenant_id`.
 - Queries tenant-scoped sempre filtram por `tenant_id`.
-- Row-level security pode ser usada como defesa adicional.
+- MySQL nao oferece Row Level Security nativo como PostgreSQL; isolamento deve ser garantido por aplicacao, constraints, revisao de queries e testes.
 - Constraints unicas incluem `tenant_id` quando representam regras por tenant.
 
 Cache:
@@ -135,3 +135,17 @@ Regras:
 - Jobs processam mensagens com tenant context correto.
 - Canais realtime recusam inscricao sem permissao.
 - Rotas administrativas rejeitam uso sem escopo global.
+
+## Authenticated Tenant Context
+
+O primeiro modulo funcional removeu a dependencia de headers de identidade enviados pelo cliente. O tenant efetivo agora vem do usuario autenticado e ativo:
+
+```text
+access token/cookie
+    -> verified payload
+    -> active user + active tenant lookup
+    -> request.context.tenantId/userId/role
+    -> guards, roles and future repositories
+```
+
+Qualquer modulo futuro que receber `tenantId` no body, query ou header deve tratar esse valor como sugestao nao confiavel ou rejeita-lo quando representar autoridade.

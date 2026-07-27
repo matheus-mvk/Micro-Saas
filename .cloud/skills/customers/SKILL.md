@@ -1,39 +1,39 @@
 # Customers
 
-Status: `PLANNED`
+Status: `IN_DESIGN`
 
-Objective: manage tenant customer records for freight operations.
+Objective: manage tenant customer records and reusable customer addresses.
 
-Scope: create, list, update, deactivate, filters and pagination.
+Scope: create, list, update, deactivate, address management, filters, pagination and imports.
 
-Context: model prepared only.
+Context: current `Customer` model exists; `CustomerAddress` is proposed and not implemented.
 
-Entities: Customer and FreightSimulation.
+Entities: Customer, CustomerAddress, Shipment.
 
-Use Cases: register customer, update customer and deactivate customer.
+Use Cases: register customer, update customer, deactivate customer, manage addresses.
 
-Endpoints: planned `/customers`.
+Endpoints: planned `/customers` and nested `/customers/{id}/addresses`.
 
-Validations: tenant-scoped document uniqueness and contact fields.
+Validations: document normalization, contact fields, address fields and tenant-scoped uniqueness.
 
-Permissions: matrix pending.
+Permissions: ADMIN/MANAGER manage; OPERATOR may read and create if approved.
 
-Tenant: every query includes tenant id.
+Tenant: every query uses tenant context.
 
-Security: no customer data across tenants.
+Security: no customer data across tenants; PII must be masked in logs.
 
-Audit: create and update customer.
+Audit: create, update, deactivate and address changes.
 
-Events: none initially.
+Events: `customer.created`, `customer.updated`.
 
-Integrations: document/address enrichment future.
+Integrations: ViaCEP or BrasilAPI for address enrichment.
 
-Tests: pagination, validation and tenant isolation.
+Tests: pagination, validation, tenant isolation and soft-deactivate behavior.
 
-Errors: standard API error contract.
+Errors: duplicate document, invalid document, not found without cross-tenant leak.
 
-Decisions: minimal initial model.
+Decisions: customer addresses are not shipment history.
 
-Pending: module specification.
+Pending: CPF/CNPJ rules and address requirements.
 
-History: planned during foundation.
+History: refined during domain analysis.

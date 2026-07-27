@@ -1,39 +1,39 @@
 # Carriers
 
-Status: `PLANNED`
+Status: `IN_DESIGN`
 
-Objective: manage tenant carrier records and future quotation rules.
+Objective: manage tenant carrier records and carrier service modes.
 
-Scope: create, list, update, deactivate, filters and pagination.
+Scope: carriers, services, status, contact data, integration mapping and future coverage.
 
-Context: model prepared only.
+Context: current `Carrier` model exists; `CarrierService` is proposed and not implemented.
 
-Entities: Carrier and FreightSimulation.
+Entities: Carrier, CarrierService, FreightRateTable, Shipment.
 
-Use Cases: register carrier, update carrier and deactivate carrier.
+Use Cases: register carrier, update carrier, deactivate carrier, create service, configure service.
 
-Endpoints: planned `/carriers`.
+Endpoints: planned `/carriers` and `/carrier-services`.
 
-Validations: tenant-scoped document and code uniqueness.
+Validations: document/code uniqueness, service code uniqueness and active constraints.
 
-Permissions: matrix pending.
+Permissions: ADMIN/MANAGER manage; OPERATOR read, pending approval.
 
-Tenant: every query includes tenant id.
+Tenant: every carrier and service is tenant-scoped.
 
-Security: carrier rates future must be access controlled.
+Security: rate data and integration credentials must be restricted.
 
-Audit: create and update carrier.
+Audit: carrier/service create and update.
 
-Events: none initially.
+Events: `carrier.updated`, `carrier_service.changed`.
 
-Integrations: quotation service future.
+Integrations: carrier APIs and quotation services later.
 
-Tests: validation and tenant isolation.
+Tests: tenant isolation, duplicate constraints, deactivate behavior.
 
-Errors: standard API error contract.
+Errors: duplicate carrier, inactive service, not found.
 
-Decisions: minimal initial model.
+Decisions: service-specific rules do not belong directly on Carrier.
 
-Pending: module specification.
+Pending: coverage model and integration account model.
 
-History: planned during foundation.
+History: refined during domain analysis.

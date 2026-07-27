@@ -40,6 +40,8 @@ Common causes:
 - Service healthcheck has not completed.
 - Container cannot resolve another service name.
 
+If Windows already has a local MySQL listening on `localhost:3306`, keep it running and use the container database through `localhost:3307` from Windows tools. Do not change the internal container URL `mysql:3306`.
+
 For disposable local data, reset volumes:
 
 ```bash
@@ -83,6 +85,16 @@ For local Docker, the default database URL points to the `mysql` compose service
 
 ```bash
 mysql://logistics:logistics_password@mysql:3306/logistics_saas
+```
+
+This URL is for containers on the Docker network. For DBeaver or another Windows client, use:
+
+```text
+Host: localhost
+Port: 3307
+Database: logistics_saas
+User: logistics
+Password: logistics_password
 ```
 
 In staging and production, avoid manual schema changes. Use the migration process owned by the application.

@@ -1,39 +1,39 @@
 # Imports
 
-Status: `PLANNED`
+Status: `IN_DESIGN`
 
-Objective: import CSV and XLSX data through safe asynchronous jobs.
+Objective: import CSV/XLSX data through safe asynchronous jobs.
 
-Scope: upload, validate, enqueue, process, report progress and audit.
+Scope: upload, validate, preview, enqueue, process rows, report progress, retry and audit.
 
-Context: BullMQ and Redis are prepared; parser is not implemented.
+Context: `ImportJob` and BullMQ queue exist; upload, parser, storage and worker are not implemented.
 
-Entities: ImportJob and future file metadata.
+Entities: ImportJob, ImportJobRow, target module entities.
 
-Use Cases: create import, process rows and view status.
+Use Cases: create import, validate file, process rows, view status, cancel/retry import.
 
 Endpoints: planned `/imports`.
 
-Validations: size, extension, MIME, magic bytes and spreadsheet formula safety.
+Validations: size, extension, MIME, magic bytes, row schema and CSV formula safety.
 
-Permissions: matrix pending.
+Permissions: module-specific import permissions.
 
-Tenant: file ownership and jobs scoped by tenant.
+Tenant: file ownership and job envelope must include trusted tenant.
 
-Security: store outside public root and use random names.
+Security: random filenames, non-public storage, scan future, sanitized error reports.
 
-Audit: import created, failed and completed.
+Audit: import created, started, completed, failed, canceled and retried.
 
-Events: realtime progress via tenant room.
+Events: `import.progress`, `import.completed`, `import.failed`.
 
 Integrations: storage provider future.
 
-Tests: hostile files and tenant isolation.
+Tests: hostile files, tenant isolation, idempotency, partial failures, worker retries.
 
-Errors: safe rejection without leaking parser internals.
+Errors: invalid file, invalid row, unsupported import type, processing failed.
 
-Decisions: BullMQ for async processing.
+Decisions: avoid generic imports without explicit target schema.
 
-Pending: upload specification.
+Pending: choose first import type and storage provider.
 
-History: planned during foundation.
+History: refined during domain analysis.

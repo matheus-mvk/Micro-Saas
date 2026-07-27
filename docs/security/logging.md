@@ -70,3 +70,16 @@ Alertar para:
 - criacao excessiva de tokens de API;
 - uso de integracao fora do padrao;
 - consultas caras ou jobs com custo anormal.
+
+## Auth Logging Policy
+
+Fluxos de autenticacao nao devem registrar:
+
+- senha;
+- access token;
+- refresh token;
+- cookies;
+- segredos OAuth;
+- codigos ou seeds MFA.
+
+Eventos de login, logout e falha sao registrados em `AuditLog` com `requestId`, tenant quando conhecido, actor quando conhecido, resultado e hash de IP quando disponivel. Logs tecnicos continuam sendo usados para observabilidade, mas nao substituem auditoria persistente.

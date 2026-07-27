@@ -1,4 +1,12 @@
 import { Module } from '@nestjs/common';
 
-@Module({})
+import { DatabaseModule } from '../../infrastructure/database/database.module';
+
+import { AuditService } from './audit.service';
+
+@Module({
+  imports: [DatabaseModule],
+  providers: [AuditService],
+  exports: [AuditService],
+})
 export class AuditModule {}

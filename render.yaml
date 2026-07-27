@@ -1,0 +1,68 @@
+services:
+  - type: web
+    name: nexora-freight-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerContext: .
+    dockerfilePath: ./apps/api/Dockerfile
+    healthCheckPath: /api/v1/health/live
+    preDeployCommand: pnpm --filter @logistics/api db:deploy
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PORT
+        value: 3333
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: AUTH_LOGIN_MAX_ATTEMPTS
+        value: 5
+      - key: AUTH_LOGIN_WINDOW_SECONDS
+        value: 900
+      - key: COOKIE_DOMAIN
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: API_PUBLIC_URL
+        sync: false
+      - key: WEB_PUBLIC_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: TOTP_ISSUER
+        value: Nexora Freight
+      - key: ADDRESS_LOOKUP_PROVIDER
+        value: viacep
+      - key: ROUTE_DISTANCE_PROVIDER
+        value: fallback
+      - key: OPENROUTE_API_KEY
+        sync: false
+      - key: LOGISTICS_INTEGRATION_TIMEOUT_MS
+        value: 10000
+      - key: IMPORT_STORAGE_DIR
+        value: /tmp/nexora-freight-imports
+      - key: IMPORT_MAX_FILE_SIZE_BYTES
+        value: 5242880
+      - key: IMPORT_MAX_ROWS
+        value: 5000
+      - key: ALLOW_DEMO_SEED
+        value: "false"
+      - key: LOG_LEVEL
+        value: info

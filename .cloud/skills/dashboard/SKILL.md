@@ -1,39 +1,39 @@
 # Dashboard
 
-Status: `PLANNED`
+Status: `IN_DESIGN`
 
-Objective: provide operational indicators for logistics decisions.
+Objective: provide tenant-scoped operational indicators and drill-downs.
 
-Scope: simulation volume, average cost, frequent routes, carriers, savings, trends and recent operations.
+Scope: simulations, shipments, tracking, imports, carrier performance and cost trends.
 
-Context: placeholder UI exists only.
+Context: web dashboard placeholder exists; no API aggregations exist.
 
-Entities: FreightSimulation, Carrier, Customer, ImportJob and AuditLog.
+Entities: FreightSimulation, FreightSimulationOption, Shipment, TrackingEvent, ImportJob, Insight.
 
-Use Cases: view indicators and drill into operational records.
+Use Cases: view summary, filter by period/status/carrier/customer/route, drill into records.
 
-Endpoints: planned `/dashboard`.
+Endpoints: planned `/dashboard/summary`, `/dashboard/shipments`, `/dashboard/simulations`.
 
-Validations: date ranges and tenant scope.
+Validations: date range, tenant scope, pagination and filter limits.
 
-Permissions: matrix pending.
+Permissions: MANAGER/ADMIN default; OPERATOR limited view pending approval.
 
-Tenant: aggregate only current tenant data.
+Tenant: aggregates only current tenant data.
 
-Security: no cross-tenant aggregate leakage.
+Security: no cross-tenant aggregate leakage or hidden count inference.
 
-Audit: administrative dashboard exports future.
+Audit: dashboard export and admin reports.
 
-Events: realtime dashboard updates future.
+Events: `dashboard.updated`.
 
-Integrations: analytics future.
+Integrations: none for MVP metrics.
 
-Tests: aggregation correctness and access control.
+Tests: aggregation correctness, empty state and authorization.
 
-Errors: empty state when no data exists.
+Errors: invalid date range, partial data, unavailable projection.
 
-Decisions: no fake charts until data contracts exist.
+Decisions: no fake charts; metrics must use real data and show source period.
 
-Pending: metric definitions.
+Pending: KPI definitions and projection strategy.
 
-History: planned during foundation.
+History: refined during domain analysis.

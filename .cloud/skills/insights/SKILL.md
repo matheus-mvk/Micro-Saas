@@ -1,39 +1,39 @@
 # Insights
 
-Status: `PLANNED`
+Status: `IN_DESIGN`
 
-Objective: generate automatic operational insights from existing data.
+Objective: generate explainable operational insights from existing tenant data.
 
-Scope: anomaly detection, cost trend notes, route observations and carrier comparison.
+Scope: rule-based anomalies, cost trends, carrier performance, route risk and dismiss/read lifecycle.
 
-Context: generative AI is not required for initial insights.
+Context: module exists as skeleton only; generative AI is not required.
 
-Entities: FreightSimulation, Carrier, Customer and AuditLog.
+Entities: Insight, Shipment, TrackingEvent, FreightSimulation, ImportJob.
 
-Use Cases: list insights, dismiss insight and track impact.
+Use Cases: compute insights, list insights, mark read, dismiss, open evidence.
 
 Endpoints: planned `/insights`.
 
-Validations: explainability and tenant scope.
+Validations: rule version, tenant scope, evidence existence and validity window.
 
-Permissions: matrix pending.
+Permissions: MANAGER/ADMIN view by default; OPERATOR view actionable operational insights pending approval.
 
-Tenant: insights computed per tenant.
+Tenant: insights computed and stored per tenant.
 
 Security: no sensitive data sent to external AI without approval.
 
-Audit: insight dismissal and administrative changes.
+Audit: dismiss and administrative rule changes.
 
-Events: new insight notifications future.
+Events: `insight.created`, `insight.dismissed`.
 
-Integrations: optional AI or analytics services future.
+Integrations: optional AI later; start deterministic.
 
-Tests: deterministic rules and tenant boundaries.
+Tests: deterministic rules, tenant isolation, stale insight invalidation.
 
-Errors: unavailable insights shown as empty state.
+Errors: no data, stale projection, insight not found.
 
-Decisions: start with non-generative rules.
+Decisions: explainability is mandatory.
 
-Pending: rules specification.
+Pending: approve first insight rules and thresholds.
 
-History: planned during foundation.
+History: refined during domain analysis.

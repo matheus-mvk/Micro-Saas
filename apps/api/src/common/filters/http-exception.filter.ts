@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
@@ -15,6 +16,8 @@ import type { RequestWithContext } from '../types/request-context';
 @Catch()
 @Injectable()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -45,6 +48,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       const statusCode = exception.getStatus();
+      if (statusCode >= 500) {
+        this.logInternalError(exception, request);
+      }
       return {
         statusCode,
         code: codeForStatus(statusCode),
@@ -56,6 +62,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
       };
     }
 
+    this.logInternalError(exception, request);
+
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       code: errorCodes.INTERNAL_ERROR,
@@ -65,6 +73,23 @@ export class HttpExceptionFilter implements ExceptionFilter {
       timestamp,
       path,
     };
+  }
+
+  private logInternalError(exception: unknown, request: RequestWithContext): void {
+    const metadata = {
+      method: request.method,
+      path: request.url,
+      requestId: request.context.requestId,
+      tenantId: request.context.tenantId,
+      userId: request.context.userId,
+    };
+
+    if (exception instanceof Error) {
+      this.logger.error({ ...metadata, message: exception.message, name: exception.name, stack: exception.stack });
+      return;
+    }
+
+    this.logger.error({ ...metadata, exception });
   }
 }
 

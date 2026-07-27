@@ -50,3 +50,32 @@ Registrar, sem segredos:
 - MFA ativado, removido ou usado;
 - criacao, rotacao e revogacao de token de API;
 - troca de tenant ativo.
+
+## Implementacao Atual Do Modulo 1
+
+Status: parcialmente implementado em codigo, pendente de validacao completa de testes/build no ambiente local.
+
+Rotas implementadas:
+
+- `POST /api/v1/auth/login`: rota publica, valida e-mail e senha, exige usuario `ACTIVE` e tenant ativo, gera access token curto e refresh token opaco.
+- `POST /api/v1/auth/refresh`: rota publica, le refresh token via cookie `HttpOnly`, rotaciona o token e revoga o token anterior.
+- `POST /api/v1/auth/logout`: rota publica por decisao explicita para permitir encerramento mesmo com access token expirado; revoga o refresh token do cookie presente e limpa cookies.
+- `GET /api/v1/auth/me`: rota privada, retorna somente dados seguros do usuario autenticado.
+
+Decisoes atuais:
+
+- Senhas usam hash `scrypt` com salt aleatorio via `node:crypto`.
+- Refresh tokens sao opacos, armazenados somente como HMAC SHA-256.
+- Access token usa JWT HS256 de curta duracao e tambem e enviado em cookie `HttpOnly`.
+- `tenantId`, `userId` e `role` sao derivados do token verificado e do usuario ativo no banco.
+- Headers `x-tenant-id`, `x-user-id` e `x-user-role` nao sao mais fonte de identidade.
+- Erro de login e generico para reduzir enumeracao.
+
+Pendencias:
+
+- Rate limiting progressivo.
+- CSRF dedicado para mutacoes baseadas em cookie.
+- MFA/TOTP.
+- OAuth Google/GitHub.
+- Logout global por dispositivo/familia com tela de gerenciamento.
+- Invalidacao automatica de sessoes em troca de senha, papel, status ou MFA.

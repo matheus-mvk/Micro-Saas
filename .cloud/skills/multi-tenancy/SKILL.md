@@ -1,6 +1,6 @@
 # Multi-Tenancy
 
-Status: `IN_DESIGN`
+Status: `IN_PROGRESS`
 
 Objective: enforce tenant isolation across API, data, cache, queues, files and realtime.
 
@@ -34,6 +34,6 @@ Errors: do not reveal resource existence across tenants.
 
 Decisions: ADR 0004.
 
-Pending: repository helpers and integration tests per module.
+Pending: repository helpers, cross-tenant e2e tests per module, cache/queue/socket/storage tenant namespaces.
 
-History: initial strategy.
+History: initial strategy; module 1 derives tenant context from authenticated user instead of request identity headers.

@@ -3,6 +3,7 @@ node_modules
 .next
 dist
 coverage
+.vitest-cache
 playwright-report
 test-results
 .env

@@ -27,6 +27,7 @@ export default function LandingPage() {
           <strong>Nexora Freight</strong>
         </Link>
         <nav aria-label="Navegacao publica">
+          <Link href={'/register' as never}>Criar conta</Link>
           <Link href="/login">Entrar</Link>
         </nav>
       </header>
@@ -40,10 +41,13 @@ export default function LandingPage() {
             para operacoes B2B em crescimento.
           </p>
           <div className={styles.actions}>
-            <Link href="/login">
+            <Link href={'/register' as never}>
               <Button>
-                Entrar na plataforma <ArrowRight size={18} aria-hidden="true" />
+                Comecar agora <ArrowRight size={18} aria-hidden="true" />
               </Button>
+            </Link>
+            <Link href={'/register' as never} className={styles.secondaryLink}>
+              Criar conta
             </Link>
             <Link href="#seguranca" className={styles.secondaryLink}>
               Ver confiabilidade
@@ -116,8 +120,8 @@ export default function LandingPage() {
             politica de logs sem credenciais ou tokens.
           </p>
         </div>
-        <Link href="/login">
-          <Button variant="secondary">Acessar ambiente</Button>
+        <Link href={'/register' as never}>
+          <Button variant="secondary">Criar conta</Button>
         </Link>
       </section>
 

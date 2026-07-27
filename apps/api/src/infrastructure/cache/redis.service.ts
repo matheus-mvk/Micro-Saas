@@ -2,19 +2,14 @@ import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
 
 import { AppConfigService } from '../../config/app-config.service';
+import { buildRedisOptions } from './redis-options';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   readonly client: Redis;
 
   constructor(config: AppConfigService) {
-    this.client = new Redis({
-      host: config.redisHost,
-      port: config.redisPort,
-      password: config.redisPassword,
-      lazyConnect: true,
-      maxRetriesPerRequest: 1,
-    });
+    this.client = new Redis(buildRedisOptions(config));
   }
 
   async ping(): Promise<string> {

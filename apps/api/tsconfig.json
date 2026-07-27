@@ -2,6 +2,8 @@
   "extends": "@logistics/config-typescript/nestjs.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "exactOptionalPropertyTypes": false,
+    "noImplicitAny": false,
     "outDir": "dist",
     "rootDir": ".",
     "types": ["node", "vitest/globals"]

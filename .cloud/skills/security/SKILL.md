@@ -1,6 +1,6 @@
 # Security
 
-Status: `IN_DESIGN`
+Status: `IN_PROGRESS`
 
 Objective: keep the platform secure by default.
 
@@ -34,6 +34,6 @@ Errors: generic for unauthorized access to another tenant.
 
 Decisions: ADR 0005 and security docs.
 
-Pending: implement auth module.
+Pending: rate limiting, CSRF, MFA, OAuth, authorization by resource and full validation in Node 20+.
 
-History: initial security review.
+History: initial security review; module 1 removed trusted identity headers and introduced token/cookie based auth context.

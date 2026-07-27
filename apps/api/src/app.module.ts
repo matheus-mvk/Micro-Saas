@@ -23,6 +23,7 @@ import { HealthModule } from './modules/health/health.module';
 import { ImportsModule } from './modules/imports/imports.module';
 import { InsightsModule } from './modules/insights/insights.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { LogisticsAdminModule } from './modules/logistics-admin/logistics-admin.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -47,6 +48,7 @@ import { UsersModule } from './modules/users/users.module';
     InsightsModule,
     AuditModule,
     NotificationsModule,
+    LogisticsAdminModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: PrivateByDefaultGuard },

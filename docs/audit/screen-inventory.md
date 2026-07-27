@@ -1,0 +1,19 @@
+# Screen Inventory
+
+Date: 2026-07-25
+
+Scope: static inventory of `apps/web/src/app/**` and related layout/components. Runtime visual validation in browser was not completed in this execution.
+
+| Route or screen | Name | Purpose | Allowed profile | Module | Components | Endpoints | Status | Problems | Improvements made | Responsiveness | Accessibility | Tests | Evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `/` | Public landing | Present Nexora Freight and route users to login | Public | Public site | `PlatformPreview`, `Button` | none | `FUNCTIONALLY_INCOMPLETE` | Does not cover all original landing sections and uses illustrative local content | Reviewed; no code change in this pass | Responsive grid exists, not browser-verified | Semantic sections and nav exist | Smoke test exists | `apps/web/src/app/(public)/page.tsx` |
+| `/login` | Login | Authenticate user by email and password | Public | Auth | `LoginForm`, `Button` | `POST /auth/login` | `REVIEWED_AND_OPTIMIZED` | OAuth, MFA and recovery are not implemented | API connection error message added earlier; reviewed in this pass | Responsive form exists | Labels, validation messages and `aria-invalid` exist | Mocked login tests exist | `apps/web/src/features/auth/login-form.tsx` |
+| `/dashboard` | Dashboard | Show tenant-scoped operational counters | ADMIN, MANAGER, OPERATOR authenticated | Dashboard | `AuthenticatedLayout`, `AppShell`, `DashboardSummary`, `EmptyState` | `GET /dashboard/summary`, `GET /auth/me` | `REVIEWED_AND_OPTIMIZED` | Still limited to foundation metrics from existing tables | Replaced hard-coded zero KPIs with backend summary API and loading/error/empty states | Cards collapse to single column | Error state uses `role=alert`; cards have section labels | Typecheck passed; no runtime e2e | `apps/web/src/app/(dashboard)/dashboard/page.tsx` |
+| `(dashboard)/layout` | Authenticated layout | Protect private dashboard routes | Authenticated users | Auth shell | `AuthenticatedLayout` | `GET /auth/me` | `REVIEWED_AND_OPTIMIZED` | No role-specific nav yet | Added clearer session validation error and retry | Text state responsive | Uses alert role for validation failure | Typecheck passed | `apps/web/src/features/auth/authenticated-layout.tsx` |
+| App shell | Admin shell | Sidebar, topbar, logout and tenant identity | Authenticated users | Layout | `AppShell` | `POST /auth/logout` | `REVIEWED_AND_OPTIMIZED` | Non-dashboard nav modules do not exist yet | Disabled unavailable modules, added mobile navigation toggle and active state | Sidebar drawer appears on mobile | Nav labeled; unavailable items are `aria-disabled` | Accessibility smoke exists | `apps/web/src/components/layout/app-shell.tsx` |
+| `loading.tsx` | Global loading | App loading fallback | All | Shell | inline text | none | `REVIEWED_NO_CHANGE_NEEDED` | Minimal visual only | No change | Flexible | Text visible | Not directly tested | `apps/web/src/app/loading.tsx` |
+| `error.tsx` | Route error boundary | Recover from route-level client error | All | Error handling | inline error UI | none | `REVIEWED_WITH_GAPS` | Inline styles and generic message | No change in this pass | Flexible | Button available | Not directly tested | `apps/web/src/app/error.tsx` |
+| `global-error.tsx` | Global error boundary | Recover from unrecoverable app error | All | Error handling | inline error UI | none | `REVIEWED_WITH_GAPS` | Inline styles and generic message | No change in this pass | Flexible | Button available | Not directly tested | `apps/web/src/app/global-error.tsx` |
+| `not-found.tsx` | Not found | 404 page | All | Error handling | inline page | none | `REVIEWED_NO_CHANGE_NEEDED` | Minimal visual | No change | Flexible | Semantic enough for current scope | Not directly tested | `apps/web/src/app/not-found.tsx` |
+
+Totals: 9 screens or screen-level surfaces found, 9 reviewed, 3 modified.

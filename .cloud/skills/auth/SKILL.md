@@ -1,6 +1,6 @@
 # Auth
 
-Status: `PLANNED`
+Status: `IN_PROGRESS`
 
 Objective: implement secure access with email/password, OAuth, MFA and session management.
 
@@ -12,7 +12,7 @@ Entities: User and RefreshToken.
 
 Use Cases: authenticate, refresh token, revoke session, logout global, reset password, manage MFA.
 
-Endpoints: planned `/auth/login`, `/auth/refresh`, `/auth/logout`, OAuth callbacks and MFA endpoints.
+Endpoints: implemented `/auth/login`, `/auth/refresh`, `/auth/logout` and `/auth/me`; OAuth callbacks and MFA endpoints remain planned.
 
 Validations: anti-enumeration, brute-force protection and strong credential handling.
 
@@ -34,6 +34,6 @@ Errors: generic auth failure messages.
 
 Decisions: ADR 0005.
 
-Pending: full specification and implementation.
+Pending: rate limiting, CSRF hardening, OAuth, MFA, logout global, session management UI and successful Vitest/build validation on Node 20+.
 
-History: planned during foundation.
+History: planned during foundation; module 1 implementation added email/password login, refresh rotation, logout, trusted tenant context and audit writes.

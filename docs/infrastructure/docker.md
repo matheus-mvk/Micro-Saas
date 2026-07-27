@@ -34,6 +34,8 @@ Local `docker-compose.yml` should define development dependencies and local appl
 
 Every stateful service should use named volumes. Ports should be documented and should not conflict with common local tooling.
 
+The MySQL container listens on port `3306` inside the Docker network. To avoid conflicts with a local Windows MySQL instance, the host mapping publishes it as `localhost:3307`. Container-to-container connections must continue using `mysql:3306`.
+
 ## Common Commands
 
 ```bash

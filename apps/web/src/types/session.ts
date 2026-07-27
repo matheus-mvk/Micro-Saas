@@ -1,9 +1,3 @@
-import type { UserRole } from '@logistics/shared';
+import type { AuthenticatedUserDto } from '@logistics/shared';
 
-export interface SessionUser {
-  id: string;
-  tenantId: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
+export type SessionUser = AuthenticatedUserDto;

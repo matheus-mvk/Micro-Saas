@@ -92,3 +92,19 @@ Mudancas de contrato devem seguir uma destas estrategias:
 - endpoint ou evento versionado;
 - janela de migracao com suporte paralelo;
 - descontinuacao comunicada e monitorada por uso real.
+
+## Auth Module Atual
+
+O modulo de autenticacao inicial implementa o fluxo Controller -> Service/Use Case -> Repository -> Prisma.
+
+Componentes principais:
+
+- `AuthController`: contratos HTTP de login, refresh, logout e usuario atual.
+- `AuthService`: casos de uso de autenticacao, refresh rotation, logout e consulta da sessao atual.
+- `AuthRepository`: persistencia de usuario e refresh token.
+- `AuthContextService`: resolve contexto autenticado para guards.
+- `AuthTokenService`: JWT de access token, refresh token opaco e hashes de metadados.
+- `PasswordService`: hash e verificacao de senha.
+- `AuditService`: escrita inicial de auditoria.
+
+Controllers nao acessam Prisma diretamente. O schema atual foi mantido sem migrations nesta etapa porque `User`, `RefreshToken` e `AuditLog` ja possuiam os campos necessarios.

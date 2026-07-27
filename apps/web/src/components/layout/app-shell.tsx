@@ -1,55 +1,120 @@
-import { Bell, Building2, ChartNoAxesCombined, FileUp, Menu, Search, Settings, Truck, Users } from 'lucide-react';
-import type { ReactNode } from 'react';
+'use client';
+
+import { useQueryClient } from '@tanstack/react-query';
+import { Building2, Calculator, ChartNoAxesCombined, FileClock, FileUp, Lightbulb, LogOut, Menu, Route, Settings, Truck, Users, Warehouse } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, type ReactNode } from 'react';
 
 import styles from './app-shell.module.css';
 
+import { authQueryKeys, logout } from '@/services/auth-service';
+import type { SessionUser } from '@/types/session';
+
 const navItems = [
-  { label: 'Dashboard', icon: ChartNoAxesCombined },
-  { label: 'Usuarios', icon: Users },
-  { label: 'Clientes', icon: Building2 },
-  { label: 'Transportadoras', icon: Truck },
-  { label: 'Importacoes', icon: FileUp },
-  { label: 'Configuracoes', icon: Settings },
+  { label: 'Dashboard', icon: ChartNoAxesCombined, href: '/dashboard', implemented: true },
+  { label: 'Usuarios', icon: Users, href: '/users', implemented: true, roles: ['ADMIN', 'MANAGER'] },
+  { label: 'Clientes', icon: Building2, href: '/customers', implemented: true },
+  { label: 'Filiais', icon: Warehouse, href: '/branches', implemented: true, roles: ['ADMIN', 'MANAGER'] },
+  { label: 'Simulacao', icon: Calculator, href: '/freight/simulate', implemented: true },
+  { label: 'Historico', icon: FileClock, href: '/freight/history', implemented: true },
+  { label: 'Shipments', icon: Truck, href: '/shipments', implemented: true },
+  { label: 'Transportadoras', icon: Truck, href: '/carriers', implemented: true, roles: ['ADMIN', 'MANAGER', 'OPERATOR'] },
+  { label: 'Importacoes', icon: FileUp, href: '/imports', implemented: true },
+  { label: 'Insights', icon: Lightbulb, href: '/insights', implemented: true },
+  { label: 'Tabelas de frete', icon: Calculator, href: '/freight-tables', implemented: true, roles: ['ADMIN', 'MANAGER'] },
+  { label: 'Auditoria', icon: FileClock, href: '/audit', implemented: true, roles: ['ADMIN', 'MANAGER'] },
+  { label: 'Perfil', icon: Settings, href: '/settings/profile', implemented: true },
 ];
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, user }: { children: ReactNode; user: SessionUser }) {
+  const queryClient = useQueryClient();
+  const pathname = usePathname();
+  const router = useRouter();
+  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
+  const initials = user.name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+  async function handleLogout(): Promise<void> {
+    await logout();
+    queryClient.removeQueries({ queryKey: authQueryKeys.me });
+    router.replace('/login?reason=logout');
+  }
+
   return (
     <div className={styles.shell}>
-      <aside className={styles.sidebar} aria-label="Navegacao administrativa">
+      <aside className={classNames(styles.sidebar, isNavigationOpen ? styles.sidebarOpen : undefined)} aria-label="Navegacao administrativa">
         <div className={styles.brand}>
           <span className={styles.mark}>NF</span>
           <strong>Nexora Freight</strong>
         </div>
         <nav className={styles.nav} aria-label="Navegacao administrativa">
-          {navItems.map((item) => (
-            <a key={item.label} href="/dashboard" className={styles.navItem}>
-              <item.icon aria-hidden="true" size={18} />
-              <span>{item.label}</span>
-            </a>
-          ))}
+          {navItems.filter((item) => !item.roles || item.roles.includes(user.role)).map((item) =>
+            item.implemented && item.href ? (
+              <Link
+                key={item.label}
+                href={item.href as never}
+                className={styles.navItem}
+                aria-current={pathname === item.href ? 'page' : undefined}
+              >
+                <item.icon aria-hidden="true" size={18} />
+                <span>{item.label}</span>
+              </Link>
+            ) : (
+              <button
+                key={item.label}
+                type="button"
+                className={classNames(styles.navItem, styles.navItemDisabled)}
+                aria-disabled="true"
+                title="Modulo ainda nao implementado"
+              >
+                <item.icon aria-hidden="true" size={18} />
+                <span>{item.label}</span>
+              </button>
+            ),
+          )}
         </nav>
       </aside>
       <div className={styles.main}>
         <header className={styles.header}>
-          <button className={styles.iconButton} aria-label="Abrir navegacao">
+          <button
+            className={styles.iconButton}
+            aria-expanded={isNavigationOpen}
+            aria-label="Alternar navegacao"
+            onClick={() => {
+              setIsNavigationOpen((current) => !current);
+            }}
+            type="button"
+          >
             <Menu size={20} aria-hidden="true" />
           </button>
-          <div className={styles.search}>
-            <Search size={18} aria-hidden="true" />
-            <label className="sr-only" htmlFor="global-search">
-              Pesquisa
-            </label>
-            <input id="global-search" placeholder="Pesquisar operacoes" />
+          <div className={styles.headerContext} aria-label="Contexto da operacao">
+            <span>Operacao logistica</span>
           </div>
-          <button className={styles.iconButton} aria-label="Notificacoes">
-            <Bell size={20} aria-hidden="true" />
+          <div className={styles.identity} aria-label="Sessao atual">
+            <div>
+              <strong>{user.name}</strong>
+              <span>{user.tenant.name}</span>
+            </div>
+            <div className={styles.profile} aria-hidden="true">
+              <span>{initials || 'NF'}</span>
+            </div>
+          </div>
+          <button className={styles.iconButton} aria-label="Sair" onClick={() => void handleLogout()} type="button">
+            <LogOut size={20} aria-hidden="true" />
           </button>
-          <div className={styles.profile} aria-label="Perfil">
-            <span>DL</span>
-          </div>
         </header>
         <main className={styles.content}>{children}</main>
       </div>
     </div>
   );
+}
+
+function classNames(...values: (string | undefined)[]): string {
+  return values.filter(Boolean).join(' ');
 }

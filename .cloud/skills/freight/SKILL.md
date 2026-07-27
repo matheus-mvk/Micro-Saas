@@ -1,39 +1,39 @@
 # Freight
 
-Status: `PLANNED`
+Status: `IN_DESIGN`
 
-Objective: simulate and persist freight estimates.
+Objective: simulate freight and compare carrier service options.
 
-Scope: origin, destination, real weight, dimensions, cubic weight, cargo value, distance, carrier, deadline and price.
+Scope: input validation, address normalization, distance estimate, rate evaluation, option persistence and history.
 
-Context: domain fields exist; calculation is not implemented.
+Context: current `FreightSimulation` model exists; calculation and options are not implemented.
 
-Entities: FreightSimulation, Customer and Carrier.
+Entities: FreightSimulation, FreightSimulationOption, Customer, CarrierService, FreightRateTable.
 
-Use Cases: simulate freight, queue simulation and review history.
+Use Cases: create simulation, calculate options, list history, choose option for shipment.
 
-Endpoints: planned `/freight-simulations`.
+Endpoints: planned `/freight-simulations` and option selection endpoint.
 
-Validations: numeric precision, required route data and tenant ownership.
+Validations: route, weight, dimensions, cargo value, active rate table and tenant ownership.
 
-Permissions: matrix pending.
+Permissions: OPERATOR can simulate; MANAGER/ADMIN can view broader history, pending approval.
 
-Tenant: all simulations scoped by tenant.
+Tenant: all simulations and options are tenant-scoped.
 
-Security: do not expose other tenants' rates or history.
+Security: do not expose other tenants' rates or simulations.
 
-Audit: simulation creation and administrative changes.
+Audit: simulation creation and option-to-shipment conversion.
 
-Events: queued simulation progress future.
+Events: `simulation.created`, `simulation.calculated`.
 
-Integrations: ViaCEP/BrasilAPI and route provider candidate.
+Integrations: address API and route/distance API.
 
-Tests: calculation rules after specification.
+Tests: decimal precision, provider fallback, tenant isolation and option selection.
 
-Errors: validation and provider failure mapping.
+Errors: validation, unavailable provider, no eligible carrier service.
 
-Decisions: Decimal for money and measurements.
+Decisions: simulation is separate from shipment.
 
-Pending: business rules.
+Pending: approve pricing model and first carrier service rules.
 
-History: planned during foundation.
+History: moved from PLANNED to IN_DESIGN during domain analysis.

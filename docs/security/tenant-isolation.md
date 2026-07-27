@@ -38,7 +38,7 @@ Todo dado privado deve ser particionado por tenant e toda operacao sobre dado pr
 - Evitar consultas ad hoc que aceitem `tenant_id` opcional.
 - Rejeitar operacoes quando o tenant nao puder ser determinado.
 - Validar que joins, includes, views e procedures preservam o filtro de tenant.
-- Em bancos que suportem, avaliar Row Level Security como camada adicional.
+- Como a fundacao usa MySQL, nao depender de Row Level Security nativo; usar isolamento de aplicacao, constraints e testes automatizados.
 
 ## Anti-padroes proibidos
 
@@ -56,3 +56,18 @@ Todo dado privado deve ser particionado por tenant e toda operacao sobre dado pr
 - Auditoria de acessos internos cross-tenant.
 - Inventario de caches e filas com chaveamento por tenant.
 - Politica de storage documentada para uploads e exportacoes.
+
+## Estado Apos Modulo 1
+
+O contexto autenticado inicial foi implementado:
+
+- `tenantId` e resolvido do usuario autenticado.
+- `userId` e `role` sao derivados de token verificado e usuario ativo no banco.
+- Headers de tenant/usuario/papel vindos do cliente deixaram de ser fonte confiavel.
+- `GET /auth/me` retorna tenant seguro da sessao.
+
+Pendencias:
+
+- Criar testes e2e de acesso cruzado assim que o primeiro CRUD tenant-scoped for implementado.
+- Criar helpers/repositories por modulo que exijam `tenantId` nos filtros.
+- Proteger namespaces de Redis, BullMQ, Socket.IO e storage antes de uso funcional.

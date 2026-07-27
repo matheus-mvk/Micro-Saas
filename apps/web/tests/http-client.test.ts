@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiClientError, apiRequest } from '../src/services/http-client';
+import { ApiClientError, ApiConnectionError, apiRequest } from '../src/services/http-client';
 
 describe('apiRequest', () => {
   afterEach(() => {
@@ -13,11 +13,28 @@ describe('apiRequest', () => {
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({ status: 'ok' }),
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ status: 'ok' })),
       }),
     );
 
     await expect(apiRequest<{ status: string }>('/health/live')).resolves.toEqual({ status: 'ok' });
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:3333/api/v1/health/live',
+      expect.objectContaining({ credentials: 'include' }),
+    );
+  });
+
+  it('supports empty successful responses', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 204,
+      }),
+    );
+
+    await expect(apiRequest<undefined>('/empty')).resolves.toBeUndefined();
   });
 
   it('throws structured API errors', async () => {
@@ -38,5 +55,11 @@ describe('apiRequest', () => {
     );
 
     await expect(apiRequest('/demo')).rejects.toBeInstanceOf(ApiClientError);
+  });
+
+  it('throws connection errors when the API cannot be reached', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('fetch failed')));
+
+    await expect(apiRequest('/auth/login')).rejects.toBeInstanceOf(ApiConnectionError);
   });
 });

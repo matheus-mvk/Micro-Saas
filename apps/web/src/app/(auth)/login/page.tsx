@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 import styles from './page.module.css';
 
@@ -16,9 +17,11 @@ export default function LoginPage() {
         <div>
           <p className={styles.eyebrow}>Acesso administrativo</p>
           <h1>Entrar</h1>
-          <p>Area preparada para autenticacao com senha, OAuth, MFA e sessoes auditaveis.</p>
+          <p>Acesse sua operacao logistica com uma sessao segura e auditavel.</p>
         </div>
-        <LoginForm />
+        <Suspense fallback={null}>
+          <LoginForm />
+        </Suspense>
       </section>
       <section className={styles.preview}>
         <PlatformPreview />

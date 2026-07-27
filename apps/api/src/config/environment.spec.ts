@@ -18,5 +18,7 @@ describe('validateEnvironment', () => {
     });
 
     expect(env.API_PORT).toBe(3333);
+    expect(env.AUTH_LOGIN_MAX_ATTEMPTS).toBe(5);
+    expect(env.AUTH_LOGIN_WINDOW_SECONDS).toBe(900);
   });
 });

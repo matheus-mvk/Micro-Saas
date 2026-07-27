@@ -1,39 +1,39 @@
 # Project Foundation
 
-Status: `IN_PROGRESS`
+Status: `IN_DESIGN`
 
-Objective: maintain the monorepo, scripts, shared contracts, Docker, documentation and validation baseline.
+Objective: maintain the monorepo, scripts, shared contracts, Docker, documentation and validation baseline while product modules are specified.
 
-Scope: root configuration, package orchestration, quality gates and integration review.
+Scope: root configuration, package orchestration, quality gates, API/web bootstrap, Docker, documentation and integration review.
 
-Context: first execution creates foundation only.
+Context: foundation exists; current stage is formal audit and domain planning.
 
-Entities: Tenant, Branch, User, RefreshToken, Customer, Carrier, FreightSimulation, ImportJob, AuditLog.
+Entities: Tenant, Branch, User, RefreshToken, Customer, Carrier, FreightSimulation, ImportJob, AuditLog and proposed future logistics entities.
 
-Use Cases: bootstrap, validate, document and prepare modules.
+Use Cases: bootstrap, validate, document, audit and prepare modules.
 
-Endpoints: public health endpoints only.
+Endpoints: public health endpoints and Swagger in non-production.
 
-Validations: lint, typecheck, tests, build, Prisma generate and Docker checks.
+Validations: lint, typecheck, tests, build, Compose config and non-destructive static checks.
 
-Permissions: no business permissions implemented yet.
+Permissions: no business permission matrix implemented.
 
-Tenant: shared schema with tenant id.
+Tenant: shared schema with tenant id; runtime enforcement still needs auth and repositories.
 
-Security: deny by default in API.
+Security: deny-by-default guard exists, but current auth context is placeholder.
 
-Audit: policies documented; persistence model created.
+Audit: policies and model exist; writer is not implemented.
 
-Events: future import progress and notifications.
+Events: future import progress, tracking, notifications and outbox.
 
-Integrations: future ViaCEP/BrasilAPI and route provider.
+Integrations: future address and route providers.
 
-Tests: foundation tests for health, env, request id, error contract, UI rendering and HTTP client.
+Tests: foundation tests exist; functional isolation tests pending.
 
-Errors: structured API error contract.
+Errors: structured API error contract exists.
 
-Decisions: see ADRs 0001 through 0011.
+Decisions: see ADRs and `docs/audit/open-decisions.md`.
 
-Pending: validate after pnpm and Docker are available.
+Pending: approve first functional module.
 
-History: created during foundation execution.
+History: foundation created and then audited during planning stage.

@@ -9,8 +9,8 @@ O banco transacional principal deve ser MySQL, conforme requisito do desafio, po
 - integridade referencial forte;
 - transacoes ACID;
 - bons recursos de particionamento e indices;
-- suporte a JSONB para metadados controlados;
-- row-level security quando a implementacao optar por reforco no banco.
+- suporte a colunas `JSON` para metadados controlados;
+- operacao ampla em ambientes gerenciados e containers locais.
 
 Armazenamentos complementares podem existir para busca, cache, objetos e series temporais, mas o registro transacional autoritativo permanece no banco principal.
 

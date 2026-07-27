@@ -3,12 +3,12 @@ WORKDIR /app
 RUN corepack enable
 
 FROM base AS deps
-COPY package.json pnpm-workspace.yaml turbo.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY packages/config-typescript/package.json packages/config-typescript/package.json
 COPY packages/config-eslint/package.json packages/config-eslint/package.json
 COPY packages/shared/package.json packages/shared/package.json
 COPY apps/web/package.json apps/web/package.json
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 FROM deps AS builder
 ARG NEXT_PUBLIC_API_URL

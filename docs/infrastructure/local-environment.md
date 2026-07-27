@@ -58,8 +58,10 @@ pnpm dev
 Default local endpoints:
 
 - API: `http://localhost:3333/api/v1`.
-- Swagger in development: `http://localhost:3333/docs`.
+- Swagger in development: `http://localhost:3333/api/docs` or `http://localhost:3333/docs`.
 - Web: `http://localhost:3000`.
+- MySQL inside Docker network: `mysql:3306`.
+- MySQL from Windows or DBeaver: `localhost:3307`.
 
 ## Local Services
 
@@ -77,6 +79,14 @@ Run migrations and seed data only through repository-owned scripts:
 pnpm db:migrate
 pnpm db:seed
 ```
+
+When the API runs as a container, keep `DATABASE_URL` pointing to the internal Docker service:
+
+```bash
+mysql://logistics:logistics_password@mysql:3306/logistics_saas
+```
+
+For external tools on Windows, such as DBeaver, use host `localhost`, port `3307`, database `logistics_saas`, user `logistics`, and password `logistics_password`.
 
 Local seed data should include at least two tenants so cross-tenant access bugs are visible during development.
 

@@ -14,6 +14,7 @@
     "docker:down": "docker compose down",
     "db:generate": "pnpm --filter @logistics/api db:generate",
     "db:migrate": "pnpm --filter @logistics/api db:migrate",
+    "db:deploy": "pnpm --filter @logistics/api db:deploy",
     "db:seed": "pnpm --filter @logistics/api db:seed",
     "db:studio": "pnpm --filter @logistics/api db:studio",
     "prisma:generate": "pnpm db:generate",

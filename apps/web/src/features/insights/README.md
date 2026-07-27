@@ -1,3 +1,3 @@
 # Insights Feature
 
-Status: planned. This feature will own automatic observations generated from tenant data.
+Status: implemented. Owns tenant-scoped deterministic insights, filters, refresh, read and dismiss actions.

@@ -17,6 +17,19 @@ enum UserStatus {
   ACTIVE
   INVITED
   DISABLED
+  DELETED
+}
+
+enum OAuthProvider {
+  GOOGLE
+  GITHUB
+}
+
+enum UserInvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
 }
 
 enum ImportStatus {
@@ -27,16 +40,74 @@ enum ImportStatus {
   CANCELED
 }
 
+enum ImportType {
+  CUSTOMERS
+  CARRIERS
+}
+
+enum ImportRowStatus {
+  SUCCESS
+  ERROR
+  SKIPPED
+}
+
+enum InsightCategory {
+  COST
+  DEADLINE
+  CARRIER
+  ROUTE
+  CUSTOMER
+  OPERATION
+  IMPORT
+  DATA_QUALITY
+}
+
+enum InsightSeverity {
+  INFO
+  OPPORTUNITY
+  WARNING
+  CRITICAL
+}
+
+enum InsightStatus {
+  NEW
+  READ
+  DISMISSED
+  RESOLVED
+}
+
 enum AuditAction {
   LOGIN
   LOGOUT
   AUTH_FAILURE
+  TENANT_REGISTERED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  OAUTH_LINKED
+  OAUTH_UNLINKED
+  MFA_CHANGED
+  USER_INVITED
   USER_CREATED
   USER_UPDATED
   ROLE_CHANGED
+  SESSION_REVOKED
+  ONBOARDING_UPDATED
   CUSTOMER_CHANGED
   CARRIER_CHANGED
+  FREIGHT_PRICING_CHANGED
+  FREIGHT_SIMULATION_CREATED
+  FREIGHT_OPTION_SELECTED
+  SHIPMENT_CREATED
   IMPORT_CREATED
+  IMPORT_STARTED
+  IMPORT_COMPLETED
+  IMPORT_FAILED
+  IMPORT_CANCELED
+  IMPORT_RETRIED
+  IMPORT_FILE_DOWNLOADED
+  INSIGHT_GENERATED
+  INSIGHT_READ
+  INSIGHT_DISMISSED
   ADMIN_OPERATION
 }
 
@@ -45,6 +116,77 @@ enum FreightSimulationStatus {
   QUEUED
   CALCULATED
   FAILED
+}
+
+enum AddressType {
+  MAIN
+  PICKUP
+  DELIVERY
+  BILLING
+  OTHER
+}
+
+enum CarrierServiceStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CoverageStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum FreightRateTableStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum FreightChargeType {
+  FIXED
+  AD_VALOREM
+  GRIS
+  TOLL
+  INSURANCE
+  ADDITION
+  DISCOUNT
+}
+
+enum FreightPriceComponentType {
+  BASE
+  MINIMUM_ADJUSTMENT
+  WEIGHT
+  EXCESS_WEIGHT
+  FIXED
+  AD_VALOREM
+  GRIS
+  TOLL
+  INSURANCE
+  ADDITION
+  DISCOUNT
+  TOTAL
+}
+
+enum ShipmentStatus {
+  CREATED
+  PICKUP_SCHEDULED
+  PICKED_UP
+  IN_TRANSIT
+  ARRIVED_AT_HUB
+  OUT_FOR_DELIVERY
+  DELIVERED
+  DELIVERY_FAILED
+  RETURNING
+  RETURNED
+  CANCELED
+}
+
+enum TrackingEventType {
+  STATUS_CHANGED
+  ETA_UPDATED
+  LOCATION_UPDATED
+  NOTE_ADDED
+  EXCEPTION_REPORTED
+  CORRECTION_CREATED
 }
 
 model Tenant {
@@ -56,32 +198,86 @@ model Tenant {
   createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
 
-  auditLogs           AuditLog[]
-  branches            Branch[]
-  carriers            Carrier[]
-  customers           Customer[]
-  freightSimulations  FreightSimulation[]
-  importJobs          ImportJob[]
-  refreshTokens       RefreshToken[]
-  users               User[]
+  auditLogs                AuditLog[]
+  branches                 Branch[]
+  carriers                 Carrier[]
+  customers                Customer[]
+  freightSimulations       FreightSimulation[]
+  importJobs               ImportJob[]
+  importRowResults         ImportRowResult[]
+  insights                 Insight[]
+  invitations              UserInvitation[]
+  mfaChallenges            MfaChallenge[]
+  mfaRecoveryCodes         MfaRecoveryCode[]
+  oauthAccounts            OAuthAccount[]
+  onboarding               TenantOnboarding?
+  passwordResetTokens      PasswordResetToken[]
+  refreshTokens            RefreshToken[]
+  settings                 TenantSettings?
+  trackingEvents           TrackingEvent[]
+  users                    User[]
 
   @@map("tenants")
 }
 
+model TenantSettings {
+  id                  String   @id @default(uuid()) @db.Char(36)
+  tenantId            String   @unique @map("tenant_id") @db.Char(36)
+  country             String   @default("BR") @db.VarChar(2)
+  currency            String   @default("BRL") @db.VarChar(3)
+  timezone            String   @default("America/Sao_Paulo") @db.VarChar(80)
+  onboardingCompleted Boolean  @default(false) @map("onboarding_completed")
+  createdAt           DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_settings")
+}
+
+model TenantOnboarding {
+  id              String   @id @default(uuid()) @db.Char(36)
+  tenantId        String   @unique @map("tenant_id") @db.Char(36)
+  companyDone     Boolean  @default(false) @map("company_done")
+  branchDone      Boolean  @default(false) @map("branch_done")
+  inviteDone      Boolean  @default(false) @map("invite_done")
+  completed       Boolean  @default(false)
+  currentStep     String   @default("company") @map("current_step") @db.VarChar(40)
+  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_onboarding")
+}
+
 model Branch {
-  id        String   @id @default(uuid()) @db.Char(36)
-  tenantId  String   @map("tenant_id") @db.Char(36)
-  name      String   @db.VarChar(120)
-  code      String   @db.VarChar(40)
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  id          String   @id @default(uuid()) @db.Char(36)
+  tenantId    String   @map("tenant_id") @db.Char(36)
+  name        String   @db.VarChar(120)
+  code        String   @db.VarChar(40)
+  postalCode  String?  @map("postal_code") @db.VarChar(16)
+  street      String?  @db.VarChar(160)
+  number      String?  @db.VarChar(40)
+  complement  String?  @db.VarChar(120)
+  district    String?  @db.VarChar(120)
+  city        String?  @db.VarChar(120)
+  state       String?  @db.VarChar(2)
+  country     String   @default("BR") @db.VarChar(2)
+  contactName String?  @map("contact_name") @db.VarChar(120)
+  email       String?  @db.VarChar(180)
+  phone       String?  @db.VarChar(40)
+  notes       String?  @db.Text
+  main        Boolean  @default(false)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.DateTime(3)
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   users  User[]
 
   @@unique([tenantId, code])
-  @@index([tenantId, active])
+  @@index([tenantId, active, main])
   @@map("branches")
 }
 
@@ -94,34 +290,155 @@ model User {
   passwordHash String?    @map("password_hash") @db.VarChar(255)
   role         UserRole   @default(OPERATOR)
   status       UserStatus @default(INVITED)
+  mfaEnabled   Boolean    @default(false) @map("mfa_enabled")
+  mfaSecret    String?    @map("mfa_secret") @db.VarChar(512)
+  passwordChangeRequired Boolean @default(false) @map("password_change_required")
   lastLoginAt  DateTime?  @map("last_login_at") @db.DateTime(3)
+  deletedAt    DateTime?  @map("deleted_at") @db.DateTime(3)
   createdAt    DateTime   @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt    DateTime   @updatedAt @map("updated_at") @db.DateTime(3)
 
-  auditLogs     AuditLog[]     @relation("AuditActor")
-  branch        Branch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  importJobs    ImportJob[]
-  refreshTokens RefreshToken[]
-  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  auditLogs                 AuditLog[]          @relation("AuditActor")
+  branch                    Branch?             @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  invitationsAccepted       UserInvitation[]     @relation("InvitationAcceptedBy")
+  invitationsSent           UserInvitation[]     @relation("InvitationInvitedBy")
+  importJobs                ImportJob[]
+  mfaChallenges             MfaChallenge[]
+  mfaRecoveryCodes          MfaRecoveryCode[]
+  oauthAccounts             OAuthAccount[]
+  passwordResetTokens       PasswordResetToken[]
+  refreshTokens             RefreshToken[]
+  trackingEvents            TrackingEvent[]
+  tenant                    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, email])
   @@index([tenantId, status])
   @@index([tenantId, role])
+  @@index([tenantId, mfaEnabled])
   @@map("users")
 }
 
+model OAuthAccount {
+  id             String        @id @default(uuid()) @db.Char(36)
+  tenantId       String        @map("tenant_id") @db.Char(36)
+  userId         String        @map("user_id") @db.Char(36)
+  provider       OAuthProvider
+  providerUserId String        @map("provider_user_id") @db.VarChar(160)
+  email          String        @db.VarChar(180)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.DateTime(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@unique([tenantId, userId, provider])
+  @@index([tenantId, email])
+  @@map("oauth_accounts")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Char(36)
+  tenantId  String?   @map("tenant_id") @db.Char(36)
+  userId    String?   @map("user_id") @db.Char(36)
+  emailHash String    @map("email_hash") @db.VarChar(128)
+  tokenHash String    @unique @map("token_hash") @db.VarChar(128)
+  expiresAt DateTime  @map("expires_at") @db.DateTime(3)
+  usedAt    DateTime? @map("used_at") @db.DateTime(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([emailHash, expiresAt])
+  @@index([tenantId, userId, usedAt])
+  @@map("password_reset_tokens")
+}
+
+model UserInvitation {
+  id           String               @id @default(uuid()) @db.Char(36)
+  tenantId     String               @map("tenant_id") @db.Char(36)
+  email        String               @db.VarChar(180)
+  role         UserRole
+  tokenHash    String               @unique @map("token_hash") @db.VarChar(128)
+  status       UserInvitationStatus @default(PENDING)
+  invitedById  String               @map("invited_by_id") @db.Char(36)
+  acceptedById String?              @map("accepted_by_id") @db.Char(36)
+  expiresAt    DateTime             @map("expires_at") @db.DateTime(3)
+  acceptedAt   DateTime?            @map("accepted_at") @db.DateTime(3)
+  revokedAt    DateTime?            @map("revoked_at") @db.DateTime(3)
+  createdAt    DateTime             @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
+
+  acceptedBy User?  @relation("InvitationAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+  invitedBy  User   @relation("InvitationInvitedBy", fields: [invitedById], references: [id], onDelete: Restrict)
+  tenant     Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email, status])
+  @@index([tenantId, status, createdAt])
+  @@map("user_invitations")
+}
+
+model MfaRecoveryCode {
+  id        String    @id @default(uuid()) @db.Char(36)
+  tenantId  String    @map("tenant_id") @db.Char(36)
+  userId    String    @map("user_id") @db.Char(36)
+  codeHash  String    @map("code_hash") @db.VarChar(128)
+  usedAt    DateTime? @map("used_at") @db.DateTime(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId, codeHash])
+  @@index([tenantId, userId, usedAt])
+  @@map("mfa_recovery_codes")
+}
+
+model MfaChallenge {
+  id                 String    @id @default(uuid()) @db.Char(36)
+  tenantId           String    @map("tenant_id") @db.Char(36)
+  userId             String    @map("user_id") @db.Char(36)
+  challengeTokenHash String    @unique @map("challenge_token_hash") @db.VarChar(128)
+  expiresAt          DateTime  @map("expires_at") @db.DateTime(3)
+  usedAt             DateTime? @map("used_at") @db.DateTime(3)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId, expiresAt])
+  @@map("mfa_challenges")
+}
+
+model OAuthState {
+  id        String        @id @default(uuid()) @db.Char(36)
+  stateHash String        @unique @map("state_hash") @db.VarChar(128)
+  provider  OAuthProvider
+  mode      String        @db.VarChar(20)
+  tenantId  String?       @map("tenant_id") @db.Char(36)
+  userId    String?       @map("user_id") @db.Char(36)
+  metadata  Json?
+  expiresAt DateTime      @map("expires_at") @db.DateTime(3)
+  usedAt    DateTime?     @map("used_at") @db.DateTime(3)
+  createdAt DateTime      @default(now()) @map("created_at") @db.DateTime(3)
+
+  @@index([provider, mode, expiresAt])
+  @@map("oauth_states")
+}
+
 model RefreshToken {
-  id         String    @id @default(uuid()) @db.Char(36)
-  tenantId   String    @map("tenant_id") @db.Char(36)
-  userId     String    @map("user_id") @db.Char(36)
-  tokenHash  String    @map("token_hash") @db.VarChar(255)
-  familyId   String    @map("family_id") @db.Char(36)
-  userAgent  String?   @map("user_agent") @db.VarChar(255)
-  ipHash     String?   @map("ip_hash") @db.VarChar(128)
-  expiresAt  DateTime  @map("expires_at") @db.DateTime(3)
-  revokedAt  DateTime? @map("revoked_at") @db.DateTime(3)
-  createdAt  DateTime  @default(now()) @map("created_at") @db.DateTime(3)
-  rotatedAt  DateTime? @map("rotated_at") @db.DateTime(3)
+  id        String    @id @default(uuid()) @db.Char(36)
+  tenantId  String    @map("tenant_id") @db.Char(36)
+  userId    String    @map("user_id") @db.Char(36)
+  tokenHash String    @map("token_hash") @db.VarChar(255)
+  familyId  String    @map("family_id") @db.Char(36)
+  userAgent String?   @map("user_agent") @db.VarChar(255)
+  ipHash    String?   @map("ip_hash") @db.VarChar(128)
+  expiresAt DateTime  @map("expires_at") @db.DateTime(3)
+  revokedAt DateTime? @map("revoked_at") @db.DateTime(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  rotatedAt DateTime? @map("rotated_at") @db.DateTime(3)
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -143,25 +460,61 @@ model Customer {
   updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
 
   freightSimulations FreightSimulation[]
-  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, document])
   @@index([tenantId, active, name])
   @@map("customers")
 }
 
+model CustomerAddress {
+  id         String      @id @default(uuid()) @db.Char(36)
+  tenantId   String      @map("tenant_id") @db.Char(36)
+  customerId String      @map("customer_id") @db.Char(36)
+  type       AddressType @default(OTHER)
+  label      String?     @db.VarChar(80)
+  postalCode String      @map("postal_code") @db.VarChar(16)
+  street     String      @db.VarChar(160)
+  number     String?     @db.VarChar(40)
+  complement String?     @db.VarChar(120)
+  district   String?     @db.VarChar(120)
+  city       String      @db.VarChar(120)
+  state      String      @db.VarChar(2)
+  country    String      @default("BR") @db.VarChar(2)
+  latitude   Decimal?    @db.Decimal(10, 7)
+  longitude  Decimal?    @db.Decimal(10, 7)
+  main       Boolean     @default(false)
+  pickup     Boolean     @default(false)
+  delivery   Boolean     @default(false)
+  active     Boolean     @default(true)
+  createdAt  DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt  DateTime    @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@index([tenantId, customerId, active])
+  @@index([tenantId, postalCode])
+  @@map("customer_addresses")
+}
+
 model Carrier {
-  id        String   @id @default(uuid()) @db.Char(36)
-  tenantId  String   @map("tenant_id") @db.Char(36)
-  name      String   @db.VarChar(160)
-  document  String?  @db.VarChar(32)
-  code      String?  @db.VarChar(40)
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  id          String   @id @default(uuid()) @db.Char(36)
+  tenantId    String   @map("tenant_id") @db.Char(36)
+  name        String   @db.VarChar(160)
+  document    String?  @db.VarChar(32)
+  stateRegistration String? @map("state_registration") @db.VarChar(40)
+  code        String?  @db.VarChar(40)
+  legalName   String?  @map("legal_name") @db.VarChar(180)
+  email       String?  @db.VarChar(180)
+  phone       String?  @db.VarChar(40)
+  contactName String?  @map("contact_name") @db.VarChar(120)
+  site        String?  @db.VarChar(180)
+  notes       String?  @db.Text
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.DateTime(3)
 
   freightSimulations FreightSimulation[]
-  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  services           CarrierService[]
+  tenant             Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, document])
   @@unique([tenantId, code])
@@ -169,69 +522,481 @@ model Carrier {
   @@map("carriers")
 }
 
-model FreightSimulation {
-  id                  String                  @id @default(uuid()) @db.Char(36)
-  tenantId            String                  @map("tenant_id") @db.Char(36)
-  customerId          String?                 @map("customer_id") @db.Char(36)
-  carrierId           String?                 @map("carrier_id") @db.Char(36)
-  originPostalCode    String                  @map("origin_postal_code") @db.VarChar(16)
-  destinationPostalCode String                @map("destination_postal_code") @db.VarChar(16)
-  realWeightKg        Decimal                 @map("real_weight_kg") @db.Decimal(10, 3)
-  cubicWeightKg       Decimal?                @map("cubic_weight_kg") @db.Decimal(10, 3)
-  lengthCm            Decimal?                @map("length_cm") @db.Decimal(10, 2)
-  widthCm             Decimal?                @map("width_cm") @db.Decimal(10, 2)
-  heightCm            Decimal?                @map("height_cm") @db.Decimal(10, 2)
-  cargoValue          Decimal?                @map("cargo_value") @db.Decimal(12, 2)
-  distanceKm          Decimal?                @map("distance_km") @db.Decimal(10, 2)
-  estimatedPrice      Decimal?                @map("estimated_price") @db.Decimal(12, 2)
-  estimatedDeadlineDays Int?                  @map("estimated_deadline_days")
-  status              FreightSimulationStatus @default(DRAFT)
-  metadata            Json?
-  createdAt           DateTime                @default(now()) @map("created_at") @db.DateTime(3)
-  updatedAt           DateTime                @updatedAt @map("updated_at") @db.DateTime(3)
+model CarrierService {
+  id                  String               @id @default(uuid()) @db.Char(36)
+  tenantId            String               @map("tenant_id") @db.Char(36)
+  carrierId           String               @map("carrier_id") @db.Char(36)
+  code                String               @db.VarChar(40)
+  name                String               @db.VarChar(140)
+  modality            String               @db.VarChar(60)
+  description         String?              @db.VarChar(255)
+  defaultDeadlineDays Int                  @map("default_deadline_days")
+  cubicFactor         Decimal              @map("cubic_factor") @db.Decimal(10, 3)
+  minWeightKg         Decimal?             @map("min_weight_kg") @db.Decimal(10, 3)
+  maxWeightKg         Decimal?             @map("max_weight_kg") @db.Decimal(10, 3)
+  maxLengthCm         Decimal?             @map("max_length_cm") @db.Decimal(10, 2)
+  maxWidthCm          Decimal?             @map("max_width_cm") @db.Decimal(10, 2)
+  maxHeightCm         Decimal?             @map("max_height_cm") @db.Decimal(10, 2)
+  minimumValue        Decimal              @map("minimum_value") @db.Decimal(12, 2)
+  status              CarrierServiceStatus @default(ACTIVE)
+  createdAt           DateTime             @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt           DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
 
-  carrier  Carrier? @relation(fields: [carrierId], references: [id], onDelete: SetNull)
-  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier           Carrier                   @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  coverages         CarrierCoverage[]
+  freightRateTables FreightRateTable[]
+
+  @@unique([tenantId, carrierId, code])
+  @@index([tenantId, status, carrierId])
+  @@map("carrier_services")
+}
+
+model CarrierCoverage {
+  id                         String         @id @default(uuid()) @db.Char(36)
+  tenantId                   String         @map("tenant_id") @db.Char(36)
+  carrierServiceId           String         @map("carrier_service_id") @db.Char(36)
+  originState                String?        @map("origin_state") @db.VarChar(2)
+  destinationState           String?        @map("destination_state") @db.VarChar(2)
+  originPostalCodeStart      String?        @map("origin_postal_code_start") @db.VarChar(16)
+  originPostalCodeEnd        String?        @map("origin_postal_code_end") @db.VarChar(16)
+  destinationPostalCodeStart String?        @map("destination_postal_code_start") @db.VarChar(16)
+  destinationPostalCodeEnd   String?        @map("destination_postal_code_end") @db.VarChar(16)
+  status                     CoverageStatus @default(ACTIVE)
+  createdAt                  DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt                  DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+
+  carrierService CarrierService @relation(fields: [carrierServiceId], references: [id], onDelete: Cascade)
+  rateTableLinks FreightRateTableCoverage[]
+
+  @@index([tenantId, carrierServiceId, status])
+  @@index([tenantId, originState, destinationState, status])
+  @@map("carrier_coverages")
+}
+
+model FreightRateTable {
+  id               String                 @id @default(uuid()) @db.Char(36)
+  tenantId         String                 @map("tenant_id") @db.Char(36)
+  carrierServiceId String                 @map("carrier_service_id") @db.Char(36)
+  name             String                 @db.VarChar(140)
+  version          Int                    @default(1)
+  currency         String                 @default("BRL") @db.VarChar(3)
+  validFrom        DateTime               @map("valid_from") @db.DateTime(3)
+  validTo          DateTime?              @map("valid_to") @db.DateTime(3)
+  notes            String?                @db.Text
+  previousVersionId String?               @map("previous_version_id") @db.Char(36)
+  status           FreightRateTableStatus @default(ACTIVE)
+  createdAt        DateTime               @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime               @updatedAt @map("updated_at") @db.DateTime(3)
+
+  carrierService CarrierService            @relation(fields: [carrierServiceId], references: [id], onDelete: Cascade)
+  ranges         FreightRateRange[]
+  charges        FreightAdditionalCharge[]
+  coverages      FreightRateTableCoverage[]
+  previousVersion FreightRateTable? @relation("RateTableVersions", fields: [previousVersionId], references: [id], onDelete: SetNull)
+  nextVersions   FreightRateTable[] @relation("RateTableVersions")
+
+  @@unique([tenantId, carrierServiceId, version])
+  @@index([tenantId, previousVersionId])
+  @@index([tenantId, carrierServiceId, status, validFrom, validTo], map: "freight_rate_tables_lookup_idx")
+  @@map("freight_rate_tables")
+}
+
+model FreightRateRange {
+  id               String   @id @default(uuid()) @db.Char(36)
+  tenantId         String   @map("tenant_id") @db.Char(36)
+  rateTableId      String   @map("rate_table_id") @db.Char(36)
+  minWeightKg      Decimal  @map("min_weight_kg") @db.Decimal(10, 3)
+  maxWeightKg      Decimal  @map("max_weight_kg") @db.Decimal(10, 3)
+  basePrice        Decimal  @map("base_price") @db.Decimal(12, 2)
+  pricePerKg       Decimal  @map("price_per_kg") @db.Decimal(12, 4)
+  excessPricePerKg Decimal? @map("excess_price_per_kg") @db.Decimal(12, 4)
+  deadlineDays     Int      @map("deadline_days")
+  priority         Int      @default(0)
+  createdAt        DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  rateTable FreightRateTable          @relation(fields: [rateTableId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, rateTableId, minWeightKg, maxWeightKg], map: "freight_rate_ranges_lookup_idx")
+  @@map("freight_rate_ranges")
+}
+
+model FreightRateTableCoverage {
+  id          String @id @default(uuid()) @db.Char(36)
+  tenantId    String @map("tenant_id") @db.Char(36)
+  rateTableId String @map("rate_table_id") @db.Char(36)
+  coverageId  String @map("coverage_id") @db.Char(36)
+  rateTable   FreightRateTable @relation(fields: [rateTableId], references: [id], onDelete: Cascade)
+  coverage    CarrierCoverage @relation(fields: [coverageId], references: [id], onDelete: Cascade)
+  @@unique([tenantId, rateTableId, coverageId])
+  @@index([tenantId, coverageId])
+  @@map("freight_rate_table_coverages")
+}
+
+model FreightAdditionalCharge {
+  id          String            @id @default(uuid()) @db.Char(36)
+  tenantId    String            @map("tenant_id") @db.Char(36)
+  rateTableId String            @map("rate_table_id") @db.Char(36)
+  type        FreightChargeType
+  name        String            @db.VarChar(120)
+  fixedAmount Decimal?          @map("fixed_amount") @db.Decimal(12, 2)
+  percentage  Decimal?          @db.Decimal(9, 6)
+  active      Boolean           @default(true)
+  createdAt   DateTime          @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt   DateTime          @updatedAt @map("updated_at") @db.DateTime(3)
+
+  rateTable FreightRateTable @relation(fields: [rateTableId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, rateTableId, active, type], map: "freight_charges_lookup_idx")
+  @@map("freight_additional_charges")
+}
+
+model FreightSimulation {
+  id                    String                  @id @default(uuid()) @db.Char(36)
+  tenantId              String                  @map("tenant_id") @db.Char(36)
+  branchId              String?                 @map("branch_id") @db.Char(36)
+  customerId            String?                 @map("customer_id") @db.Char(36)
+  carrierId             String?                 @map("carrier_id") @db.Char(36)
+  createdById           String?                 @map("created_by_id") @db.Char(36)
+  originPostalCode      String                  @map("origin_postal_code") @db.VarChar(16)
+  destinationPostalCode String                  @map("destination_postal_code") @db.VarChar(16)
+  realWeightKg          Decimal                 @map("real_weight_kg") @db.Decimal(10, 3)
+  cubicWeightKg         Decimal?                @map("cubic_weight_kg") @db.Decimal(10, 3)
+  chargeableWeightKg    Decimal?                @map("chargeable_weight_kg") @db.Decimal(10, 3)
+  totalVolumeM3         Decimal?                @map("total_volume_m3") @db.Decimal(12, 6)
+  lengthCm              Decimal?                @map("length_cm") @db.Decimal(10, 2)
+  widthCm               Decimal?                @map("width_cm") @db.Decimal(10, 2)
+  heightCm              Decimal?                @map("height_cm") @db.Decimal(10, 2)
+  cargoValue            Decimal?                @map("cargo_value") @db.Decimal(12, 2)
+  distanceKm            Decimal?                @map("distance_km") @db.Decimal(10, 2)
+  desiredShipDate       DateTime?               @map("desired_ship_date") @db.DateTime(3)
+  estimatedPrice        Decimal?                @map("estimated_price") @db.Decimal(12, 2)
+  estimatedDeadlineDays Int?                    @map("estimated_deadline_days")
+  status                FreightSimulationStatus @default(DRAFT)
+  metadata              Json?
+  createdAt             DateTime                @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime                @updatedAt @map("updated_at") @db.DateTime(3)
+
+  addresses FreightSimulationAddress[]
+  carrier   Carrier?                   @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  customer  Customer?                  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  options   FreightSimulationOption[]
+  packages  FreightSimulationPackage[]
+  tenant    Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, status, createdAt])
-  @@index([tenantId, originPostalCode, destinationPostalCode])
+  @@index([tenantId, customerId, createdAt])
+  @@index([tenantId, createdById, createdAt])
+  @@index([tenantId, branchId, createdAt], map: "freight_simulations_branch_period_idx")
+  @@index([tenantId, carrierId, createdAt], map: "freight_simulations_carrier_period_idx")
+  @@index([tenantId, originPostalCode, destinationPostalCode], map: "freight_simulations_tenant_route_idx")
   @@map("freight_simulations")
 }
 
+model FreightSimulationAddress {
+  id           String      @id @default(uuid()) @db.Char(36)
+  tenantId     String      @map("tenant_id") @db.Char(36)
+  simulationId String      @map("simulation_id") @db.Char(36)
+  type         AddressType
+  postalCode   String      @map("postal_code") @db.VarChar(16)
+  street       String      @db.VarChar(160)
+  number       String?     @db.VarChar(40)
+  complement   String?     @db.VarChar(120)
+  district     String?     @db.VarChar(120)
+  city         String      @db.VarChar(120)
+  state        String      @db.VarChar(2)
+  country      String      @default("BR") @db.VarChar(2)
+  latitude     Decimal?    @db.Decimal(10, 7)
+  longitude    Decimal?    @db.Decimal(10, 7)
+  createdAt    DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+
+  simulation FreightSimulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, simulationId, type])
+  @@map("freight_simulation_addresses")
+}
+
+model FreightSimulationPackage {
+  id           String   @id @default(uuid()) @db.Char(36)
+  tenantId     String   @map("tenant_id") @db.Char(36)
+  simulationId String   @map("simulation_id") @db.Char(36)
+  quantity     Int
+  weightKg     Decimal  @map("weight_kg") @db.Decimal(10, 3)
+  lengthCm     Decimal  @map("length_cm") @db.Decimal(10, 2)
+  widthCm      Decimal  @map("width_cm") @db.Decimal(10, 2)
+  heightCm     Decimal  @map("height_cm") @db.Decimal(10, 2)
+  volumeM3     Decimal  @map("volume_m3") @db.Decimal(12, 6)
+  description  String?  @db.VarChar(160)
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  simulation FreightSimulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, simulationId])
+  @@map("freight_simulation_packages")
+}
+
+model FreightSimulationOption {
+  id                  String    @id @default(uuid()) @db.Char(36)
+  tenantId            String    @map("tenant_id") @db.Char(36)
+  simulationId        String    @map("simulation_id") @db.Char(36)
+  carrierId           String    @map("carrier_id") @db.Char(36)
+  carrierServiceId    String    @map("carrier_service_id") @db.Char(36)
+  rateTableId         String    @map("rate_table_id") @db.Char(36)
+  rateRangeId         String    @map("rate_range_id") @db.Char(36)
+  carrierName         String    @map("carrier_name") @db.VarChar(160)
+  serviceName         String    @map("service_name") @db.VarChar(140)
+  serviceCode         String    @map("service_code") @db.VarChar(40)
+  rateTableVersion    Int       @map("rate_table_version")
+  currency            String    @default("BRL") @db.VarChar(3)
+  realWeightKg        Decimal   @map("real_weight_kg") @db.Decimal(10, 3)
+  cubicWeightKg       Decimal   @map("cubic_weight_kg") @db.Decimal(10, 3)
+  chargeableWeightKg  Decimal   @map("chargeable_weight_kg") @db.Decimal(10, 3)
+  distanceKm          Decimal?  @map("distance_km") @db.Decimal(10, 2)
+  deadlineDays        Int       @map("deadline_days")
+  estimatedDeliveryAt DateTime  @map("estimated_delivery_at") @db.DateTime(3)
+  totalPrice          Decimal   @map("total_price") @db.Decimal(12, 2)
+  cheapest            Boolean   @default(false)
+  fastest             Boolean   @default(false)
+  selected            Boolean   @default(false)
+  selectedAt          DateTime? @map("selected_at") @db.DateTime(3)
+  unavailableReason   String?   @map("unavailable_reason") @db.VarChar(255)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+
+  priceComponents FreightSimulationPriceComponent[]
+  simulation      FreightSimulation                 @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, simulationId, totalPrice])
+  @@index([tenantId, carrierId, carrierServiceId, createdAt], map: "freight_options_carrier_service_idx")
+  @@index([tenantId, selected, createdAt], map: "freight_options_selected_period_idx")
+  @@map("freight_simulation_options")
+}
+
+model FreightSimulationPriceComponent {
+  id        String                    @id @default(uuid()) @db.Char(36)
+  tenantId  String                    @map("tenant_id") @db.Char(36)
+  optionId  String                    @map("option_id") @db.Char(36)
+  type      FreightPriceComponentType
+  label     String                    @db.VarChar(120)
+  amount    Decimal                   @db.Decimal(12, 2)
+  sortOrder Int                       @default(0) @map("sort_order")
+  createdAt DateTime                  @default(now()) @map("created_at") @db.DateTime(3)
+
+  option FreightSimulationOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, optionId, sortOrder])
+  @@map("freight_simulation_price_components")
+}
+
+model Shipment {
+  id                  String         @id @default(uuid()) @db.Char(36)
+  tenantId            String         @map("tenant_id") @db.Char(36)
+  simulationId        String         @unique @map("simulation_id") @db.Char(36)
+  selectedOptionId    String         @unique @map("selected_option_id") @db.Char(36)
+  customerId          String?        @map("customer_id") @db.Char(36)
+  branchId            String?        @map("branch_id") @db.Char(36)
+  carrierId           String         @map("carrier_id") @db.Char(36)
+  carrierServiceId    String         @map("carrier_service_id") @db.Char(36)
+  createdById         String?        @map("created_by_id") @db.Char(36)
+  trackingCode        String         @map("tracking_code") @db.VarChar(80)
+  externalReference   String?        @map("external_reference") @db.VarChar(80)
+  realWeightKg        Decimal        @map("real_weight_kg") @db.Decimal(10, 3)
+  chargeableWeightKg  Decimal        @map("chargeable_weight_kg") @db.Decimal(10, 3)
+  cargoValue          Decimal?       @map("cargo_value") @db.Decimal(12, 2)
+  freightValue        Decimal        @map("freight_value") @db.Decimal(12, 2)
+  estimatedDeliveryAt DateTime       @map("estimated_delivery_at") @db.DateTime(3)
+  deliveredAt         DateTime?      @map("delivered_at") @db.DateTime(3)
+  status              ShipmentStatus @default(CREATED)
+  createdAt           DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt           DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+
+  addresses ShipmentAddress[]
+  packages  ShipmentPackage[]
+  trackingEvents TrackingEvent[]
+
+  @@unique([tenantId, trackingCode])
+  @@index([tenantId, status, estimatedDeliveryAt])
+  @@index([tenantId, customerId, createdAt])
+  @@index([tenantId, carrierId, createdAt])
+  @@index([tenantId, branchId, createdAt], map: "shipments_branch_period_idx")
+  @@index([tenantId, carrierServiceId, createdAt], map: "shipments_service_period_idx")
+  @@map("shipments")
+}
+
+model TrackingEvent {
+  id           String            @id @default(uuid()) @db.Char(36)
+  tenantId     String            @map("tenant_id") @db.Char(36)
+  shipmentId   String            @map("shipment_id") @db.Char(36)
+  createdById  String?           @map("created_by_id") @db.Char(36)
+  eventType    TrackingEventType @map("event_type")
+  status       ShipmentStatus?
+  description  String?           @db.VarChar(500)
+  occurredAt   DateTime          @map("occurred_at") @db.DateTime(3)
+  receivedAt   DateTime          @default(now()) @map("received_at") @db.DateTime(3)
+  location     String?           @db.VarChar(180)
+  externalCode String?           @map("external_code") @db.VarChar(120)
+  metadata     Json?
+  idempotencyKey String?         @map("idempotency_key") @db.VarChar(180)
+  createdAt    DateTime          @default(now()) @map("created_at") @db.DateTime(3)
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, shipmentId, idempotencyKey])
+  @@index([tenantId, shipmentId, occurredAt])
+  @@index([tenantId, eventType, createdAt])
+  @@map("tracking_events")
+}
+
+model ShipmentAddress {
+  id         String      @id @default(uuid()) @db.Char(36)
+  tenantId   String      @map("tenant_id") @db.Char(36)
+  shipmentId String      @map("shipment_id") @db.Char(36)
+  type       AddressType
+  postalCode String      @map("postal_code") @db.VarChar(16)
+  street     String      @db.VarChar(160)
+  number     String?     @db.VarChar(40)
+  complement String?     @db.VarChar(120)
+  district   String?     @db.VarChar(120)
+  city       String      @db.VarChar(120)
+  state      String      @db.VarChar(2)
+  country    String      @default("BR") @db.VarChar(2)
+  createdAt  DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, shipmentId, type])
+  @@map("shipment_addresses")
+}
+
+model ShipmentPackage {
+  id                  String   @id @default(uuid()) @db.Char(36)
+  tenantId            String   @map("tenant_id") @db.Char(36)
+  shipmentId          String   @map("shipment_id") @db.Char(36)
+  simulationPackageId String?  @map("simulation_package_id") @db.Char(36)
+  quantity            Int
+  weightKg            Decimal  @map("weight_kg") @db.Decimal(10, 3)
+  lengthCm            Decimal  @map("length_cm") @db.Decimal(10, 2)
+  widthCm             Decimal  @map("width_cm") @db.Decimal(10, 2)
+  heightCm            Decimal  @map("height_cm") @db.Decimal(10, 2)
+  volumeM3            Decimal  @map("volume_m3") @db.Decimal(12, 6)
+  description         String?  @db.VarChar(160)
+  createdAt           DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, shipmentId])
+  @@map("shipment_packages")
+}
+
 model ImportJob {
-  id          String       @id @default(uuid()) @db.Char(36)
-  tenantId    String       @map("tenant_id") @db.Char(36)
-  createdById String       @map("created_by_id") @db.Char(36)
-  filename    String       @db.VarChar(255)
-  fileType    String       @map("file_type") @db.VarChar(16)
-  status      ImportStatus @default(PENDING)
-  totalRows   Int          @default(0) @map("total_rows")
-  processedRows Int        @default(0) @map("processed_rows")
-  errorSummary Json?       @map("error_summary")
-  createdAt   DateTime     @default(now()) @map("created_at") @db.DateTime(3)
-  updatedAt   DateTime     @updatedAt @map("updated_at") @db.DateTime(3)
+  id            String       @id @default(uuid()) @db.Char(36)
+  tenantId      String       @map("tenant_id") @db.Char(36)
+  createdById   String       @map("created_by_id") @db.Char(36)
+  type          ImportType   @default(CUSTOMERS)
+  filename      String       @db.VarChar(255)
+  fileType      String       @map("file_type") @db.VarChar(16)
+  storedFilename String?     @map("stored_filename") @db.VarChar(255)
+  mimeType      String?      @map("mime_type") @db.VarChar(120)
+  sizeBytes     Int          @default(0) @map("size_bytes")
+  fileHash      String?      @map("file_hash") @db.VarChar(128)
+  status        ImportStatus @default(PENDING)
+  totalRows     Int          @default(0) @map("total_rows")
+  processedRows Int          @default(0) @map("processed_rows")
+  successRows   Int          @default(0) @map("success_rows")
+  errorRows     Int          @default(0) @map("error_rows")
+  skippedRows   Int          @default(0) @map("skipped_rows")
+  progress      Int          @default(0)
+  mapping       Json?
+  options       Json?
+  errorSummary  Json?        @map("error_summary")
+  startedAt     DateTime?    @map("started_at") @db.DateTime(3)
+  finishedAt    DateTime?    @map("finished_at") @db.DateTime(3)
+  failureReason String?      @map("failure_reason") @db.VarChar(500)
+  createdAt     DateTime     @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.DateTime(3)
 
   createdBy User   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  rowResults ImportRowResult[]
   tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, status, createdAt])
+  @@index([tenantId, type, createdAt])
+  @@index([tenantId, createdById, createdAt])
+  @@index([tenantId, fileHash])
   @@map("import_jobs")
 }
 
-model AuditLog {
-  id          String      @id @default(uuid()) @db.Char(36)
-  tenantId    String?     @map("tenant_id") @db.Char(36)
-  actorId     String?     @map("actor_id") @db.Char(36)
-  action      AuditAction
-  entityType  String?     @map("entity_type") @db.VarChar(80)
-  entityId    String?     @map("entity_id") @db.Char(36)
-  requestId   String?     @map("request_id") @db.VarChar(64)
-  ipHash      String?     @map("ip_hash") @db.VarChar(128)
-  metadata    Json?
-  createdAt   DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+model ImportRowResult {
+  id                String          @id @default(uuid()) @db.Char(36)
+  tenantId          String          @map("tenant_id") @db.Char(36)
+  importJobId       String          @map("import_job_id") @db.Char(36)
+  rowNumber         Int             @map("row_number")
+  status            ImportRowStatus
+  externalReference String?         @map("external_reference") @db.VarChar(180)
+  normalizedData    Json?           @map("normalized_data")
+  errorCode         String?         @map("error_code") @db.VarChar(80)
+  errorMessage      String?         @map("error_message") @db.VarChar(500)
+  createdResourceId String?         @map("created_resource_id") @db.Char(36)
+  createdAt         DateTime        @default(now()) @map("created_at") @db.DateTime(3)
 
-  actor User?   @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  importJob ImportJob @relation(fields: [importJobId], references: [id], onDelete: Cascade)
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, importJobId, rowNumber])
+  @@index([tenantId, importJobId, status])
+  @@map("import_row_results")
+}
+
+model Insight {
+  id               String          @id @default(uuid()) @db.Char(36)
+  tenantId         String          @map("tenant_id") @db.Char(36)
+  dedupeKey        String          @map("dedupe_key") @db.VarChar(180)
+  type             String          @db.VarChar(80)
+  category         InsightCategory
+  severity         InsightSeverity
+  title            String          @db.VarChar(180)
+  description      String          @db.VarChar(700)
+  evidence         Json
+  metricValue      Decimal?        @map("metric_value") @db.Decimal(14, 4)
+  comparisonValue  Decimal?        @map("comparison_value") @db.Decimal(14, 4)
+  percentageChange Decimal?        @map("percentage_change") @db.Decimal(9, 4)
+  periodStart      DateTime        @map("period_start") @db.DateTime(3)
+  periodEnd        DateTime        @map("period_end") @db.DateTime(3)
+  resourceType     String?         @map("resource_type") @db.VarChar(80)
+  resourceId       String?         @map("resource_id") @db.Char(36)
+  actionUrl        String?         @map("action_url") @db.VarChar(255)
+  status           InsightStatus   @default(NEW)
+  generatedAt      DateTime        @default(now()) @map("generated_at") @db.DateTime(3)
+  readAt           DateTime?       @map("read_at") @db.DateTime(3)
+  dismissedAt      DateTime?       @map("dismissed_at") @db.DateTime(3)
+  metadata         Json?
+  createdAt        DateTime        @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime        @updatedAt @map("updated_at") @db.DateTime(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, dedupeKey])
+  @@index([tenantId, status, generatedAt])
+  @@index([tenantId, category, severity, generatedAt])
+  @@index([tenantId, status, category, severity, periodStart], map: "insights_filter_idx")
+  @@index([tenantId, periodStart, periodEnd])
+  @@map("insights")
+}
+
+model AuditLog {
+  id         String      @id @default(uuid()) @db.Char(36)
+  tenantId   String?     @map("tenant_id") @db.Char(36)
+  actorId    String?     @map("actor_id") @db.Char(36)
+  action     AuditAction
+  entityType String?     @map("entity_type") @db.VarChar(80)
+  entityId   String?     @map("entity_id") @db.Char(36)
+  requestId  String?     @map("request_id") @db.VarChar(64)
+  ipHash     String?     @map("ip_hash") @db.VarChar(128)
+  metadata   Json?
+  createdAt  DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+
+  actor  User?   @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
   tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, action, createdAt])

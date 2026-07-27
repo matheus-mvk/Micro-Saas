@@ -60,3 +60,17 @@ Exigir permissao explicita e auditoria para:
 - Token de integracao com escopo de leitura nao consegue executar escrita.
 - Endpoint de listagem nao retorna contagem, metadado ou erro que revele existencia de dados de outro tenant.
 
+## Implementacao Atual Do Modulo 1
+
+O guard privado por padrao agora valida access token/cookie antes de aceitar contexto autenticado.
+
+Estado atual:
+
+- `@Public()` continua sendo a unica forma de liberar rota anonima.
+- `RolesGuard` usa `request.context.role`, agora preenchido pelo contexto autenticado confiavel.
+- RBAC ainda e inicial e baseado em `ADMIN`, `MANAGER` e `OPERATOR`.
+- Autorizacao por recurso, filial, ownership e acao especifica ainda deve ser implementada por modulo funcional.
+
+Regra obrigatoria para proximos modulos:
+
+- Todo repository/use case tenant-scoped deve combinar `id` do recurso com `tenantId` vindo do contexto autenticado.

@@ -1,0 +1,59 @@
+'use client';
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Building2, CheckCircle2, Plus, RefreshCw, Save, Truck } from 'lucide-react';
+import { useState, type ComponentType, type FormEvent, type ReactNode } from 'react';
+import NextLink from 'next/link';
+
+import styles from './logistics-management.module.css';
+import { EmptyState } from '@/components/feedback/empty-state';
+import { ApiClientError } from '@/services/http-client';
+import { getBranches, getCarriers, logisticsAdminQueryKeys, saveBranch, saveCarrier, saveCarrierService, toggleBranch, toggleCarrier, type BranchInput, type CarrierInput, type ServiceInput } from '@/services/logistics-admin-service';
+
+const Link = NextLink as unknown as ComponentType<{ href: string; children?: ReactNode; [key: string]: unknown }>;
+
+type Tab = 'branches' | 'carriers';
+const emptyBranch: BranchInput = { name: '', code: '', postalCode: '', street: '', number: '', district: '', city: '', state: '', main: false };
+const emptyCarrier: CarrierInput = { name: '', code: '', document: '', legalName: '', email: '', phone: '', contactName: '', site: '', notes: '' };
+const emptyService: ServiceInput = { code: '', name: '', modality: '', description: '', defaultDeadlineDays: 3, cubicFactor: 300, minWeightKg: 0, maxWeightKg: 1000, minimumValue: 0 };
+
+export function LogisticsManagement({ initialTab = 'branches' }: { initialTab?: Tab }) {
+  const client = useQueryClient();
+  const [tab, setTab] = useState<Tab>(initialTab);
+  const [branch, setBranch] = useState<BranchInput>(emptyBranch);
+  const [carrier, setCarrier] = useState<CarrierInput>(emptyCarrier);
+  const [service, setService] = useState<ServiceInput>(emptyService);
+  const [selectedCarrier, setSelectedCarrier] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const branches = useQuery({ queryKey: logisticsAdminQueryKeys.branches, queryFn: () => getBranches(), retry: false });
+  const carriers = useQuery({ queryKey: logisticsAdminQueryKeys.carriers, queryFn: () => getCarriers(), retry: false });
+  const branchMutation = useMutation({ mutationFn: () => saveBranch(branch), onSuccess: async () => { setBranch(emptyBranch); setMessage('Filial cadastrada.'); await client.invalidateQueries({ queryKey: logisticsAdminQueryKeys.branches }); } });
+  const carrierMutation = useMutation({ mutationFn: () => saveCarrier(carrier), onSuccess: async () => { setCarrier(emptyCarrier); setMessage('Transportadora cadastrada.'); await client.invalidateQueries({ queryKey: logisticsAdminQueryKeys.carriers }); } });
+  const serviceMutation = useMutation({ mutationFn: () => saveCarrierService(selectedCarrier as string, service), onSuccess: async () => { setService(emptyService); setMessage('Servico cadastrado.'); await client.invalidateQueries({ queryKey: logisticsAdminQueryKeys.carriers }); } });
+  const statusMutation = useMutation<unknown, Error, { id: string; active: boolean; kind: Tab }>({ mutationFn: ({ id, active, kind }) => kind === 'branches' ? toggleBranch(id, active) : toggleCarrier(id, active), onSuccess: async () => { setMessage('Status atualizado.'); await Promise.all([client.invalidateQueries({ queryKey: logisticsAdminQueryKeys.branches }), client.invalidateQueries({ queryKey: logisticsAdminQueryKeys.carriers })]); } });
+
+  function submit(event: FormEvent<HTMLFormElement>, kind: Tab): void { event.preventDefault(); setError(null); setMessage(null); if (kind === 'branches') branchMutation.mutate(); else carrierMutation.mutate(); }
+  const activeError = error ?? messageFor(branchMutation.error ?? carrierMutation.error ?? serviceMutation.error ?? statusMutation.error);
+  return <div className={styles.layout}>
+    <div className={styles.tabs} role="tablist" aria-label="Cadastros logisticos">
+      <button className={`${styles.tab} ${tab === 'branches' ? styles.activeTab : ''}`} role="tab" aria-selected={tab === 'branches'} onClick={() => setTab('branches')} type="button"><Building2 size={16} /> Filiais</button>
+      <button className={`${styles.tab} ${tab === 'carriers' ? styles.activeTab : ''}`} role="tab" aria-selected={tab === 'carriers'} onClick={() => setTab('carriers')} type="button"><Truck size={16} /> Transportadoras e servicos</button>
+    </div>
+    {activeError ? <p className={styles.error} role="alert">{activeError}</p> : null}
+    {message ? <p className={styles.success} role="status"><CheckCircle2 size={16} /> {message}</p> : null}
+    {tab === 'branches' ? <section className={styles.panel} aria-labelledby="branches-title">
+      <div className={styles.header}><div><h2 id="branches-title">Filiais</h2><p>Origens operacionais isoladas por empresa.</p></div><div className={styles.toolbar}><Link href="/branches/new">Nova filial</Link><button type="button" onClick={() => void branches.refetch()}><RefreshCw size={15} /> Atualizar</button></div></div>
+      <form className={styles.form} onSubmit={(event) => submit(event, 'branches')}>
+        <label>Nome<input required value={branch.name} onChange={(e) => setBranch({ ...branch, name: e.target.value })} /></label><label>Codigo<input required value={branch.code} onChange={(e) => setBranch({ ...branch, code: e.target.value })} /></label><label>CEP<input value={branch.postalCode} onChange={(e) => setBranch({ ...branch, postalCode: e.target.value })} /></label><label className={styles.wide}>Logradouro<input value={branch.street} onChange={(e) => setBranch({ ...branch, street: e.target.value })} /></label><label>Numero<input value={branch.number} onChange={(e) => setBranch({ ...branch, number: e.target.value })} /></label><label>Bairro<input value={branch.district} onChange={(e) => setBranch({ ...branch, district: e.target.value })} /></label><label>Cidade<input value={branch.city} onChange={(e) => setBranch({ ...branch, city: e.target.value })} /></label><label>Estado<input maxLength={2} value={branch.state} onChange={(e) => setBranch({ ...branch, state: e.target.value })} /></label><label><span> </span><span><input type="checkbox" checked={branch.main} onChange={(e) => setBranch({ ...branch, main: e.target.checked })} /> Filial principal</span></label><button type="submit" disabled={branchMutation.isPending}><Plus size={15} /> {branchMutation.isPending ? 'Salvando' : 'Cadastrar filial'}</button>
+      </form>
+      {branches.isPending ? <p className={styles.muted}>Carregando filiais...</p> : branches.data?.data.length === 0 ? <EmptyState title="Nenhuma filial cadastrada" description="Cadastre a primeira origem operacional." /> : <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Nome</th><th>Codigo</th><th>Localizacao</th><th>Status</th><th>Acoes</th></tr></thead><tbody>{branches.data?.data.map((item) => <tr key={item.id}><td><Link href={`/branches/${item.id}`}>{item.name}</Link>{item.main ? ' (principal)' : ''}</td><td>{item.code}</td><td>{item.city ?? '-'} / {item.state ?? '-'}</td><td className={item.active ? styles.statusActive : styles.statusInactive}>{item.active ? 'Ativa' : 'Inativa'}</td><td><Link href={`/branches/${item.id}/edit`}>Editar</Link> <button type="button" onClick={() => statusMutation.mutate({ id: item.id, active: !item.active, kind: 'branches' })}>{item.active ? 'Desativar' : 'Ativar'}</button></td></tr>)}</tbody></table></div>}
+    </section> : <section className={styles.panel} aria-labelledby="carriers-title">
+      <div className={styles.header}><div><h2 id="carriers-title">Transportadoras</h2><p>Parceiros, servicos e status usados pela simulacao.</p></div><div className={styles.toolbar}><Link href="/carriers/new">Nova transportadora</Link><button type="button" onClick={() => void carriers.refetch()}><RefreshCw size={15} /> Atualizar</button></div></div>
+      <form className={styles.form} onSubmit={(event) => submit(event, 'carriers')}><label>Nome<input required value={carrier.name} onChange={(e) => setCarrier({ ...carrier, name: e.target.value })} /></label><label>Codigo<input value={carrier.code} onChange={(e) => setCarrier({ ...carrier, code: e.target.value })} /></label><label>CNPJ<input value={carrier.document} onChange={(e) => setCarrier({ ...carrier, document: e.target.value })} /></label><label>Razao social<input value={carrier.legalName} onChange={(e) => setCarrier({ ...carrier, legalName: e.target.value })} /></label><label>E-mail<input type="email" value={carrier.email} onChange={(e) => setCarrier({ ...carrier, email: e.target.value })} /></label><label>Telefone<input value={carrier.phone} onChange={(e) => setCarrier({ ...carrier, phone: e.target.value })} /></label><label>Contato<input value={carrier.contactName} onChange={(e) => setCarrier({ ...carrier, contactName: e.target.value })} /></label><label>Site<input value={carrier.site} onChange={(e) => setCarrier({ ...carrier, site: e.target.value })} /></label><label className={styles.wide}>Observacoes<textarea value={carrier.notes} onChange={(e) => setCarrier({ ...carrier, notes: e.target.value })} /></label><button type="submit" disabled={carrierMutation.isPending}><Plus size={15} /> Cadastrar transportadora</button></form>
+      {carriers.isPending ? <p className={styles.muted}>Carregando transportadoras...</p> : carriers.data?.data.length === 0 ? <EmptyState title="Nenhuma transportadora cadastrada" description="Cadastre um parceiro para ofertar servicos." /> : <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Transportadora</th><th>Documento</th><th>Servicos</th><th>Status</th><th>Acoes</th></tr></thead><tbody>{carriers.data?.data.map((item) => <tr key={item.id}><td><Link href={`/carriers/${item.id}`}>{item.name}</Link><br /><span className={styles.muted}>{item.code ?? 'Sem codigo'}</span></td><td>{item.document ?? '-'}</td><td><div className={styles.serviceList}>{item.services?.map((s) => <span className={styles.service} key={s.id}>{s.name} <small>{s.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}</small></span>)}<button type="button" onClick={() => setSelectedCarrier(item.id)}>Adicionar servico</button>{selectedCarrier === item.id ? <form className={styles.form} onSubmit={(event) => { event.preventDefault(); serviceMutation.mutate(); }}><label>Codigo<input required value={service.code} onChange={(e) => setService({ ...service, code: e.target.value })} /></label><label>Nome<input required value={service.name} onChange={(e) => setService({ ...service, name: e.target.value })} /></label><label>Modalidade<input required value={service.modality} onChange={(e) => setService({ ...service, modality: e.target.value })} /></label><label>Prazo (dias)<input type="number" min={1} value={service.defaultDeadlineDays} onChange={(e) => setService({ ...service, defaultDeadlineDays: Number(e.target.value) })} /></label><label>Fator cubagem<input type="number" min={1} value={service.cubicFactor} onChange={(e) => setService({ ...service, cubicFactor: Number(e.target.value) })} /></label><label>Valor minimo<input type="number" min={0} step="0.01" value={service.minimumValue} onChange={(e) => setService({ ...service, minimumValue: Number(e.target.value) })} /></label><button type="submit" disabled={serviceMutation.isPending}><Save size={15} /> Salvar servico</button></form> : null}</div></td><td className={item.active ? styles.statusActive : styles.statusInactive}>{item.active ? 'Ativa' : 'Inativa'}</td><td><Link href={`/carriers/${item.id}/edit`}>Editar</Link> <button type="button" onClick={() => statusMutation.mutate({ id: item.id, active: !item.active, kind: 'carriers' })}>{item.active ? 'Desativar' : 'Ativar'}</button></td></tr>)}</tbody></table></div>}
+    </section>}
+  </div>;
+}
+
+function messageFor(error: unknown): string | null { return error instanceof ApiClientError ? error.response.message : error ? 'Nao foi possivel concluir a operacao.' : null; }

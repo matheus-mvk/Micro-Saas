@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 
 import { AppConfigService } from '../../config/app-config.service';
 import { ConfigurationModule } from '../../config/configuration.module';
+import { buildRedisOptions } from '../cache/redis-options';
 
 export const IMPORT_QUEUE = 'imports';
 
@@ -12,11 +13,7 @@ export const IMPORT_QUEUE = 'imports';
       imports: [ConfigurationModule],
       inject: [AppConfigService],
       useFactory: (config: AppConfigService) => ({
-        connection: {
-          host: config.redisHost,
-          port: config.redisPort,
-          password: config.redisPassword,
-        },
+        connection: buildRedisOptions(config),
         defaultJobOptions: {
           attempts: 3,
           backoff: { type: 'exponential', delay: 1000 },

@@ -1,0 +1,95 @@
+.stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0 0.75rem;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.panel {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 1rem;
+}
+
+.notice,
+.error,
+.success {
+  border-radius: var(--radius);
+  padding: 0.75rem;
+}
+
+.notice {
+  background: #eef7f2;
+  color: #14532d;
+}
+
+.error {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.success {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.linkRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.codeList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.codeList li {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.6rem;
+  font-family: var(--font-mono, monospace);
+}

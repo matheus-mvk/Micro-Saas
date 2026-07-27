@@ -1,3 +1,3 @@
 # Imports Feature
 
-Status: planned. This feature will own CSV/XLSX upload, queue progress and processing feedback.
+Status: implemented. Owns CSV/XLSX upload, preview, field mapping, import history, detail view and realtime queue progress.
