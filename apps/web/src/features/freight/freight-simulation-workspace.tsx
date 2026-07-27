@@ -58,6 +58,11 @@ export function FreightSimulationWorkspace() {
   const destinationLookup = useMutation({ mutationFn: lookupAddress, onSuccess: setDestination });
   const createMutation = useMutation({
     mutationFn: createFreightSimulation,
+    onError: (error) => {
+      if (simulationErrorFor(error)?.code === 'customer-not-found') {
+        setCustomerId('');
+      }
+    },
     onSuccess: async (result) => {
       setSimulation(result);
       setSuccessMessage('Simulação calculada e salva no histórico.');
@@ -80,7 +85,16 @@ export function FreightSimulationWorkspace() {
   });
 
   const operationalDataReady = (branches.data?.data.length ?? 0) > 0 && carriersWithServices(carriers.data?.data ?? []).length > 0;
-  const errorMessage = messageFor(createMutation.error ?? selectMutation.error ?? shipmentMutation.error ?? originLookup.error ?? destinationLookup.error);
+  const currentError = simulationErrorFor(
+    createMutation.error ?? selectMutation.error ?? shipmentMutation.error ?? originLookup.error ?? destinationLookup.error,
+  );
+  const hasCalculationError = Boolean(createMutation.error);
+  const emptyResultsTitle = hasCalculationError ? 'Nenhuma opção gerada' : 'Nenhuma simulação nesta sessão';
+  const emptyResultsDescription = hasCalculationError
+    ? currentError?.code === 'no-eligible-service'
+      ? 'A tentativa de cálculo não encontrou transportadora, serviço, cobertura ou tabela de frete compatível com a rota e os volumes informados.'
+      : 'A tentativa de cálculo não gerou opções. Revise os dados da carga, rota e cliente antes de tentar novamente.'
+    : 'Preencha os dados e calcule para comparar transportadoras.';
 
   const packageMetrics = useMemo(() => {
     const realWeight = packages.reduce((total, item) => total + item.weightKg * item.quantity, 0);
@@ -93,6 +107,9 @@ export function FreightSimulationWorkspace() {
 
   function handleSubmit(event: SyntheticEvent<HTMLFormElement>): void {
     event.preventDefault();
+    createMutation.reset();
+    selectMutation.reset();
+    shipmentMutation.reset();
     setSuccessMessage(null);
     createMutation.mutate({
       cargoValue: Number(cargoValue),
@@ -101,6 +118,15 @@ export function FreightSimulationWorkspace() {
       origin,
       packages,
     });
+  }
+
+  async function refreshOperationalData(): Promise<void> {
+    const [customersResult] = await Promise.all([customers.refetch(), branches.refetch(), carriers.refetch()]);
+    const nextCustomers = customersResult.data?.data ?? [];
+
+    if (customerId && !nextCustomers.some((customer) => customer.id === customerId)) {
+      setCustomerId('');
+    }
   }
 
   return (
@@ -115,7 +141,7 @@ export function FreightSimulationWorkspace() {
             className={styles.secondaryButton}
             type="button"
             onClick={() => {
-              void Promise.all([customers.refetch(), branches.refetch(), carriers.refetch()]);
+              void refreshOperationalData();
             }}
           >
             <RefreshCw size={16} aria-hidden="true" />
@@ -130,10 +156,23 @@ export function FreightSimulationWorkspace() {
           />
         ) : null}
 
-        {errorMessage ? (
-          <p className={styles.error} role="alert">
-            {errorMessage}
-          </p>
+        {currentError ? (
+          <div className={styles.errorBox} role="alert">
+            <strong>{currentError.title}</strong>
+            <p>{currentError.message}</p>
+            {currentError.action === 'refresh' ? (
+              <button
+                className={styles.errorAction}
+                type="button"
+                onClick={() => {
+                  void refreshOperationalData();
+                }}
+              >
+                <RefreshCw size={15} aria-hidden="true" />
+                Atualizar cadastros
+              </button>
+            ) : null}
+          </div>
         ) : null}
         {successMessage ? (
           <p className={styles.success} role="status">
@@ -157,6 +196,8 @@ export function FreightSimulationWorkspace() {
                 <select
                   value={customerId}
                   onChange={(event) => {
+                    createMutation.reset();
+                    setSuccessMessage(null);
                     setCustomerId(event.target.value);
                   }}
                 >
@@ -232,10 +273,10 @@ export function FreightSimulationWorkspace() {
                   ]);
                 }}
               >
-              <PackagePlus size={16} aria-hidden="true" />
-              Adicionar volume
-            </button>
-          </div>
+                <PackagePlus size={16} aria-hidden="true" />
+                Adicionar volume
+              </button>
+            </div>
             {packages.map((item, index) => (
               <div className={styles.packageCard} key={index}>
                 <div className={styles.packageCardHeader}>
@@ -377,7 +418,7 @@ export function FreightSimulationWorkspace() {
           <Route size={20} aria-hidden="true" />
         </div>
 
-        {!simulation ? <EmptyState title="Nenhuma simulação nesta sessão" description="Preencha os dados e calcule para comparar transportadoras." /> : null}
+        {!simulation ? <EmptyState title={emptyResultsTitle} description={emptyResultsDescription} /> : null}
 
         {simulation ? (
           <div className={styles.results}>
@@ -529,8 +570,43 @@ function formatNumber(value: number): string {
   return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 }).format(value);
 }
 
-function messageFor(error: unknown): string | null {
+type SimulationError = {
+  action: 'none' | 'refresh';
+  code: 'customer-not-found' | 'generic' | 'no-eligible-service';
+  message: string;
+  title: string;
+};
+
+function simulationErrorFor(error: unknown): SimulationError | null {
   if (!error) return null;
-  if (error instanceof ApiClientError) return error.response.message;
-  return 'Não foi possível concluir a operação.';
+
+  const message = error instanceof ApiClientError ? error.response.message : '';
+  const normalizedMessage = message.toLowerCase();
+
+  if (normalizedMessage.includes('no eligible carrier service')) {
+    return {
+      action: 'refresh',
+      code: 'no-eligible-service',
+      message:
+        'Não encontramos uma transportadora elegível para esta simulação. Confira se existem serviços ativos, cobertura para a rota, tabela de frete vigente e limites compatíveis com peso, dimensões e CEPs informados.',
+      title: 'Nenhuma transportadora elegível',
+    };
+  }
+
+  if (normalizedMessage.includes('customer was not found')) {
+    return {
+      action: 'refresh',
+      code: 'customer-not-found',
+      message:
+        'O cliente selecionado não existe mais ou não pertence ao tenant atual. A seleção foi limpa; escolha outro cliente ou deixe o campo como opcional para calcular.',
+      title: 'Cliente não encontrado',
+    };
+  }
+
+  return {
+    action: 'none',
+    code: 'generic',
+    message: message || 'Não foi possível concluir a operação. Revise os dados informados e tente novamente.',
+    title: 'Operação não concluída',
+  };
 }

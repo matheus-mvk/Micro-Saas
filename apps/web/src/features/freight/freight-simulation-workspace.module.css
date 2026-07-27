@@ -386,6 +386,50 @@
   color: #991b1b;
 }
 
+.errorBox {
+  background: rgb(220 38 38 / 8%);
+  border: 1px solid rgb(220 38 38 / 18%);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.8rem;
+}
+
+.errorBox strong,
+.errorBox p {
+  margin: 0;
+}
+
+.errorBox strong {
+  color: #7f1d1d;
+}
+
+.errorBox p {
+  color: #991b1b;
+  line-height: 1.45;
+}
+
+.errorAction {
+  align-items: center;
+  background: #fff;
+  border: 1px solid rgb(220 38 38 / 22%);
+  border-radius: 8px;
+  color: #991b1b;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 800;
+  gap: 0.4rem;
+  justify-content: center;
+  justify-self: start;
+  min-height: 2.2rem;
+  padding: 0.45rem 0.7rem;
+}
+
+.errorAction:hover {
+  background: rgb(220 38 38 / 6%);
+  border-color: rgb(220 38 38 / 32%);
+}
+
 .option {
   border: 1px solid var(--color-border);
   border-radius: 8px;
