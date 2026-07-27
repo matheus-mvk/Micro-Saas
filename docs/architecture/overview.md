@@ -1,4 +1,4 @@
-# Architecture Overview
+# Visao Geral Da Arquitetura
 
 ```mermaid
 flowchart LR
@@ -11,4 +11,4 @@ flowchart LR
   API --> Socket[Socket.IO]
 ```
 
-The frontend consumes only the API. Prisma and database credentials remain server-side in `apps/api`.
+O frontend consome somente a API. Prisma e credenciais de banco permanecem server-side em `apps/api`.

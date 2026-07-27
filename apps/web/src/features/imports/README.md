@@ -1,3 +1,3 @@
-# Imports Feature
+# Funcionalidade De Imports
 
-Status: implemented. Owns CSV/XLSX upload, preview, field mapping, import history, detail view and realtime queue progress.
+Status: implementado. Responsavel por upload CSV/XLSX, preview, mapeamento de campos, historico de importacao, tela de detalhe e progresso realtime da fila.

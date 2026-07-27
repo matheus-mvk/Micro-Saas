@@ -1,3 +1,3 @@
-# Customers Feature
+# Funcionalidade De Clientes
 
-Status: planned. This feature will own customer list, forms, filters and tenant-scoped API calls.
+Status: planejado. Esta funcionalidade sera responsavel por lista de clientes, formularios, filtros e chamadas de API tenant-scoped.

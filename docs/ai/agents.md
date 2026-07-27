@@ -1,5 +1,5 @@
-# Agents
+# Agentes
 
-Five specialist roles are used: backend, frontend, UI/UX, security and infrastructure. A final reviewer integrates results and resolves conflicts.
+Cinco papeis especialistas sao usados: backend, frontend, UI/UX, seguranca e infraestrutura. Um revisor final integra os resultados e resolve conflitos.
 
-Agent rules live in `AGENTS.md` and `.cloud/agents`.
+As regras dos agentes ficam em `AGENTS.md` e `.cloud/agents`.

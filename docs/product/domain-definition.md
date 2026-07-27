@@ -1,43 +1,43 @@
-# Domain Definition
+# Definicao De Dominio
 
 Status: `IN_DESIGN`
 
-## Product Positioning
+## Posicionamento Do Produto
 
-The platform is a multi-tenant logistics intelligence SaaS for freight cost control, carrier comparison, shipment execution monitoring, tracking event ingestion, imports, operational dashboards, and explainable insights.
+A plataforma e um SaaS multi-tenant de inteligencia logistica para controle de custo de frete, comparacao de transportadoras, monitoramento de execucao de shipments, ingestao de eventos de tracking, imports, dashboards operacionais e insights explicaveis.
 
-The product should not be framed as only a freight calculator. Freight simulation is one workflow inside a broader logistics decision platform.
+O produto nao deve ser apresentado apenas como uma calculadora de frete. Simulacao de frete e um fluxo dentro de uma plataforma mais ampla de decisao logistica.
 
-## Core Language
+## Linguagem Central
 
-- Tenant: contracting company using the SaaS.
-- Branch: optional operating unit of a tenant.
-- Customer: customer served by the tenant logistics operation.
-- CustomerAddress: reusable customer address record, not a historical delivery snapshot.
-- Carrier: transport company configured by a tenant.
-- CarrierService: service/mode offered by a carrier.
-- FreightRateTable: versioned pricing rules for carrier services.
-- FreightSimulation: estimate request for comparing cost, lead time, and risk.
-- FreightSimulationOption: one returned option for a simulation.
-- Shipment: real transport operation.
-- ShipmentAddress: immutable address snapshot used by a shipment.
-- ShipmentPackage: package/volume data used in a shipment.
-- TrackingEvent: immutable logistics fact in a shipment timeline.
-- ImportJob: asynchronous processing record for uploaded files.
-- AuditLog: system action record; separate from logistics tracking.
-- Insight: explainable operational recommendation or anomaly.
+- Tenant: empresa contratante que usa o SaaS.
+- Branch: unidade operacional opcional de um tenant.
+- Customer: cliente atendido pela operacao logistica do tenant.
+- CustomerAddress: registro reutilizavel de endereco do cliente, nao snapshot historico de entrega.
+- Carrier: transportadora configurada por um tenant.
+- CarrierService: servico/modalidade oferecido por uma transportadora.
+- FreightRateTable: regras de precificacao versionadas para servicos de transportadora.
+- FreightSimulation: solicitacao de estimativa para comparar custo, prazo e risco.
+- FreightSimulationOption: uma opcao retornada para uma simulacao.
+- Shipment: operacao real de transporte.
+- ShipmentAddress: snapshot imutavel de endereco usado por um shipment.
+- ShipmentPackage: dados de pacote/volume usados em um shipment.
+- TrackingEvent: fato logistico imutavel na timeline de um shipment.
+- ImportJob: registro de processamento assincrono para arquivos enviados.
+- AuditLog: registro de acao do sistema; separado de tracking logistico.
+- Insight: recomendacao operacional ou anomalia explicavel.
 
-## Boundaries
+## Fronteiras
 
-FreightSimulation answers: what could this freight cost and which option should be selected?
+FreightSimulation responde: quanto este frete poderia custar e qual opcao deveria ser selecionada?
 
-Shipment answers: what is actually being transported, by whom, where is it, and what happened?
+Shipment responde: o que esta realmente sendo transportado, por quem, onde esta e o que aconteceu?
 
-TrackingEvent answers: which logistics fact occurred, when, where, from which source, and whether it changed operational status?
+TrackingEvent responde: qual fato logistico ocorreu, quando, onde, a partir de qual origem e se alterou o status operacional?
 
-AuditLog answers: who did what in the system, against which entity, under which request, and with what result?
+AuditLog responde: quem fez o que no sistema, contra qual entidade, sob qual requisicao e com qual resultado?
 
-## Context Diagram
+## Diagrama De Contexto
 
 ```mermaid
 flowchart LR
@@ -54,7 +54,7 @@ flowchart LR
   WS --> Web
 ```
 
-## Recommended Domain Modules
+## Modulos De Dominio Recomendados
 
 ```mermaid
 flowchart TD
@@ -81,37 +81,37 @@ flowchart TD
   Audit -.records.-> Tracking
 ```
 
-## Domain Recommendations
+## Recomendacoes De Dominio
 
-1. Keep customer addresses reusable, but snapshot shipment addresses into `ShipmentAddress`.
-2. Introduce `CarrierService` before final freight simulation, because carrier-level fields cannot represent service-specific constraints.
-3. Introduce `FreightSimulationOption`; do not connect a whole simulation directly to a shipment.
-4. Introduce `Shipment` as the operational aggregate for tracking, dashboards, delivery status, and performance.
-5. Make `TrackingEvent` immutable. Corrections must create new events.
-6. Store current shipment status as denormalized state updated transactionally from status-changing tracking events.
-7. Keep audit separate from tracking. Tracking is logistics truth; audit is system accountability.
-8. Start insights as deterministic rules, not generative AI.
+1. Manter enderecos de cliente reutilizaveis, mas copiar snapshots de enderecos para `ShipmentAddress`.
+2. Introduzir `CarrierService` antes da simulacao final de frete, porque campos no nivel da transportadora nao representam restricoes especificas por servico.
+3. Introduzir `FreightSimulationOption`; nao conectar uma simulacao inteira diretamente a um shipment.
+4. Introduzir `Shipment` como agregado operacional para tracking, dashboards, status de entrega e performance.
+5. Tornar `TrackingEvent` imutavel. Correcoes devem criar novos eventos.
+6. Armazenar status atual do shipment como estado desnormalizado atualizado transacionalmente por eventos de tracking que mudam status.
+7. Manter auditoria separada de tracking. Tracking e a verdade logistica; auditoria e a responsabilizacao do sistema.
+8. Comecar insights como regras deterministicas, nao IA generativa.
 
-## MVP Domain Scope
+## Escopo De Dominio MVP
 
-In scope after Identity and Access:
+Dentro do escopo apos Identity and Access:
 
-- tenant-aware users;
-- customers and addresses;
-- carriers and services;
-- freight pricing MVP;
-- freight simulations and options;
+- usuarios tenant-aware;
+- clientes e enderecos;
+- transportadoras e servicos;
+- precificacao de frete MVP;
+- simulacoes de frete e opcoes;
 - shipments;
-- tracking timeline;
-- imports for one or two explicit file types;
-- dashboard KPIs from real tables;
-- rule-based insights.
+- timeline de tracking;
+- imports para um ou dois tipos explicitos de arquivo;
+- KPIs de dashboard a partir de tabelas reais;
+- insights baseados em regras.
 
-Out of scope until later:
+Fora do escopo ate uma etapa posterior:
 
-- marketplace of carriers;
-- full TMS replacement;
-- route optimization engine;
-- billing and subscription;
-- generative AI recommendations using sensitive data;
-- complex workflow engine.
+- marketplace de transportadoras;
+- substituicao completa de TMS;
+- motor de otimizacao de rotas;
+- billing e assinatura;
+- recomendacoes com IA generativa usando dados sensiveis;
+- motor complexo de workflow.

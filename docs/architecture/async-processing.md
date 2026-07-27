@@ -1,19 +1,19 @@
-# Async Processing
+# Processamento Assincrono
 
 Status: `IN_DESIGN`
 
-## Scope
+## Escopo
 
-BullMQ and Redis should process workloads that are slow, retryable, or external-system dependent:
+BullMQ e Redis devem processar workloads lentos, retryable ou dependentes de sistemas externos:
 
-- CSV/XLSX imports;
-- report generation;
-- tracking ingestion;
-- insight generation;
-- external sync;
-- notification fan-out.
+- imports CSV/XLSX;
+- geracao de relatorios;
+- ingestao de tracking;
+- geracao de insights;
+- sincronizacao externa;
+- fan-out de notificacoes.
 
-## Architecture
+## Arquitetura
 
 ```mermaid
 flowchart TD
@@ -27,26 +27,26 @@ flowchart TD
   Events --> Metrics[Metrics]
 ```
 
-## Queue Proposal
+## Proposta De Filas
 
-| Queue | Purpose | Payload |
+| Queue | Proposito | Payload |
 | --- | --- | --- |
-| `imports` | Validate/process uploaded files | `tenantId`, `actorId`, `importJobId`, `fileId`, `type`, `idempotencyKey`, `correlationId` |
-| `tracking-ingestion` | Normalize external/imported tracking | `tenantId`, `source`, `externalEventId`, `shipmentRef`, `payloadRef` |
-| `reports` | Generate exports and reports | `tenantId`, `actorId`, `reportType`, `filters`, `idempotencyKey` |
-| `insights` | Compute deterministic insights | `tenantId`, `period`, `ruleSetVersion` |
-| `notifications` | Fan-out realtime/email/webhook | `tenantId`, `eventType`, `resourceId`, `payloadRef` |
+| `imports` | Validar/processar arquivos enviados | `tenantId`, `actorId`, `importJobId`, `fileId`, `type`, `idempotencyKey`, `correlationId` |
+| `tracking-ingestion` | Normalizar tracking externo/importado | `tenantId`, `source`, `externalEventId`, `shipmentRef`, `payloadRef` |
+| `reports` | Gerar exports e relatorios | `tenantId`, `actorId`, `reportType`, `filters`, `idempotencyKey` |
+| `insights` | Calcular insights deterministicos | `tenantId`, `period`, `ruleSetVersion` |
+| `notifications` | Fan-out realtime/e-mail/webhook | `tenantId`, `eventType`, `resourceId`, `payloadRef` |
 
-## Job Rules
+## Regras De Job
 
-- Every job envelope must include trusted `tenantId`, `correlationId`, and source.
-- Idempotency keys are mandatory for external or retried writes.
-- Retry policy should be per job type, not global only.
-- Failed jobs move to DLQ or remain inspectable with retention.
-- Cancellation must be explicit for imports and reports.
-- Workers must have health checks and metrics for queue depth, active jobs, failed jobs, and latency.
+- Todo envelope de job deve incluir `tenantId`, `correlationId` e origem confiaveis.
+- Chaves de idempotencia sao obrigatorias para escritas externas ou reprocessadas.
+- Politica de retry deve ser por tipo de job, nao apenas global.
+- Jobs falhos vao para DLQ ou permanecem inspecionaveis com retencao.
+- Cancelamento deve ser explicito para imports e relatorios.
+- Workers devem ter health checks e metricas para profundidade de fila, jobs ativos, jobs falhos e latencia.
 
-## Import Flow
+## Fluxo De Importacao
 
 ```mermaid
 sequenceDiagram
@@ -65,6 +65,6 @@ sequenceDiagram
   Worker->>DB: finalize ImportJob
 ```
 
-## Resource-Limited Development
+## Desenvolvimento Com Recursos Limitados
 
-For local machines, keep one worker process with low concurrency. Use explicit concurrency settings per queue and avoid heavy observability stacks until staging.
+Para maquinas locais, mantenha um processo worker com baixa concorrencia. Use configuracoes explicitas de concorrencia por fila e evite stacks pesadas de observabilidade ate staging.

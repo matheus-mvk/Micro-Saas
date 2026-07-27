@@ -1,169 +1,169 @@
-# Logistics Manual Test Scenarios
+# Cenarios Manuais De Teste Logistico
 
-Date: 2026-07-25
+Data: 2026-07-25
 
-These scenarios describe the manual verification expected after the implementation prompt is executed. They are not currently all executable because most logistics services are missing or scaffolded.
+Estes cenarios descrevem a verificacao manual esperada depois da execucao do prompt de implementacao. Nem todos estao executaveis atualmente porque parte dos servicos logisticos ainda pode estar ausente ou apenas estruturada.
 
-## Current Executable Smoke Scenarios
+## Cenarios De Smoke Executaveis Atualmente
 
-### Public Landing
+### Landing Publica
 
-1. Open `http://localhost:3000/`.
-2. Verify brand `Nexora Freight` is visible.
-3. Verify CTA to `/login`.
-4. Verify page is responsive on desktop and mobile.
+1. Abrir `http://localhost:3000/`.
+2. Verificar se a marca `Nexora Freight` esta visivel.
+3. Verificar CTA para `/login`.
+4. Verificar responsividade em desktop e mobile.
 
-Expected current status: partially executable.
+Status atual esperado: parcialmente executavel.
 
-### Local Login
+### Login Local
 
-1. Ensure migrations and seed are applied.
-2. Open `http://localhost:3000/login`.
-3. Enter `administrador@dev.com`.
-4. Enter `@DEV1512`.
-5. Submit.
-6. Verify redirect to `/dashboard`.
-7. Verify cookies are set by backend and frontend does not use localStorage for tokens.
+1. Garantir que migrations e seed foram aplicadas.
+2. Abrir `http://localhost:3000/login`.
+3. Informar `administrador@dev.com`.
+4. Informar `@DEV1512`.
+5. Enviar o formulario.
+6. Verificar redirecionamento para `/dashboard`.
+7. Verificar se os cookies sao definidos pelo backend e se o frontend nao usa localStorage para tokens.
 
-Expected current status: executable only if database migration and seed are healthy.
+Status atual esperado: executavel somente se migration e seed do banco estiverem saudaveis.
 
-### Dashboard Summary
+### Resumo Do Dashboard
 
-1. Login as admin.
-2. Open `/dashboard`.
-3. Verify indicators load from `/api/v1/dashboard/summary`.
-4. Stop API and retry to verify error state.
+1. Fazer login como admin.
+2. Abrir `/dashboard`.
+3. Verificar se os indicadores carregam de `/api/v1/dashboard/summary`.
+4. Parar a API e repetir para validar o estado de erro.
 
-Expected current status: partially executable.
+Status atual esperado: parcialmente executavel.
 
-## Required Final Scenarios
+## Cenarios Finais Obrigatorios
 
-### Tenant Isolation
+### Isolamento De Tenant
 
-1. Login as primary tenant admin.
-2. List customers, carriers, simulations, shipments, import jobs and audit logs.
-3. Attempt direct access to resource IDs from secondary tenant.
-4. Verify either 404 or 403 according to documented policy.
-5. Verify dashboard totals exclude secondary tenant records.
-6. Verify realtime import/tracking events from secondary tenant are not received.
+1. Fazer login como admin do tenant principal.
+2. Listar clientes, transportadoras, simulacoes, shipments, import jobs e audit logs.
+3. Tentar acesso direto a IDs de recursos do tenant secundario.
+4. Verificar retorno 404 ou 403 conforme politica documentada.
+5. Verificar se totais do dashboard excluem registros do tenant secundario.
+6. Verificar se eventos realtime de importacao/tracking do tenant secundario nao sao recebidos.
 
-### User Management
+### Gestao De Usuarios
 
-1. Login as ADMIN.
-2. Invite a new OPERATOR.
-3. Change user to MANAGER.
-4. Attempt to remove the last active ADMIN and verify rejection.
-5. Disable a user and verify sessions are revoked.
-6. Login as OPERATOR and verify restricted actions return 403.
+1. Fazer login como `ADMIN`.
+2. Convidar um novo `OPERATOR`.
+3. Alterar usuario para `MANAGER`.
+4. Tentar remover o ultimo `ADMIN` ativo e verificar rejeicao.
+5. Desativar um usuario e verificar revogacao de sessoes.
+6. Fazer login como `OPERATOR` e verificar se acoes restritas retornam 403.
 
-### Customer and Address Management
+### Gestao De Clientes E Enderecos
 
-1. Create legal entity customer with CNPJ.
-2. Create natural person customer with CPF.
-3. Add billing, pickup and delivery addresses.
-4. Fill an address by CEP and edit manually.
-5. Try duplicate document in same tenant and verify validation.
-6. Verify same document in another tenant follows documented policy.
+1. Criar cliente pessoa juridica com CNPJ.
+2. Criar cliente pessoa fisica com CPF.
+3. Adicionar enderecos de faturamento, coleta e entrega.
+4. Preencher endereco por CEP e editar manualmente.
+5. Tentar documento duplicado no mesmo tenant e verificar validacao.
+6. Verificar se o mesmo documento em outro tenant segue a politica documentada.
 
-### Carrier, Services and Coverage
+### Transportadoras, Servicos E Cobertura
 
-1. Create carrier.
-2. Add economic and express services.
-3. Configure weight limits, cubic factor and coverage.
-4. Disable service and verify it is not offered in new simulations.
-5. Disable carrier and verify no new simulation option uses it.
+1. Criar transportadora.
+2. Adicionar servicos economico e expresso.
+3. Configurar limites de peso, fator cubico e cobertura.
+4. Desativar servico e verificar que ele nao e oferecido em novas simulacoes.
+5. Desativar transportadora e verificar que nenhuma nova opcao de simulacao a utiliza.
 
-### Freight Rate Tables
+### Tabelas De Frete
 
-1. Create active rate table for carrier service.
-2. Add weight bands and fees.
-3. Attempt overlapping band and verify rejection.
-4. Create a new version with future vigency.
-5. Verify historical simulation keeps old version and breakdown.
+1. Criar tabela de frete ativa para servico de transportadora.
+2. Adicionar faixas de peso e taxas.
+3. Tentar faixa sobreposta e verificar rejeicao.
+4. Criar nova versao com vigencia futura.
+5. Verificar se simulacao historica mantem versao antiga e breakdown.
 
-### Freight Simulation
+### Simulacao De Frete
 
-1. Select optional customer.
-2. Fill origin/destination by CEP.
-3. Add multiple volumes.
-4. Fill cargo value and desired date.
-5. Run simulation.
-6. Verify real weight, cubic weight and chargeable weight.
-7. Verify options, unavailable reasons, cheapest and fastest indicators.
-8. Open breakdown.
-9. Select an option.
-10. Verify audit entry.
+1. Selecionar cliente opcional.
+2. Preencher origem/destino por CEP.
+3. Adicionar multiplos volumes.
+4. Informar valor da carga e data desejada.
+5. Executar simulacao.
+6. Verificar peso real, peso cubado e peso taxavel.
+7. Verificar opcoes, motivos de indisponibilidade, indicadores de menor preco e menor prazo.
+8. Abrir breakdown.
+9. Selecionar uma opcao.
+10. Verificar entrada de auditoria.
 
-### Simulation History
+### Historico De Simulacao
 
-1. Open history.
-2. Filter by period, customer, user, carrier, service, origin, destination and shipment relation.
-3. Open detail.
-4. Verify original input, volumes, options, selected option and rule versions.
+1. Abrir historico.
+2. Filtrar por periodo, cliente, usuario, transportadora, servico, origem, destino e relacao com shipment.
+3. Abrir detalhe.
+4. Verificar entrada original, volumes, opcoes, opcao selecionada e versoes de regras.
 
-### Shipment and Tracking
+### Shipment E Tracking
 
-1. Create shipment from selected simulation option.
-2. Verify address snapshots.
-3. Register tracking events in valid order.
-4. Try invalid status transition and verify rejection.
-5. Register a correction event and verify original event remains.
-6. Verify current shipment status matches timeline.
+1. Criar shipment a partir de opcao selecionada de simulacao.
+2. Verificar snapshots de endereco.
+3. Registrar eventos de tracking em ordem valida.
+4. Tentar transicao de status invalida e verificar rejeicao.
+5. Registrar evento de correcao e verificar que o evento original permanece.
+6. Verificar se o status atual do shipment corresponde a linha do tempo.
 
-### Imports, Async and Realtime
+### Importacoes, Async E Realtime
 
-1. Upload valid CSV.
-2. Verify pre-validation preview.
-3. Confirm import.
-4. Verify BullMQ job starts.
-5. Watch realtime progress.
-6. Verify fallback polling by disabling websocket.
-7. Upload file with row errors and download error report.
-8. Re-upload same file and verify idempotency rule.
+1. Fazer upload de CSV valido.
+2. Verificar preview de pre-validacao.
+3. Confirmar importacao.
+4. Verificar inicio do job BullMQ.
+5. Acompanhar progresso em realtime.
+6. Verificar fallback por polling desativando websocket.
+7. Fazer upload de arquivo com erros por linha e baixar relatorio de erros.
+8. Reenviar o mesmo arquivo e verificar regra de idempotencia.
 
-### Dashboard and Insights
+### Dashboard E Insights
 
-1. Open dashboard with demo dataset.
-2. Apply period/customer/carrier/service/status filters.
-3. Verify KPIs match records in database.
-4. Open insights.
-5. Verify insight evidence, severity, metric and contextual link.
-6. Mark insight as read and dismiss allowed insight.
+1. Abrir dashboard com dataset demo.
+2. Aplicar filtros de periodo/cliente/transportadora/servico/status.
+3. Verificar se KPIs correspondem aos registros no banco.
+4. Abrir insights.
+5. Verificar evidencia, severidade, metrica e link contextual do insight.
+6. Marcar insight como lido e dispensar insight permitido.
 
-### Audit
+### Auditoria
 
-1. Perform login, user edit, customer edit, carrier edit, rate table edit, simulation, shipment and tracking actions.
-2. Open audit page.
-3. Filter by period, user, action and resource.
-4. Verify no secrets, tokens, passwords, TOTP secrets or recovery codes appear.
+1. Executar login, edicao de usuario, edicao de cliente, edicao de transportadora, edicao de tabela de frete, simulacao, shipment e tracking.
+2. Abrir pagina de auditoria.
+3. Filtrar por periodo, usuario, acao e recurso.
+4. Verificar que segredos, tokens, senhas, TOTP secrets ou recovery codes nao aparecem.
 
-### Security
+### Seguranca
 
-1. Attempt brute-force login and verify lockout/rate limit.
-2. Attempt mutation without CSRF token and verify rejection.
-3. Attempt WebSocket room join for another tenant and verify rejection.
-4. Verify OAuth failure pages and MFA challenge states.
+1. Tentar brute-force de login e verificar lockout/rate limit.
+2. Tentar mutation sem CSRF token e verificar rejeicao.
+3. Tentar entrar em sala WebSocket de outro tenant e verificar rejeicao.
+4. Verificar paginas de falha OAuth e estados de desafio MFA.
 
-### Seed Idempotency
+### Idempotencia Da Seed
 
-1. Run seed.
-2. Capture counts for tenants, users, customers, carriers and demo operational records.
-3. Run seed again.
-4. Verify counts and unique records do not duplicate.
+1. Rodar seed.
+2. Capturar contagens de tenants, usuarios, clientes, transportadoras e registros operacionais demo.
+3. Rodar seed novamente.
+4. Verificar que contagens e registros unicos nao duplicam.
 
-## Final Demonstration Flow
+## Fluxo Final De Demonstracao
 
-1. Open landing.
-2. Login as `administrador@dev.com`.
-3. Review dashboard.
-4. Create customer.
-5. Create carrier service and rate table.
-6. Run freight simulation.
-7. Select option.
-8. Create shipment.
-9. Register tracking.
-10. Import a file.
-11. Watch progress.
-12. Review audit.
-13. Review insight.
-14. Logout.
+1. Abrir landing.
+2. Fazer login como `administrador@dev.com`.
+3. Revisar dashboard.
+4. Criar cliente.
+5. Criar servico de transportadora e tabela de frete.
+6. Executar simulacao de frete.
+7. Selecionar opcao.
+8. Criar shipment.
+9. Registrar tracking.
+10. Importar um arquivo.
+11. Acompanhar progresso.
+12. Revisar auditoria.
+13. Revisar insight.
+14. Fazer logout.

@@ -1,4 +1,4 @@
-# Risk Register
+# Registro De Riscos
 
 ## Escala
 
@@ -39,4 +39,3 @@ Um risco so pode ser aceito quando:
 - Revisar riscos antes de releases com mudancas em autenticacao, autorizacao, isolamento, uploads, integracoes, IA ou exportacoes.
 - Atualizar status apos incidentes, pentests, auditorias, findings de scanner ou mudancas de arquitetura.
 - Promover riscos criticos abertos para backlog prioritario.
-

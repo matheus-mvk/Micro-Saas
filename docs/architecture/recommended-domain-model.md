@@ -1,8 +1,8 @@
-# Recommended Domain Model
+# Modelo De Dominio Recomendado
 
 Status: `IN_DESIGN`
 
-## Entity Map
+## Mapa De Entidades
 
 ```mermaid
 erDiagram
@@ -29,63 +29,63 @@ erDiagram
   User ||--o{ AuditLog : actor
 ```
 
-## Entity Recommendations
+## Recomendacoes De Entidades
 
 ### Tenant
 
-Tenant is the contracting company. Keep shared database/shared schema with `tenantId` on private business tables. Future dedicated environments may be handled by deployment routing, not by changing domain contracts.
+Tenant e a empresa contratante. Mantenha banco compartilhado/schema compartilhado com `tenantId` nas tabelas privadas de negocio. Ambientes dedicados futuros podem ser tratados por roteamento de deploy, nao por mudanca de contratos de dominio.
 
 ### Branch
 
-Branch is optional in the MVP. Do not force `branchId` onto every table until workflows require branch-scoped permissions, reports, or ownership.
+Branch e opcional no MVP. Nao force `branchId` em toda tabela ate que os workflows exijam permissoes, relatorios ou ownership por filial.
 
-### Customer and CustomerAddress
+### Customer E CustomerAddress
 
-Customer should support individual/company identity without overmodeling on day one. Recommended fields: `tenantId`, `type`, `name`, `legalName`, `document`, contacts, status, timestamps, optional `deletedAt`.
+Customer deve suportar identidade pessoa fisica/juridica sem modelagem excessiva no primeiro dia. Campos recomendados: `tenantId`, `type`, `name`, `legalName`, `document`, contatos, status, timestamps e `deletedAt` opcional.
 
-CustomerAddress should be a reusable address catalog. It must not serve as the historical address for a shipment.
+CustomerAddress deve ser um catalogo reutilizavel de enderecos. Ele nao deve servir como endereco historico de um shipment.
 
-### Carrier and CarrierService
+### Carrier E CarrierService
 
-Carrier identifies the tenant's transport provider. CarrierService represents modes such as economic, express, same day, less-than-truckload, or road freight.
+Carrier identifica o provedor de transporte do tenant. CarrierService representa modalidades como economico, expresso, same day, less-than-truckload ou frete rodoviario.
 
-Service-specific constraints, cubing factor, minimum freight, SLA, active regions, and integration mapping belong to CarrierService or FreightRateTable, not directly to Carrier.
+Restricoes especificas de servico, fator de cubagem, frete minimo, SLA, regioes ativas e mapeamento de integracao pertencem a CarrierService ou FreightRateTable, nao diretamente a Carrier.
 
 ### FreightRateTable
 
-Use a versioned pricing aggregate. For MVP, prefer relational tables for tariff dimensions and limited validated JSON only for output breakdowns or provider-specific metadata.
+Use um agregado de precificacao versionado. Para o MVP, prefira tabelas relacionais para dimensoes tarifarias e JSON limitado/validado somente para breakdowns de saida ou metadata especifica de provedor.
 
-### FreightSimulation and FreightSimulationOption
+### FreightSimulation E FreightSimulationOption
 
-FreightSimulation is an estimate request. It may reference customer/branch and stores route/cargo inputs. FreightSimulationOption stores individual carrier service alternatives. A shipment may be created from one selected option.
+FreightSimulation e uma requisicao de estimativa. Ela pode referenciar customer/branch e armazena entradas de rota/carga. FreightSimulationOption armazena alternativas individuais por servico de transportadora. Um shipment pode ser criado a partir de uma opcao selecionada.
 
 ### Shipment
 
-Shipment is the operational transport record. It may come from a selected simulation option, manual entry, import, or external integration. Optional relationships should be explicit because not every shipment has a customer or simulation.
+Shipment e o registro operacional de transporte. Pode vir de uma opcao selecionada de simulacao, entrada manual, importacao ou integracao externa. Relacionamentos opcionais devem ser explicitos porque nem todo shipment possui cliente ou simulacao.
 
 ### TrackingEvent
 
-TrackingEvent is immutable and tenant-scoped. It may change current shipment status, update ETA, add a note, register location, or correct a previous event.
+TrackingEvent e imutavel e tenant-scoped. Ele pode alterar o status atual do shipment, atualizar ETA, adicionar nota, registrar localizacao ou corrigir evento anterior.
 
 ### ImportJob
 
-ImportJob should be typed by import purpose. Avoid a generic importer that accepts arbitrary schemas. Each import type needs mapping, validation, row-level error reports, and idempotency.
+ImportJob deve ser tipado por finalidade de importacao. Evite importador generico que aceita schemas arbitrarios. Cada tipo de importacao precisa de mapeamento, validacao, relatorios de erro por linha e idempotencia.
 
 ### AuditLog
 
-AuditLog is append-only system accountability. It records actor, action, entity, request, IP hash, user agent, before/after snapshots when safe, result, and error classification.
+AuditLog e responsabilizacao append-only do sistema. Registra ator, acao, entidade, requisicao, hash de IP, user agent, snapshots before/after quando seguro, resultado e classificacao de erro.
 
-## Aggregate Boundaries
+## Limites De Agregado
 
-- Customer aggregate: `Customer`, `CustomerAddress`.
-- Carrier aggregate: `Carrier`, `CarrierService`.
-- Freight pricing aggregate: `FreightRateTable`, rate rows/version data.
-- Freight simulation aggregate: `FreightSimulation`, `FreightSimulationOption`.
-- Shipment aggregate: `Shipment`, `ShipmentAddress`, `ShipmentPackage`, `TrackingEvent`.
-- Import aggregate: `ImportJob`, `ImportJobRow`, generated domain records.
-- Audit is append-only and should not be mutated by domain aggregates.
+- Agregado Customer: `Customer`, `CustomerAddress`.
+- Agregado Carrier: `Carrier`, `CarrierService`.
+- Agregado de precificacao de frete: `FreightRateTable`, rate rows/version data.
+- Agregado de simulacao de frete: `FreightSimulation`, `FreightSimulationOption`.
+- Agregado Shipment: `Shipment`, `ShipmentAddress`, `ShipmentPackage`, `TrackingEvent`.
+- Agregado Import: `ImportJob`, `ImportJobRow`, registros de dominio gerados.
+- Audit e append-only e nao deve ser alterado por agregados de dominio.
 
-## Shipment Lifecycle Diagram
+## Diagrama De Ciclo De Vida Do Shipment
 
 ```mermaid
 flowchart TD
@@ -103,7 +103,7 @@ flowchart TD
   Timeline --> Current[Shipment currentStatus/currentStatusAt]
 ```
 
-## Audit Diagram
+## Diagrama De Auditoria
 
 ```mermaid
 flowchart LR

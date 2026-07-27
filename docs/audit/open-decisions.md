@@ -1,43 +1,43 @@
-# Open Decisions
+# Decisoes Abertas
 
 Status: `IN_DESIGN`
 
-## Decisions Recommended For Approval
+## Decisoes Recomendadas Para Aprovacao
 
-| Decision | Recommendation | Rationale | Reversibility |
+| Decisao | Recomendacao | Justificativa | Reversibilidade |
 | --- | --- | --- | --- |
-| First functional module | Identity and Access | All private routes, tenant context, RBAC, WebSocket, queues, and audit depend on trusted identity | Medium |
-| Tenant model | Shared database, shared schema, mandatory `tenantId` on business tables | Matches current foundation and keeps MVP operational cost low | Medium |
-| User tenancy | One tenant per user for MVP; design future memberships explicitly | Simpler auth, fewer edge cases; future membership can be added with migration | Medium |
-| User email uniqueness | Unique by `(tenantId, email)` for MVP | Allows same email in different companies; aligns current schema | Medium |
-| Identifiers | Keep UUID for current schema; evaluate ULID before adding high-volume tables | Avoids churn now; ULID improves chronological locality later | Medium |
-| Freight pricing | Start with relational normalized rate tables plus limited validated JSON for fee breakdown only | Queryable, auditable, versioned, easier to test than arbitrary rule JSON | Medium |
-| Shipment status | Store `Shipment.currentStatus` and append immutable `TrackingEvent` in same transaction | Fast operational reads and auditable timeline | Low |
-| Tracking event model | Immutable append-only events with idempotency by source/externalEventId | Required for imports/webhooks/retries | Low |
-| Realtime | Socket.IO rooms derived from authenticated server context | Prevents client-selected tenant rooms | Low |
-| Imports | Specific import types, not one generic untyped importer | Prevents unvalidatable data flows | Medium |
-| External APIs | ViaCEP or BrasilAPI for address enrichment plus OpenRouteService for distance/route estimation | Useful to freight simulation MVP with manageable integration risk | Medium |
+| Primeiro modulo funcional | Identity and Access | Todas as rotas privadas, contexto de tenant, RBAC, WebSocket, filas e auditoria dependem de identidade confiavel | Media |
+| Modelo de tenant | Banco compartilhado, schema compartilhado, `tenantId` obrigatorio em tabelas de negocio | Combina com a fundacao atual e mantem baixo o custo operacional do MVP | Media |
+| Tenant por usuario | Um tenant por usuario no MVP; modelar memberships futuras explicitamente | Auth mais simples e menos casos de borda; membership futura pode ser adicionada com migration | Media |
+| Unicidade de e-mail do usuario | Unico por `(tenantId, email)` no MVP | Permite mesmo e-mail em empresas diferentes; alinha com schema atual | Media |
+| Identificadores | Manter UUID no schema atual; avaliar ULID antes de tabelas de alto volume | Evita churn agora; ULID melhora localidade cronologica depois | Media |
+| Precificacao de frete | Comecar com tabelas relacionais normalizadas e JSON limitado/validado somente para breakdown de taxas | Consultavel, auditavel, versionado e mais facil de testar que JSON arbitrario de regras | Media |
+| Status de shipment | Armazenar `Shipment.currentStatus` e anexar `TrackingEvent` imutavel na mesma transacao | Leituras operacionais rapidas e timeline auditavel | Baixa |
+| Modelo de evento de tracking | Eventos imutaveis append-only com idempotencia por source/externalEventId | Obrigatorio para importacoes/webhooks/retries | Baixa |
+| Realtime | Salas Socket.IO derivadas do contexto autenticado no servidor | Impede salas de tenant selecionadas pelo cliente | Baixa |
+| Importacoes | Tipos especificos de importacao, nao um importador generico nao tipado | Evita fluxos de dados impossiveis de validar | Media |
+| APIs externas | ViaCEP ou BrasilAPI para enriquecimento de endereco mais OpenRouteService para estimativa de distancia/rota | Util para MVP de simulacao de frete com risco de integracao administravel | Media |
 
-## Decisions Still Open
+## Decisoes Ainda Abertas
 
-| Topic | Options | Recommendation | Human Approval Needed |
+| Topico | Opcoes | Recomendacao | Aprovacao Humana Necessaria |
 | --- | --- | --- | --- |
-| Platform superadmin | Separate global admin domain or tenant role extension | Separate internal role namespace | Yes |
-| Branch scoping | Optional branch on users/resources or membership table | Keep branch optional until concrete use cases | Yes |
-| OAuth tenant resolution | Email domain, invitation, explicit tenant selection, or membership | Invitation/membership first | Yes |
-| MFA enforcement | Admin-only initially or all users | Admin/manager first, tenant policy later | Yes |
-| Storage provider | Local volume, S3-compatible, cloud-specific blob store | S3-compatible abstraction after imports spec | Yes |
-| Rate table complexity | Pure relational, hybrid JSON, code strategy, rules engine | Relational MVP with versioning | Yes |
-| Tracking corrections | Admin-only correction event or edit with audit | Correction event, no mutation | Yes |
-| Data retention | Fixed defaults or tenant plan configurable | Defaults now, plan configurable later | Yes |
-| Redis exposure local | Keep host port or bind localhost only | Bind localhost in future hardening | No, low impact |
-| CI runtime | Node 20 matching Docker or Node 22 matching current CI | Align versions before production | No, low impact |
+| Superadmin da plataforma | Dominio global admin separado ou extensao de role de tenant | Namespace separado de role interna | Sim |
+| Escopo de filial | Branch opcional em usuarios/recursos ou tabela de membership | Manter branch opcional ate casos de uso concretos | Sim |
+| Resolucao de tenant OAuth | Dominio de e-mail, convite, selecao explicita de tenant ou membership | Convite/membership primeiro | Sim |
+| Enforcement de MFA | Inicialmente apenas admin ou todos os usuarios | Admin/manager primeiro, politica de tenant depois | Sim |
+| Provedor de storage | Volume local, S3-compatible, blob store especifico de cloud | Abstracao S3-compatible depois da spec de importacoes | Sim |
+| Complexidade de tabela de frete | Relacional puro, JSON hibrido, estrategia em codigo, rules engine | MVP relacional com versionamento | Sim |
+| Correcoes de tracking | Evento de correcao apenas admin ou edicao com auditoria | Evento de correcao, sem mutation | Sim |
+| Retencao de dados | Defaults fixos ou configuravel por plano do tenant | Defaults agora, configuravel por plano depois | Sim |
+| Exposicao local do Redis | Manter host port ou bind somente localhost | Bind localhost em hardening futuro | Nao, baixo impacto |
+| Runtime CI | Node 20 alinhado ao Docker ou Node 22 alinhado a CI atual | Alinhar versoes antes de producao | Nao, baixo impacto |
 
-## Decisions Rejected For Now
+## Decisoes Rejeitadas Por Enquanto
 
-- Generic base repository for every model: adds ceremony before real access patterns exist.
-- CQRS framework: useful only if read/write models diverge materially.
-- Event sourcing for shipments: tracking events are append-only, but the system does not need full event sourcing.
-- Rules engine for freight pricing in MVP: high complexity before tariff variability is proven.
-- JSON-only freight rules: hard to validate, index, audit, and compare.
-- Client-selected tenant for WebSocket rooms: unsafe.
+- Base repository generico para todo modelo: adiciona cerimonia antes de padroes reais de acesso existirem.
+- Framework CQRS: util somente se modelos de leitura/escrita divergirem materialmente.
+- Event sourcing para shipments: eventos de tracking sao append-only, mas o sistema nao precisa de event sourcing completo.
+- Rules engine para precificacao de frete no MVP: alta complexidade antes de a variabilidade tarifaria ser comprovada.
+- Regras de frete somente em JSON: dificil de validar, indexar, auditar e comparar.
+- Tenant selecionado pelo cliente para salas WebSocket: inseguro.

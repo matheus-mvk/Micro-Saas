@@ -1,57 +1,57 @@
-# Current Implementation Audit
+# Auditoria Da Implementacao Atual
 
 Status: `IN_DESIGN`
 
-This audit is based on repository inspection and the specialist reviews completed for the planning stage. It distinguishes implemented behavior from scaffolding and documentation.
+Esta auditoria se baseia na inspecao do repositorio e nas revisoes especializadas concluidas na etapa de planejamento. Ela diferencia comportamento implementado de scaffolding e documentacao.
 
-## Status Legend
+## Legenda De Status
 
-- `IMPLEMENTED`: executable behavior exists and was validated or is directly evident in code.
-- `PARTIALLY_IMPLEMENTED`: useful base exists, but security, data flow, or business behavior is incomplete.
-- `SCAFFOLDED`: module, folder, or shell exists without functional use cases.
-- `DOCUMENTED_ONLY`: described in docs or skills, not implemented.
-- `NOT_IMPLEMENTED`: no meaningful artifact found.
-- `NEEDS_REVIEW`: exists but has a design or safety concern before feature work.
-- `BLOCKED_BY_EXTERNAL_CONFIGURATION`: depends on local Docker, secrets, browser deps, or environment state.
+- `IMPLEMENTED`: comportamento executavel existe e foi validado ou esta diretamente evidente no codigo.
+- `PARTIALLY_IMPLEMENTED`: existe base util, mas seguranca, fluxo de dados ou comportamento de negocio esta incompleto.
+- `SCAFFOLDED`: modulo, pasta ou shell existe sem casos de uso funcionais.
+- `DOCUMENTED_ONLY`: descrito em docs ou skills, nao implementado.
+- `NOT_IMPLEMENTED`: nenhum artefato significativo encontrado.
+- `NEEDS_REVIEW`: existe, mas possui preocupacao de design ou seguranca antes de evoluir funcionalidade.
+- `BLOCKED_BY_EXTERNAL_CONFIGURATION`: depende de Docker local, segredos, dependencias de browser ou estado de ambiente.
 
-## Matrix
+## Matriz
 
-| Area | Item | Status | Files | Behavior | Test | Risk | Action |
+| Area | Item | Status | Arquivos | Comportamento | Teste | Risco | Acao |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Backend | NestJS bootstrap | `IMPLEMENTED` | `apps/api/src/main.ts`, `apps/api/src/app.module.ts` | API starts, global prefix `/api/v1`, validation, CORS, Swagger in non-production | build/typecheck previously passed | Swagger path and production exposure need policy | Keep, document route policy |
-| Backend | Health endpoints | `IMPLEMENTED` | `apps/api/src/modules/health/*` | `GET /api/v1/health`, `/live`, `/ready`; readiness checks MySQL and Redis | API e2e health exists | Public readiness can reveal dependencies if exposed broadly | Keep liveness public, restrict readiness by environment if needed |
-| Backend | Business modules | `SCAFFOLDED` | `apps/api/src/modules/{auth,users,customers,carriers,...}` | Module classes only, no controllers/use cases/repositories | none | False sense of feature completeness | Specify each module before implementation |
-| Backend | Controller-use case-repository flow | `DOCUMENTED_ONLY` | `docs/architecture/backend.md` | No business use case or repository exists yet | none | Future direct Prisma usage in controllers | Enforce during first functional module |
-| Backend | Config validation | `IMPLEMENTED` | `apps/api/src/config/environment.ts` | Zod validates required runtime variables | `environment.spec.ts` | Secrets are placeholders in examples | Keep strict validation |
-| Backend | Error contract | `PARTIALLY_IMPLEMENTED` | `apps/api/src/common/filters/http-exception.filter.ts`, `packages/shared/src/index.ts` | Structured errors with requestId/timestamp/path | filter spec exists | `ApplicationError.details` needs public allowlist policy | Add error detail classification before CRUDs |
-| Backend | Request ID and correlation ID | `IMPLEMENTED` | `request-context.middleware.ts`, `request-logging.interceptor.ts` | Generates or propagates IDs | middleware spec exists | Context also accepts spoofable tenant/user headers | Split technical request context from auth context |
-| Security | Private-by-default guard | `PARTIALLY_IMPLEMENTED` | `private-by-default.guard.ts`, `public.decorator.ts` | Denies non-public routes without context | indirect tests only | Context comes from arbitrary headers | Replace with real auth guard before private endpoints |
-| Security | RBAC | `PARTIALLY_IMPLEMENTED` | `roles.guard.ts`, `roles.decorator.ts`, `packages/shared/src/index.ts` | Role decorator/guard exists | none | Role is spoofable through header | Derive role from verified session/token |
-| Security | Authentication | `SCAFFOLDED` | `apps/api/src/modules/auth/auth.module.ts`, docs/security | No login, JWT, OAuth, MFA, refresh flow | none | Cannot protect business routes yet | Implement first functional module |
-| Security | Tenant isolation runtime | `NEEDS_REVIEW` | `schema.prisma`, `request-context.middleware.ts` | Tenant columns exist; no repository enforcement | none | Cross-tenant leaks likely if queries use only id | Add tenant-scoped repository rules/tests |
-| Security | WebSocket tenant rooms | `NEEDS_REVIEW` | `notifications.gateway.ts` | Client can join `tenant:{tenantId}` by payload | none | Critical cross-tenant room subscription risk | Authenticated handshake and server-derived tenant |
-| Data | Prisma schema | `PARTIALLY_IMPLEMENTED` | `apps/api/prisma/schema.prisma` | Foundation entities exist | generate/build passed | Missing shipment, options, tracking, services, rate tables | Evolve with approved migrations only |
-| Data | Migrations and seed | `PARTIALLY_IMPLEMENTED` | `apps/api/prisma/migrations`, `seed.ts` | Initial migration and local seed exist | generate validated | Production migration flow not defined | Add `migrate deploy` workflow later |
-| Frontend | Landing page | `PARTIALLY_IMPLEMENTED` | `apps/web/src/app/(public)/page.tsx` | Static product landing | render test | Metrics are illustrative and may look like claims | Mark/remove claims before public launch |
-| Frontend | Login page | `PARTIALLY_IMPLEMENTED` | `apps/web/src/app/(auth)/login/page.tsx`, `login-form.tsx` | Visual form with Zod/RHF validation; submit is no-op | login test | No auth/session/MFA/errors | Connect after auth module |
-| Frontend | Dashboard | `SCAFFOLDED` | `apps/web/src/app/(dashboard)/dashboard/page.tsx` | Static placeholder with empty state | render test | Public route, no data | Protect route after auth |
-| Frontend | App shell | `PARTIALLY_IMPLEMENTED` | `app-shell.tsx` | Sidebar/topbar visual | accessibility test | All nav links target `/dashboard`; tenant not visible | Specify IA and tenant context |
-| Frontend | HTTP client | `PARTIALLY_IMPLEMENTED` | `apps/web/src/services/http-client.ts` | Centralized fetch with credentials and structured errors | http-client test | Missing 204/non-JSON/session refresh behavior | Extend with auth contract |
-| Infrastructure | Docker Compose | `IMPLEMENTED` | `docker-compose.yml` | API, web, MySQL, Redis, Adminer profile | `docker compose config` and local startup previously passed | Local DB/Redis ports exposed | Keep dev-only; restrict production |
-| Infrastructure | Dockerfiles | `PARTIALLY_IMPLEMENTED` | `apps/api/Dockerfile`, `apps/web/Dockerfile` | Multi-stage, non-root, frozen lockfile | `docker compose build` passed | Runtime copies `/app` broadly | Optimize image layout later |
-| Infrastructure | BullMQ | `SCAFFOLDED` | `queue.module.ts`, imports module | Queue registered with retry/backoff | none | No worker, DLQ, idempotency envelope | Add worker service with import module |
-| Infrastructure | Redis | `PARTIALLY_IMPLEMENTED` | `redis.service.ts`, compose | Client service and health ping exist | service spec | No auth in local compose; no production plan | Managed Redis with TLS/auth for deploy |
-| Observability | Structured logs | `PARTIALLY_IMPLEMENTED` | `observability.module.ts`, logging interceptor | Pino logs and redaction | basic behavior covered indirectly | No metrics/traces/alerts | Add OpenTelemetry/metrics after deploy target |
-| Tests | Unit/integration | `PARTIALLY_IMPLEMENTED` | `apps/api/src/**/*.spec.ts`, `apps/web/tests` | Foundation tests exist | `pnpm test` previously passed | No tenant, auth, transaction, job tests | Add per module |
-| Tests | E2E | `PARTIALLY_IMPLEMENTED` | `apps/api/test`, `apps/web/tests/e2e` | API health e2e exists; web smoke planned | API e2e passed; Playwright can need native deps | Browser deps environment-sensitive | Document setup and keep CI stable |
-| Documentation | Docs/ADRs/skills/workflows | `PARTIALLY_IMPLEMENTED` | `docs`, `.cloud` | Broad foundation docs exist | static audit only | Some docs are target-state and not real-state | Keep audit current |
+| Backend | Bootstrap NestJS | `IMPLEMENTED` | `apps/api/src/main.ts`, `apps/api/src/app.module.ts` | API inicia, prefixo global `/api/v1`, validacao, CORS, Swagger em nao producao | build/typecheck passaram anteriormente | Caminho do Swagger e exposicao em producao precisam de politica | Manter, documentar politica de rotas |
+| Backend | Endpoints de health | `IMPLEMENTED` | `apps/api/src/modules/health/*` | `GET /api/v1/health`, `/live`, `/ready`; readiness checa MySQL e Redis | API e2e health existe | Readiness publica pode revelar dependencias se exposta amplamente | Manter liveness publica, restringir readiness por ambiente se necessario |
+| Backend | Modulos de negocio | `SCAFFOLDED` | `apps/api/src/modules/{auth,users,customers,carriers,...}` | Apenas classes de modulo, sem controllers/use cases/repositories | nenhum | Falsa percepcao de completude funcional | Especificar cada modulo antes da implementacao |
+| Backend | Fluxo controller-use case-repository | `DOCUMENTED_ONLY` | `docs/architecture/backend.md` | Ainda nao existe use case ou repository de negocio | nenhum | Uso direto futuro de Prisma em controllers | Aplicar no primeiro modulo funcional |
+| Backend | Validacao de configuracao | `IMPLEMENTED` | `apps/api/src/config/environment.ts` | Zod valida variaveis obrigatorias de runtime | `environment.spec.ts` | Segredos sao placeholders nos exemplos | Manter validacao estrita |
+| Backend | Contrato de erro | `PARTIALLY_IMPLEMENTED` | `apps/api/src/common/filters/http-exception.filter.ts`, `packages/shared/src/index.ts` | Erros estruturados com requestId/timestamp/path | spec do filter existe | `ApplicationError.details` precisa de politica de allowlist publica | Adicionar classificacao de detalhes de erro antes dos CRUDs |
+| Backend | Request ID e correlation ID | `IMPLEMENTED` | `request-context.middleware.ts`, `request-logging.interceptor.ts` | Gera ou propaga IDs | spec do middleware existe | Contexto tambem aceita headers spoofaveis de tenant/user | Separar contexto tecnico de requisicao do contexto auth |
+| Security | Guard private-by-default | `PARTIALLY_IMPLEMENTED` | `private-by-default.guard.ts`, `public.decorator.ts` | Nega rotas nao publicas sem contexto | apenas testes indiretos | Contexto vem de headers arbitrarios | Substituir por auth guard real antes de endpoints privados |
+| Security | RBAC | `PARTIALLY_IMPLEMENTED` | `roles.guard.ts`, `roles.decorator.ts`, `packages/shared/src/index.ts` | Decorator/guard de role existe | nenhum | Role pode ser falsificada por header | Derivar role de sessao/token verificado |
+| Security | Autenticacao | `SCAFFOLDED` | `apps/api/src/modules/auth/auth.module.ts`, docs/security | Sem login, JWT, OAuth, MFA ou fluxo de refresh | nenhum | Ainda nao protege rotas de negocio | Implementar primeiro modulo funcional |
+| Security | Isolamento de tenant em runtime | `NEEDS_REVIEW` | `schema.prisma`, `request-context.middleware.ts` | Colunas de tenant existem; sem enforcement em repositorio | nenhum | Vazamentos cross-tenant provaveis se queries usarem apenas id | Adicionar regras/testes de repositorio tenant-scoped |
+| Security | Salas WebSocket por tenant | `NEEDS_REVIEW` | `notifications.gateway.ts` | Cliente pode entrar em `tenant:{tenantId}` pelo payload | nenhum | Risco critico de assinatura de sala cross-tenant | Handshake autenticado e tenant derivado pelo servidor |
+| Data | Schema Prisma | `PARTIALLY_IMPLEMENTED` | `apps/api/prisma/schema.prisma` | Entidades de fundacao existem | generate/build passou | Faltam shipment, opcoes, tracking, servicos e tabelas de frete | Evoluir somente com migrations aprovadas |
+| Data | Migrations e seed | `PARTIALLY_IMPLEMENTED` | `apps/api/prisma/migrations`, `seed.ts` | Migration inicial e seed local existem | generate validado | Fluxo de migration de producao nao definido | Adicionar workflow de `migrate deploy` depois |
+| Frontend | Landing page | `PARTIALLY_IMPLEMENTED` | `apps/web/src/app/(public)/page.tsx` | Landing estatica de produto | teste de render | Metricas ilustrativas podem parecer claims | Marcar/remover claims antes de lancamento publico |
+| Frontend | Pagina de login | `PARTIALLY_IMPLEMENTED` | `apps/web/src/app/(auth)/login/page.tsx`, `login-form.tsx` | Formulario visual com validacao Zod/RHF; submit no-op | teste de login | Sem auth/session/MFA/erros | Conectar depois do modulo auth |
+| Frontend | Dashboard | `SCAFFOLDED` | `apps/web/src/app/(dashboard)/dashboard/page.tsx` | Placeholder estatico com estado vazio | teste de render | Rota publica, sem dados | Proteger rota apos auth |
+| Frontend | App shell | `PARTIALLY_IMPLEMENTED` | `app-shell.tsx` | Sidebar/topbar visual | teste de acessibilidade | Todos os links nav apontam para `/dashboard`; tenant nao visivel | Especificar IA e contexto de tenant |
+| Frontend | HTTP client | `PARTIALLY_IMPLEMENTED` | `apps/web/src/services/http-client.ts` | Fetch centralizado com credentials e erros estruturados | teste de http-client | Faltam comportamento para 204/non-JSON/session refresh | Estender com contrato auth |
+| Infrastructure | Docker Compose | `IMPLEMENTED` | `docker-compose.yml` | API, web, MySQL, Redis, perfil Adminer | `docker compose config` e startup local passaram anteriormente | Portas locais de DB/Redis expostas | Manter dev-only; restringir producao |
+| Infrastructure | Dockerfiles | `PARTIALLY_IMPLEMENTED` | `apps/api/Dockerfile`, `apps/web/Dockerfile` | Multi-stage, non-root, frozen lockfile | `docker compose build` passou | Runtime copia `/app` amplamente | Otimizar layout da imagem depois |
+| Infrastructure | BullMQ | `SCAFFOLDED` | `queue.module.ts`, imports module | Fila registrada com retry/backoff | nenhum | Sem worker, DLQ ou envelope de idempotencia | Adicionar servico worker com modulo de importacao |
+| Infrastructure | Redis | `PARTIALLY_IMPLEMENTED` | `redis.service.ts`, compose | Servico client e health ping existem | spec do servico | Sem auth no compose local; sem plano de producao | Redis gerenciado com TLS/auth para deploy |
+| Observability | Logs estruturados | `PARTIALLY_IMPLEMENTED` | `observability.module.ts`, logging interceptor | Logs Pino e redaction | comportamento basico coberto indiretamente | Sem metricas/traces/alertas | Adicionar OpenTelemetry/metricas apos alvo de deploy |
+| Tests | Unit/integration | `PARTIALLY_IMPLEMENTED` | `apps/api/src/**/*.spec.ts`, `apps/web/tests` | Testes de fundacao existem | `pnpm test` passou anteriormente | Sem testes de tenant, auth, transacao e jobs | Adicionar por modulo |
+| Tests | E2E | `PARTIALLY_IMPLEMENTED` | `apps/api/test`, `apps/web/tests/e2e` | API health e2e existe; smoke web planejado | API e2e passou; Playwright pode exigir deps nativas | Dependencias de browser sensiveis ao ambiente | Documentar setup e manter CI estavel |
+| Documentation | Docs/ADRs/skills/workflows | `PARTIALLY_IMPLEMENTED` | `docs`, `.cloud` | Docs amplos de fundacao existem | apenas auditoria estatica | Alguns docs descrevem estado alvo, nao estado real | Manter auditoria atualizada |
 
-## Verified Contradictions
+## Contradicoes Verificadas
 
-- Database and tenant-isolation docs were reviewed to align with MySQL: use `JSON`, not JSONB, and do not depend on PostgreSQL-style Row Level Security.
-- Security docs correctly say tenant must not come from arbitrary headers, but current `RequestContextMiddleware` reads tenant/user/role headers. This is acceptable only as a foundation placeholder and must be replaced before private business routes.
-- Realtime docs say authorization is future; current gateway is therefore not safe for production tenant rooms.
+- Docs de banco e isolamento de tenant foram revisados para alinhar com MySQL: usar `JSON`, nao JSONB, e nao depender de Row Level Security no estilo PostgreSQL.
+- Docs de seguranca dizem corretamente que tenant nao deve vir de headers arbitrarios, mas o `RequestContextMiddleware` atual le headers de tenant/user/role. Isso e aceitavel somente como placeholder de fundacao e deve ser substituido antes de rotas privadas de negocio.
+- Docs realtime dizem que autorizacao e futura; portanto, o gateway atual nao e seguro para salas de tenant em producao.
 
-## Conclusion
+## Conclusao
 
-The foundation is real and buildable, but the product is not functionally implemented. The next step must be an approved Identity and Access module, because every other module depends on trusted user, tenant, role, session, and audit context.
+A fundacao e real e buildavel, mas o produto nao esta funcionalmente implementado. O proximo passo deve ser um modulo aprovado de Identidade e Acesso, porque todos os outros modulos dependem de contexto confiavel de usuario, tenant, role, sessao e auditoria.

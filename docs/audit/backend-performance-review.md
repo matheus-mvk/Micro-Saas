@@ -1,33 +1,33 @@
-# Backend Performance Review
+# Revisao De Performance Backend
 
-Date: 2026-07-25
+Data: 2026-07-25
 
-## Implemented Corrections
+## Correcoes Implementadas
 
-- Added tenant-scoped `GET /api/v1/dashboard/summary`.
-- Used a Prisma transaction to group dashboard counts and aggregate reads.
-- Kept all dashboard queries bounded and aggregate-based; no frontend aggregation or unbounded record loading was introduced.
-- Added `db:deploy` script for Docker/CI-style migration execution without a shadow database.
-- Limited accepted `x-request-id` and correlation IDs to safe 64-character values.
+- Adicionado `GET /api/v1/dashboard/summary` tenant-scoped.
+- Usada transacao Prisma para agrupar contagens do dashboard e leituras agregadas.
+- Mantidas todas as queries do dashboard limitadas e baseadas em agregacao; nenhuma agregacao frontend ou carga de registros sem limite foi introduzida.
+- Adicionado script `db:deploy` para execucao de migration estilo Docker/CI sem shadow database.
+- Limitados `x-request-id` e correlation IDs aceitos a valores seguros de 64 caracteres.
 
-## Findings
+## Achados
 
-| Area | Status | Evidence | Remaining risk |
+| Area | Status | Evidencia | Risco restante |
 | --- | --- | --- | --- |
-| Auth | `PARTIALLY_COMPLETED` | `AuthController`, `AuthService`, `RefreshToken` schema | OAuth, MFA, recovery, session UI and CSRF remain missing |
-| Dashboard | `PARTIALLY_COMPLETED` | `DashboardController`, `DashboardService` | Only foundation metrics are available because most domain tables are absent |
-| Users/customers/carriers/imports/freight/insights | `SCAFFOLDED` | Empty Nest modules | No CRUD endpoints or business workflows |
-| Realtime | `SCAFFOLDED_UNSAFE` | `NotificationsGateway` accepts tenant payload | Must authenticate socket and derive tenant server-side |
-| BullMQ | `SCAFFOLDED` | Queue registration only | No producer, worker or processor |
+| Auth | `PARTIALLY_COMPLETED` | `AuthController`, `AuthService`, schema `RefreshToken` | OAuth, MFA, recovery, UI de sessoes e CSRF permanecem ausentes |
+| Dashboard | `PARTIALLY_COMPLETED` | `DashboardController`, `DashboardService` | Apenas metricas de fundacao disponiveis porque a maior parte das tabelas de dominio esta ausente |
+| Users/customers/carriers/imports/freight/insights | `SCAFFOLDED` | Modulos Nest vazios | Sem endpoints CRUD ou workflows de negocio |
+| Realtime | `SCAFFOLDED_UNSAFE` | `NotificationsGateway` aceita payload de tenant | Deve autenticar socket e derivar tenant server-side |
+| BullMQ | `SCAFFOLDED` | Apenas registro de fila | Sem producer, worker ou processor |
 
-## Endpoint Inventory
+## Inventario De Endpoints
 
-| Endpoint | Method | Auth | Tenant | Status |
+| Endpoint | Metodo | Auth | Tenant | Status |
 | --- | --- | --- | --- | --- |
-| `/api/v1/health/live` | GET | Public | N/A | Implemented |
-| `/api/v1/health/ready` | GET | Public | N/A | Implemented |
-| `/api/v1/auth/login` | POST | Public | Resolved from user | Partially implemented |
-| `/api/v1/auth/refresh` | POST | Public cookie | Resolved from refresh session | Partially implemented |
-| `/api/v1/auth/logout` | POST | Public cookie | Resolved from refresh session when present | Partially implemented |
-| `/api/v1/auth/me` | GET | Required | Token tenant | Implemented |
-| `/api/v1/dashboard/summary` | GET | Required | Request context tenant | Implemented in this pass |
+| `/api/v1/health/live` | GET | Public | N/A | Implementado |
+| `/api/v1/health/ready` | GET | Public | N/A | Implementado |
+| `/api/v1/auth/login` | POST | Public | Resolvido pelo usuario | Parcialmente implementado |
+| `/api/v1/auth/refresh` | POST | Cookie publico | Resolvido pela sessao de refresh | Parcialmente implementado |
+| `/api/v1/auth/logout` | POST | Cookie publico | Resolvido pela sessao de refresh quando presente | Parcialmente implementado |
+| `/api/v1/auth/me` | GET | Obrigatorio | Tenant do token | Implementado |
+| `/api/v1/dashboard/summary` | GET | Obrigatorio | Tenant do contexto de requisicao | Implementado nesta passagem |

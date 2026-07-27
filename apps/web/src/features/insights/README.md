@@ -1,3 +1,3 @@
-# Insights Feature
+# Funcionalidade De Insights
 
-Status: implemented. Owns tenant-scoped deterministic insights, filters, refresh, read and dismiss actions.
+Status: implementado. Responsavel por insights deterministicos tenant-scoped, filtros, refresh e acoes de marcar como lido e dispensar.

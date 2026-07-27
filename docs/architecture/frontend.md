@@ -1,5 +1,5 @@
-# Frontend Architecture
+# Arquitetura Frontend
 
-The web app uses Next.js App Router, TypeScript and Server Components by default. Client Components are limited to providers, forms and interactive widgets.
+A aplicacao Web usa Next.js App Router, TypeScript e Server Components por padrao. Client Components ficam limitados a providers, formularios e widgets interativos.
 
-Remote state will use TanStack Query, form validation uses Zod with React Hook Form and API access is centralized in `src/services/http-client.ts`.
+Estado remoto usa TanStack Query, validacao de formulario usa Zod com React Hook Form e acesso a API e centralizado em `src/services/http-client.ts`.

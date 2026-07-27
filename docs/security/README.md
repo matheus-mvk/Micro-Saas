@@ -1,4 +1,4 @@
-# Security Documentation
+# Documentacao De Seguranca
 
 Este diretorio consolida as regras e decisoes de seguranca para a plataforma SaaS multi-tenant de inteligencia logistica.
 
@@ -18,14 +18,14 @@ Os documentos cobrem controles de produto, aplicacao, dados e operacao para:
 ## Documentos
 
 - [Threat model](threat-model.md)
-- [Authentication](authentication.md)
-- [Authorization](authorization.md)
-- [Tenant isolation](tenant-isolation.md)
+- [Autenticacao](authentication.md)
+- [Autorizacao](authorization.md)
+- [Isolamento de tenants](tenant-isolation.md)
 - [Uploads](uploads.md)
-- [Secrets](secrets.md)
-- [Logging and audit](logging.md)
-- [Public/private data matrix](data-classification.md)
-- [Risk register](risk-register.md)
+- [Segredos](secrets.md)
+- [Logging e auditoria](logging.md)
+- [Matriz de dados publicos/privados](data-classification.md)
+- [Registro de riscos](risk-register.md)
 
 ## Principios obrigatorios
 
@@ -37,4 +37,3 @@ Os documentos cobrem controles de produto, aplicacao, dados e operacao para:
 6. Uploads devem ser tratados como conteudo hostil ate passarem por validacao, armazenamento seguro e politicas de acesso.
 7. Segredos devem existir apenas em cofres, variaveis de ambiente protegidas ou servicos equivalentes; nunca no repositorio.
 8. Mudancas de seguranca devem ser revisadas considerando impacto multi-tenant antes de merge/deploy.
-

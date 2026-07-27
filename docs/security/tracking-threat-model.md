@@ -1,16 +1,16 @@
-# Tracking Threat Model
+# Threat Model De Tracking
 
 Status: `IN_DESIGN`
 
-## Protected Assets
+## Ativos Protegidos
 
-- Shipment status and delivery timeline.
-- Customer names, addresses, tracking codes, cargo values, and SLA data.
-- Tenant-specific carrier performance and exception data.
-- Import files and external webhook payloads.
-- Audit evidence for manual tracking actions.
+- Status do shipment e timeline de entrega.
+- Nomes de clientes, enderecos, codigos de tracking, valores de carga e dados de SLA.
+- Performance de transportadoras e dados de excecao especificos de tenant.
+- Arquivos de importacao e payloads de webhooks externos.
+- Evidencias de auditoria para acoes manuais de tracking.
 
-## Trust Boundaries
+## Fronteiras De Confianca
 
 ```mermaid
 flowchart LR
@@ -25,47 +25,47 @@ flowchart LR
   WS --> Browser[Authorized Browser]
 ```
 
-## Threats By Flow
+## Ameacas Por Fluxo
 
-| Flow | Threat | Control |
+| Fluxo | Ameaca | Controle |
 | --- | --- | --- |
-| Manual event | User records event for another tenant shipment | Resolve tenant from session, query by `id + tenantId`, indistinguishable not found |
-| Manual event | Operator sets forbidden status transition | Explicit state machine and permission checks |
-| Import | Spreadsheet injects formula or malicious payload | MIME/magic byte validation, formula neutralization, async quarantine |
-| Import | Duplicate rows create duplicate events | Idempotency key per row or external event |
-| External API | Provider sends event for wrong tenant | Integration account bound to tenant and provider reference mapping |
-| Webhook | Replay or forged webhook | Signature verification, timestamp window, external event uniqueness |
-| Queue | Job processes tenant wrong or stale data | Signed/validated job envelope and worker reloading tenant/resource |
-| WebSocket | Client joins another tenant room | Authenticated handshake and server-derived room names |
-| Dashboard | Aggregates leak counts from another tenant | Tenant-scoped queries and aggregate tests |
-| Audit | Sensitive payload logged in before/after | Sanitized audit schema and redaction policy |
+| Evento manual | Usuario registra evento para shipment de outro tenant | Resolver tenant pela sessao, consultar por `id + tenantId`, retornar not found indistinguivel |
+| Evento manual | Operador define transicao de status proibida | Maquina de estados explicita e verificacoes de permissao |
+| Importacao | Planilha injeta formula ou payload malicioso | Validacao de MIME/magic byte, neutralizacao de formula, quarentena assincrona |
+| Importacao | Linhas duplicadas criam eventos duplicados | Chave de idempotencia por linha ou evento externo |
+| API externa | Provider envia evento para tenant errado | Conta de integracao vinculada ao tenant e mapeamento de referencia do provider |
+| Webhook | Replay ou webhook forjado | Verificacao de assinatura, janela de timestamp, unicidade de evento externo |
+| Fila | Job processa tenant errado ou dado obsoleto | Envelope de job assinado/validado e worker recarregando tenant/recurso |
+| WebSocket | Cliente entra em sala de outro tenant | Handshake autenticado e nomes de sala derivados pelo servidor |
+| Dashboard | Agregacoes vazam contagens de outro tenant | Queries tenant-scoped e testes de agregacao |
+| Auditoria | Payload sensivel registrado em before/after | Schema de auditoria sanitizado e politica de redacao |
 
-## Required Security Controls
+## Controles De Seguranca Obrigatorios
 
-- No `tenantId` from request body, query, or user-controlled socket payload for authorization.
-- Tracking writes require authenticated user or verified integration credential.
-- Every tracking mutation writes `AuditLog` for manual/system administrative action.
-- External events require `(tenantId, source, externalEventId)` uniqueness.
-- All status-changing writes use a transaction.
-- Terminal status changes require elevated permission or correction event.
-- Error responses avoid revealing whether cross-tenant shipment IDs exist.
-- Realtime payloads contain IDs and summary only, not full sensitive records.
+- Nenhum `tenantId` vindo de body, query ou payload de socket controlado pelo usuario pode ser usado para autorizacao.
+- Escritas de tracking exigem usuario autenticado ou credencial de integracao verificada.
+- Toda mutacao de tracking grava `AuditLog` para acao manual/sistemica administrativa.
+- Eventos externos exigem unicidade por `(tenantId, source, externalEventId)`.
+- Todas as escritas que alteram status usam transacao.
+- Mudancas para status terminal exigem permissao elevada ou evento de correcao.
+- Respostas de erro evitam revelar se IDs de shipment cross-tenant existem.
+- Payloads realtime contem apenas IDs e resumo, nao registros sensiveis completos.
 
-## Abuse Cases
+## Casos De Abuso
 
-1. Authenticated operator changes `tenantId` in payload and tries to join another room.
-2. External integration replays an old `DELIVERED` event after shipment was canceled.
-3. Import file repeats a row 1000 times to inflate timeline and costs.
-4. User registers `DELIVERED` directly from `CREATED`.
-5. User attempts to infer another tenant shipment by tracking code.
+1. Operador autenticado altera `tenantId` no payload e tenta entrar em outra sala.
+2. Integracao externa repete um evento antigo `DELIVERED` depois que o shipment foi cancelado.
+3. Arquivo de importacao repete uma linha 1000 vezes para inflar timeline e custos.
+4. Usuario registra `DELIVERED` diretamente a partir de `CREATED`.
+5. Usuario tenta inferir shipment de outro tenant por tracking code.
 
-## Tests
+## Testes
 
-- wrong tenant returns indistinguishable not found;
-- unauthorized role denied;
-- invalid status transition rejected;
-- duplicate external event ignored or returns idempotent success;
-- out-of-order event stored without corrupting current status;
-- terminal status protected;
-- WebSocket room join denied for unauthorized tenant/resource;
-- audit record is created without sensitive payload.
+- tenant errado retorna not found indistinguivel;
+- role nao autorizada e negada;
+- transicao de status invalida e rejeitada;
+- evento externo duplicado e ignorado ou retorna sucesso idempotente;
+- evento fora de ordem e armazenado sem corromper status atual;
+- status terminal e protegido;
+- entrada em sala WebSocket e negada para tenant/recurso nao autorizado;
+- registro de auditoria e criado sem payload sensivel.

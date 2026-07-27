@@ -1,26 +1,26 @@
-# Security Final Review
+# Revisao Final De Seguranca
 
-Date: 2026-07-25
+Data: 2026-07-25
 
-## Corrections Made
+## Correcoes Realizadas
 
-- Login rate limiting exists through Redis with local fallback.
-- Request and correlation IDs are now bounded to a safe 64-character pattern.
-- Demo seed refuses production execution unless `ALLOW_DEMO_SEED=true`.
-- Dashboard endpoint is private by default and tenant-scoped.
+- Rate limiting de login existe via Redis com fallback local.
+- Request IDs e correlation IDs agora sao limitados a um padrao seguro de 64 caracteres.
+- Seed demo recusa execucao em producao, exceto com `ALLOW_DEMO_SEED=true`.
+- Endpoint de dashboard e privado por padrao e tenant-scoped.
 
-## Major Remaining Risks
+## Principais Riscos Restantes
 
-| Risk | Evidence | Status |
+| Risco | Evidencia | Status |
 | --- | --- | --- |
-| WebSocket tenant room can be chosen by client | `notifications.gateway.ts` | Not fixed |
-| OAuth Google/GitHub absent | No provider/callback/controller | Not implemented |
-| MFA/TOTP absent | No TOTP model/service/controller | Not implemented |
-| Password recovery absent | No reset token model/service/controller | Not implemented |
-| CSRF protection absent for cookie-authenticated mutations | Auth cookies and credentialed fetch | Not implemented |
-| Access token returned in JSON | `AuthController.login` | Pending decision |
-| RBAC matrix not applied to domain endpoints | No domain controllers | Pending domain implementation |
+| Sala WebSocket por tenant pode ser escolhida pelo cliente | `notifications.gateway.ts` | Nao corrigido |
+| OAuth Google/GitHub ausente | Sem provider/callback/controller | Nao implementado |
+| MFA/TOTP ausente | Sem modelo/service/controller TOTP | Nao implementado |
+| Recuperacao de senha ausente | Sem modelo/service/controller de reset token | Nao implementado |
+| Protecao CSRF ausente para mutations autenticadas por cookie | Cookies de auth e fetch com credentials | Nao implementado |
+| Access token retornado em JSON | `AuthController.login` | Decisao pendente |
+| Matriz RBAC nao aplicada a endpoints de dominio | Sem controllers de dominio | Pendente de implementacao de dominio |
 
-## Demo Guidance
+## Orientacao De Demo
 
-Run only on localhost with development credentials. Do not expose this stack publicly until CSRF, OAuth/MFA decisions, WebSocket auth and production secrets are implemented.
+Execute somente em localhost com credenciais de desenvolvimento. Nao exponha esta stack publicamente ate CSRF, decisoes OAuth/MFA, auth WebSocket e segredos de producao estarem implementados.

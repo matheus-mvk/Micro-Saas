@@ -1,3 +1,3 @@
 # Workflows
 
-Workflows in `.cloud/workflows` define repeatable steps for module definition, endpoint implementation, database changes, security review and release validation.
+Workflows em `.cloud/workflows` definem etapas repetiveis para definicao de modulo, implementacao de endpoint, mudancas de banco, revisao de seguranca e validacao de release.

@@ -1,3 +1,3 @@
-# Users Feature
+# Funcionalidade De Usuarios
 
-Status: planned. This feature will own user management UI after the authentication and RBAC matrix are approved.
+Status: planejado. Esta funcionalidade sera responsavel pela UI de gestao de usuarios depois que autenticacao e matriz RBAC estiverem aprovadas.

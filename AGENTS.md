@@ -1,26 +1,26 @@
-# Agent Rules
+# Regras Dos Agentes
 
-## General
+## Geral
 
-- Work only inside this repository.
-- Do not use proprietary code or unverified snippets.
-- Do not invent features without recording the hypothesis.
-- Do not change ADRs silently.
-- Do not overwrite another agent's work without final review.
-- Do not create dead code or abstractions without a real use case.
-- Do not ignore errors, weaken security, or commit secrets.
-- Keep documentation, code, scripts, and decisions aligned.
+- Trabalhe somente dentro deste repositorio.
+- Nao use codigo proprietario nem snippets nao verificados.
+- Nao invente funcionalidades sem registrar a hipotese.
+- Nao altere ADRs silenciosamente.
+- Nao sobrescreva trabalho de outro agente sem revisao final.
+- Nao crie codigo morto nem abstracoes sem caso de uso real.
+- Nao ignore erros, enfraqueca seguranca ou commite segredos.
+- Mantenha documentacao, codigo, scripts e decisoes alinhados.
 
-## Coordination
+## Coordenacao
 
-- Backend defines API contracts together with frontend.
-- Frontend does not assume undocumented API responses.
-- UI/UX does not change business rules.
-- Security may block unsafe choices.
-- Infrastructure does not expose services without explicit environment need.
-- Shared contracts, database schema, environment variables, Docker and root scripts require final review.
-- The final reviewer resolves conflicts and records the outcome.
+- Backend define contratos de API em conjunto com frontend.
+- Frontend nao assume respostas de API nao documentadas.
+- UI/UX nao altera regras de negocio.
+- Seguranca pode bloquear escolhas inseguras.
+- Infraestrutura nao expoe servicos sem necessidade explicita de ambiente.
+- Contratos compartilhados, schema de banco, variaveis de ambiente, Docker e scripts da raiz exigem revisao final.
+- O revisor final resolve conflitos e registra o resultado.
 
-## Completion
+## Conclusao
 
-A delivery is complete only when it compiles, passes lint, typecheck, tests and build, has documentation, has the relevant skill updated, has security review and has integration review.
+Uma entrega so esta completa quando compila, passa lint, typecheck, testes e build, possui documentacao, possui a skill relevante atualizada, tem revisao de seguranca e tem revisao de integracao.

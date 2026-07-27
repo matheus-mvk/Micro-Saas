@@ -1,3 +1,3 @@
-# Dashboard Feature
+# Funcionalidade De Dashboard
 
-Status: implemented. Owns tenant-scoped decision KPIs, operational quality indicators, route/carrier rankings and insight highlights.
+Status: implementado. Responsavel por KPIs de decisao tenant-scoped, indicadores de qualidade operacional, rankings de rota/transportadora e destaques de insights.

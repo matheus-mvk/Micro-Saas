@@ -1,32 +1,32 @@
-# Docker Operations
+# Operacoes Docker
 
-This directory is reserved for Docker-specific supporting assets such as entrypoint scripts, helper environment examples, or local-only operational files when they are integrated by the application owners.
+Este diretorio e reservado para assets de suporte especificos de Docker, como scripts de entrypoint, exemplos auxiliares de ambiente ou arquivos operacionais somente locais quando forem integrados pelos donos da aplicacao.
 
-The runtime Docker assets currently live at the repository root and application boundaries:
+Os assets Docker de runtime vivem atualmente na raiz do repositorio e nas fronteiras das aplicacoes:
 
-- `docker-compose.yml`: local orchestration for app services and dependencies.
-- `apps/api/Dockerfile`: NestJS API image.
-- `apps/web/Dockerfile`: Next.js image.
-- `.env.example`: local environment template consumed by Compose.
-- `.dockerignore`: build context exclusions.
+- `docker-compose.yml`: orquestracao local de servicos da aplicacao e dependencias.
+- `apps/api/Dockerfile`: imagem da API NestJS.
+- `apps/web/Dockerfile`: imagem Next.js.
+- `.env.example`: template de ambiente local consumido pelo Compose.
+- `.dockerignore`: exclusoes do contexto de build.
 
-This README documents expected usage without changing runtime Docker assets. The broader setup runbook is available in `docs/infrastructure/setup-runbook.md`.
+Este README documenta o uso esperado sem alterar assets Docker de runtime. O runbook mais amplo de setup esta em `docs/infrastructure/setup-runbook.md`.
 
-## Service Topology
+## Topologia De Servicos
 
-Current Compose services:
+Servicos atuais do Compose:
 
-- `api`: NestJS API on port `3333`, built from `apps/api/Dockerfile`.
-- `web`: Next.js app on port `3000`, built from `apps/web/Dockerfile`.
-- `mysql`: local MySQL 8.4 database.
-- `redis`: cache, login rate limit storage, BullMQ backend, and realtime coordination support.
-- `adminer`: optional database UI behind the `devtools` profile.
+- `api`: API NestJS na porta `3333`, construida a partir de `apps/api/Dockerfile`.
+- `web`: app Next.js na porta `3000`, construido a partir de `apps/web/Dockerfile`.
+- `mysql`: banco local MySQL 8.4.
+- `redis`: cache, armazenamento de rate limit de login, backend BullMQ e suporte de coordenacao realtime.
+- `adminer`: UI opcional de banco por tras do profile `devtools`.
 
-There is no separate `worker` service in the current Compose file. Async processing is wired through the API runtime modules today. If a dedicated BullMQ worker is introduced, it must receive tenant context in every job payload and be documented here before use.
+Nao ha servico `worker` separado no arquivo Compose atual. Hoje o processamento assincrono esta conectado pelos modulos de runtime da API. Se um worker BullMQ dedicado for introduzido, ele deve receber contexto de tenant em todo payload de job e ser documentado aqui antes do uso.
 
-## Local Usage
+## Uso Local
 
-From the repository root:
+A partir da raiz do repositorio:
 
 ```bash
 cp .env.example .env
@@ -36,63 +36,63 @@ docker compose ps
 docker compose logs -f
 ```
 
-For dependency-only startup during local manual API/Web execution:
+Para iniciar apenas dependencias durante execucao manual local da API/Web:
 
 ```bash
 docker compose up -d mysql redis
 ```
 
-For the optional database UI:
+Para a UI opcional de banco:
 
 ```bash
 docker compose --profile devtools up -d adminer
 ```
 
-Default endpoints:
+Endpoints padrao:
 
 - API: `http://localhost:3333/api/v1`.
 - Web: `http://localhost:3000`.
-- MySQL inside Docker network: `mysql:3306`.
-- MySQL from host tools such as DBeaver: `localhost:3307`.
-- Redis inside Docker network: `redis:6379`.
-- Redis from host tools: `localhost:6379`.
-- Adminer with profile `devtools`: `http://localhost:8080`.
+- MySQL dentro da rede Docker: `mysql:3306`.
+- MySQL a partir de ferramentas do host, como DBeaver: `localhost:3307`.
+- Redis dentro da rede Docker: `redis:6379`.
+- Redis a partir de ferramentas do host: `localhost:6379`.
+- Adminer com profile `devtools`: `http://localhost:8080`.
 
-Stop local services:
+Parar servicos locais:
 
 ```bash
 docker compose down
 ```
 
-Stop and remove local volumes only when local data can be discarded:
+Parar e remover volumes locais somente quando os dados locais puderem ser descartados:
 
 ```bash
 docker compose down -v
 ```
 
-## Environment Variables
+## Variaveis De Ambiente
 
-Local Docker configuration should read from a development-only environment file. Do not commit real secrets.
+A configuracao Docker local deve ler um arquivo de ambiente exclusivo de desenvolvimento. Nao commite segredos reais.
 
-Use `.env.example` as the baseline for `.env`.
+Use `.env.example` como base para `.env`.
 
-Required or important API variables:
+Variaveis obrigatorias ou importantes da API:
 
-- `DATABASE_URL`: for containers, use `mysql://logistics:logistics_password@mysql:3306/logistics_saas`.
-- `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`: local MySQL bootstrap values.
-- `REDIS_HOST=redis`, `REDIS_PORT=6379`, or `REDIS_URL` when using a managed Redis endpoint.
-- `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`: at least 32 characters and never production secrets in local files.
-- `COOKIE_DOMAIN`, `CORS_ORIGINS`, `API_PUBLIC_URL`, `WEB_PUBLIC_URL`: must match local Web/API hosts.
-- `IMPORT_STORAGE_DIR`, `IMAGE_STORAGE_DIR`, `IMPORT_MAX_FILE_SIZE_BYTES`, `IMPORT_MAX_ROWS`: upload and import controls.
-- `ALLOW_DEMO_SEED`: keep `false` unless intentionally seeding demo data.
+- `DATABASE_URL`: para containers, use `mysql://logistics:logistics_password@mysql:3306/logistics_saas`.
+- `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`: valores de bootstrap do MySQL local.
+- `REDIS_HOST=redis`, `REDIS_PORT=6379`, ou `REDIS_URL` ao usar endpoint Redis gerenciado.
+- `JWT_ACCESS_SECRET` e `JWT_REFRESH_SECRET`: pelo menos 32 caracteres e nunca segredos de producao em arquivos locais.
+- `COOKIE_DOMAIN`, `CORS_ORIGINS`, `API_PUBLIC_URL`, `WEB_PUBLIC_URL`: devem corresponder aos hosts locais da Web/API.
+- `IMPORT_STORAGE_DIR`, `IMAGE_STORAGE_DIR`, `IMPORT_MAX_FILE_SIZE_BYTES`, `IMPORT_MAX_ROWS`: controles de upload e importacao.
+- `ALLOW_DEMO_SEED`: mantenha `false`, exceto quando a seed demo for intencionalmente executada.
 
-Frontend variables:
+Variaveis do frontend:
 
 - `NEXT_PUBLIC_API_URL`: default `http://localhost:3333/api/v1`.
 - `NEXT_PUBLIC_APP_URL`: default `http://localhost:3000`.
-- `NEXT_PUBLIC_API_TIMEOUT_MS`: client request timeout.
+- `NEXT_PUBLIC_API_TIMEOUT_MS`: timeout de requisicao do cliente.
 
-Memory tuning variables consumed by Compose:
+Variaveis de ajuste de memoria consumidas pelo Compose:
 
 - `MYSQL_MEM_LIMIT`
 - `REDIS_MEM_LIMIT`
@@ -101,11 +101,11 @@ Memory tuning variables consumed by Compose:
 - `API_NODE_OPTIONS`
 - `WEB_NODE_OPTIONS`
 
-Do not put `DATABASE_URL`, Redis credentials, JWT secrets, OAuth secrets, or MySQL credentials in frontend hosting environments.
+Nao coloque `DATABASE_URL`, credenciais Redis, segredos JWT, segredos OAuth ou credenciais MySQL em ambientes de hospedagem do frontend.
 
-## Migrations And Seed
+## Migrations E Seed
 
-For local development with Node installed on the host:
+Para desenvolvimento local com Node instalado no host:
 
 ```bash
 pnpm db:generate
@@ -113,7 +113,7 @@ pnpm db:deploy
 pnpm db:seed
 ```
 
-For Docker-first execution, run these commands from an API container after services are healthy:
+Para execucao Docker-first, rode estes comandos a partir de um container da API depois que os servicos estiverem saudaveis:
 
 ```bash
 docker compose run --rm api pnpm --filter @logistics/api db:generate
@@ -121,55 +121,55 @@ docker compose run --rm api pnpm --filter @logistics/api db:deploy
 docker compose run --rm api pnpm --filter @logistics/api db:seed
 ```
 
-The local `api` service also runs `db:deploy` and the demo seed before starting the NestJS process. This makes the default Docker environment include all demo users, including `administrador@dev.com`, `admin.test@dev.com`, `manager.test@dev.com`, and `operator.test@dev.com`.
+O servico local `api` tambem roda `db:deploy` e a seed demo antes de iniciar o processo NestJS. Isso faz o ambiente Docker padrao incluir todos os usuarios demo, incluindo `administrador@dev.com`, `admin.test@dev.com`, `manager.test@dev.com` e `operator.test@dev.com`.
 
-Production-like environments should use `db:deploy`, not `db:migrate`. The demo seed is blocked in `NODE_ENV=production` unless `ALLOW_DEMO_SEED=true`.
+Ambientes semelhantes a producao devem usar `db:deploy`, nao `db:migrate`. A seed demo e bloqueada em `NODE_ENV=production`, exceto quando `ALLOW_DEMO_SEED=true`.
 
-If the host machine is stuck on an old Node 18 version, prefer Docker because both application Dockerfiles use `node:20-alpine`. Prisma 6.19.x requires Node `>=18.18`.
+Se a maquina host estiver presa em uma versao antiga do Node 18, prefira Docker porque os dois Dockerfiles da aplicacao usam `node:20-alpine`. Prisma 6.19.x exige Node `>=18.18`.
 
-## Multi-Tenant Validation
+## Validacao Multi-Tenant
 
-Local Docker data should include multiple tenants. After startup, validate that:
+Dados Docker locais devem incluir multiplos tenants. Depois da inicializacao, valide que:
 
-- API requests are resolved to the intended tenant.
-- Database records are scoped by tenant.
-- Cache keys do not collide across tenants.
-- Workers include tenant ID in every job payload.
-- Imports created by an `OPERATOR` are not visible to another operator.
-- `ADMIN`, `MANAGER`, and `OPERATOR` accounts exercise the access matrix in `docs/security/access-control-matrix.md`.
+- Requisicoes da API sao resolvidas para o tenant esperado.
+- Registros do banco sao escopados por tenant.
+- Chaves de cache nao colidem entre tenants.
+- Workers incluem tenant ID em todo payload de job.
+- Imports criados por um `OPERATOR` nao sao visiveis para outro operador.
+- Contas `ADMIN`, `MANAGER` e `OPERATOR` exercitam a matriz de acesso em `docs/security/access-control-matrix.md`.
 
-The demo seed creates multiple tenants and user roles. Test account SQL and manual TiDB fallback commands are documented in `docs/development/access-test-accounts.md`.
+A seed demo cria multiplos tenants e roles de usuario. SQL de contas de teste e comandos manuais de fallback para TiDB estao documentados em `docs/development/access-test-accounts.md`.
 
-## Image Guidance
+## Orientacao De Imagem
 
-Application Dockerfiles are present. Continue preserving these expectations:
+Dockerfiles da aplicacao estao presentes. Continue preservando estas expectativas:
 
-- Lockfile-based dependency install.
-- Multi-stage builds.
-- Non-root runtime user.
-- Explicit exposed ports.
-- Healthcheck command.
-- Minimal runtime image.
+- Instalacao de dependencias baseada em lockfile.
+- Builds multi-stage.
+- Usuario de runtime nao root.
+- Portas expostas explicitamente.
+- Comando de healthcheck.
+- Imagem minima de runtime.
 
-Current service roles:
+Papeis atuais dos servicos:
 
-- `api`: NestJS API on port `3333`.
-- `web`: Next.js app on port `3000`.
-- `mysql`: local MySQL database.
-- `redis`: cache, BullMQ backend, and realtime coordination support.
-- `adminer`: optional local database UI.
-- `worker`: future dedicated async job consumer, not currently declared in Compose.
+- `api`: API NestJS na porta `3333`.
+- `web`: app Next.js na porta `3000`.
+- `mysql`: banco MySQL local.
+- `redis`: cache, backend BullMQ e suporte de coordenacao realtime.
+- `adminer`: UI local opcional de banco.
+- `worker`: consumidor futuro dedicado de jobs assincronos, ainda nao declarado no Compose.
 
-## Health And Logs
+## Health E Logs
 
-Compose healthchecks:
+Healthchecks do Compose:
 
 - `mysql`: `mysqladmin ping`.
 - `redis`: `redis-cli ping`.
-- `api`: HTTP check against `/api/v1/health/live`.
-- `web`: HTTP check against `/`.
+- `api`: verificacao HTTP contra `/api/v1/health/live`.
+- `web`: verificacao HTTP contra `/`.
 
-Useful log commands:
+Comandos uteis de log:
 
 ```bash
 docker compose logs -f api
@@ -178,50 +178,50 @@ docker compose logs -f mysql
 docker compose logs -f redis
 ```
 
-Use `docker compose ps` to confirm health status before debugging the application layer.
+Use `docker compose ps` para confirmar o status de saude antes de depurar a camada da aplicacao.
 
 ## Troubleshooting
 
-Prisma or install fails on host:
+Prisma ou instalacao falha no host:
 
-- Use Docker with Node 20.
-- Or upgrade host Node to `>=18.18`; Node 20 is recommended.
+- Use Docker com Node 20.
+- Ou atualize o Node do host para `>=18.18`; Node 20 e recomendado.
 
-API cannot connect to database:
+API nao conecta ao banco:
 
-- Inside containers, `DATABASE_URL` must point to `mysql:3306`.
-- From host tools, use `localhost:3307`.
-- Confirm `docker compose ps mysql` is healthy.
+- Dentro dos containers, `DATABASE_URL` deve apontar para `mysql:3306`.
+- A partir de ferramentas do host, use `localhost:3307`.
+- Confirme que `docker compose ps mysql` esta saudavel.
 
-API cannot connect to Redis:
+API nao conecta ao Redis:
 
-- Inside containers, use `REDIS_HOST=redis` and `REDIS_PORT=6379`.
-- From host tools, use `localhost:6379`.
-- Confirm `docker compose logs -f redis`.
+- Dentro dos containers, use `REDIS_HOST=redis` e `REDIS_PORT=6379`.
+- A partir de ferramentas do host, use `localhost:6379`.
+- Confirme `docker compose logs -f redis`.
 
-Web cannot call API:
+Web nao consegue chamar a API:
 
-- Confirm `NEXT_PUBLIC_API_URL` was provided at build time.
-- Confirm `CORS_ORIGINS` includes `http://localhost:3000`.
-- Rebuild `web` after changing public frontend variables.
+- Confirme que `NEXT_PUBLIC_API_URL` foi fornecido no build.
+- Confirme que `CORS_ORIGINS` inclui `http://localhost:3000`.
+- Rebuild `web` depois de alterar variaveis publicas do frontend.
 
-Build fails in `web` or `api`:
+Build falha em `web` ou `api`:
 
-- Re-run the failing filtered command outside Docker when possible to get shorter logs.
-- Check `pnpm-lock.yaml` changes and Node/Prisma compatibility.
-- Do not bypass TypeScript or Next.js build errors in Dockerfiles.
+- Reexecute o comando filtrado que falhou fora do Docker quando possivel para obter logs menores.
+- Verifique mudancas em `pnpm-lock.yaml` e compatibilidade Node/Prisma.
+- Nao contorne erros de build TypeScript ou Next.js nos Dockerfiles.
 
-## CI Integration
+## Integracao Com CI
 
-The CI workflow should validate Docker Compose syntax when compose files are present at the repository root:
+O workflow de CI deve validar a sintaxe Docker Compose quando arquivos Compose estiverem presentes na raiz do repositorio:
 
 ```bash
 docker compose config
 ```
 
-Recommended next checks:
+Proximas verificacoes recomendadas:
 
-- Build `api` and `web` images from a clean checkout.
-- Run vulnerability scanning on built images.
-- Run migrations against an ephemeral MySQL-compatible database.
-- Validate healthchecks after `docker compose up --build`.
+- Construir imagens `api` e `web` a partir de um checkout limpo.
+- Rodar scan de vulnerabilidades nas imagens construidas.
+- Rodar migrations contra um banco efemero compativel com MySQL.
+- Validar healthchecks apos `docker compose up --build`.

@@ -1,27 +1,27 @@
-# MySQL Performance Audit
+# Auditoria De Performance MySQL
 
-Date: 2026-07-25
+Data: 2026-07-25
 
-Reviewer role: Senior MySQL Database Analyst and Performance Engineer.
+Papel revisor: Senior MySQL Database Analyst and Performance Engineer.
 
-## Summary
+## Resumo
 
-The current schema is a foundation schema, not the complete logistics platform schema. It contains tenant, branch, user, refresh token, customer, carrier, freight simulation, import job and audit log tables. It does not yet contain customer addresses, carrier services, freight rate tables, simulation options, shipments, packages, tracking events, import rows or insights.
+O schema atual e um schema de fundacao, nao o schema completo da plataforma logistica. Ele contem tabelas de tenant, filial, usuario, refresh token, cliente, transportadora, simulacao de frete, import job e audit log. Ainda nao contem enderecos de clientes, servicos de transportadora, tabelas de frete, opcoes de simulacao, shipments, pacotes, eventos de tracking, linhas de importacao ou insights.
 
-## Findings And Changes
+## Achados E Alteracoes
 
-| Area | Finding | Change | Evidence | Status |
+| Area | Achado | Alteracao | Evidencia | Status |
 | --- | --- | --- | --- | --- |
-| Migration compatibility | MySQL rejected the generated index name `freight_simulations_tenant_id_origin_postal_code_destination_postal_code_idx` because it exceeded the identifier limit | Renamed to `freight_simulations_tenant_route_idx` in schema and migration | `schema.prisma`, `20260718150000_init/migration.sql` | Fixed |
-| Dashboard summary | The dashboard previously had no backend query and used frontend constants | Added `GET /dashboard/summary` with tenant-scoped counts using Prisma transaction | `DashboardService.getSummary` | Fixed for foundation metrics |
-| Tenant isolation | All dashboard queries filter by `tenantId` | Implemented in each count/aggregate | `dashboard.service.ts` | Fixed for new endpoint |
-| Refresh token lookup | Repository searches by `tokenHash`, while schema uniqueness is `(tenantId, tokenHash)` | No structural change yet | `auth.repository.ts`, `schema.prisma` | Pending |
-| Seed idempotency | Core users were idempotent; operational demo data was missing | Added idempotent customer, carrier, freight simulation, import job and audit log using unique keys or fixed IDs | `seed.ts` | Improved |
-| Production seed safety | Seed could run in production | Added `NODE_ENV=production` guard requiring `ALLOW_DEMO_SEED=true` | `seed.ts`, `.env.example` | Fixed |
+| Compatibilidade de migration | MySQL rejeitou o nome de indice gerado `freight_simulations_tenant_id_origin_postal_code_destination_postal_code_idx` por exceder o limite de identificador | Renomeado para `freight_simulations_tenant_route_idx` no schema e na migration | `schema.prisma`, `20260718150000_init/migration.sql` | Corrigido |
+| Resumo do dashboard | Dashboard anteriormente nao tinha query backend e usava constantes frontend | Adicionado `GET /dashboard/summary` com contagens tenant-scoped usando transacao Prisma | `DashboardService.getSummary` | Corrigido para metricas de fundacao |
+| Isolamento de tenant | Todas as queries do dashboard filtram por `tenantId` | Implementado em cada count/aggregate | `dashboard.service.ts` | Corrigido para novo endpoint |
+| Busca de refresh token | Repository busca por `tokenHash`, enquanto unicidade do schema e `(tenantId, tokenHash)` | Nenhuma alteracao estrutural ainda | `auth.repository.ts`, `schema.prisma` | Pendente |
+| Idempotencia da seed | Usuarios principais eram idempotentes; dados demo operacionais estavam ausentes | Adicionados customer, carrier, freight simulation, import job e audit log idempotentes usando chaves unicas ou IDs fixos | `seed.ts` | Melhorado |
+| Seguranca da seed em producao | Seed podia rodar em producao | Adicionado guard `NODE_ENV=production` exigindo `ALLOW_DEMO_SEED=true` | `seed.ts`, `.env.example` | Corrigido |
 
-## Index Review
+## Revisao De Indices
 
-Existing useful indexes:
+Indices uteis existentes:
 
 - `branches(tenant_id, active)`
 - `users(tenant_id, status)`
@@ -34,12 +34,12 @@ Existing useful indexes:
 - `import_jobs(tenant_id, status, created_at)`
 - `audit_logs(tenant_id, action, created_at)`
 
-No indexes were removed. One index was renamed for MySQL compatibility.
+Nenhum indice foi removido. Um indice foi renomeado por compatibilidade com MySQL.
 
-## Critical Missing Data Structures
+## Estruturas Criticas Ausentes
 
-The original challenge cannot be completed with the current schema alone. Missing models include carrier services, rate tables, freight rate versions, simulation options, shipments, shipment snapshots, tracking events, import rows, insights and MFA/OAuth/session management structures.
+O desafio original nao pode ser concluido somente com o schema atual. Modelos ausentes incluem servicos de transportadora, tabelas de frete, versoes de tabela de frete, opcoes de simulacao, shipments, snapshots de shipment, eventos de tracking, linhas de importacao, insights e estruturas de gestao MFA/OAuth/sessoes.
 
-## Partial Migration Recovery Note
+## Nota De Recuperacao De Migration Parcial
 
-If the first migration failed after creating some tables, do not run `migrate reset` or remove volumes unless the database is explicitly disposable. For local recovery, manually create the missing tables from the corrected migration SQL and then use Prisma migrate resolve according to Prisma documentation, or start with a clean development database that has no valuable data.
+Se a primeira migration falhou depois de criar algumas tabelas, nao rode `migrate reset` nem remova volumes, exceto quando o banco for explicitamente descartavel. Para recuperacao local, crie manualmente as tabelas ausentes a partir do SQL de migration corrigido e depois use Prisma migrate resolve conforme a documentacao do Prisma, ou comece com um banco de desenvolvimento limpo sem dados valiosos.

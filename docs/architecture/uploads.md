@@ -1,20 +1,20 @@
 # Uploads
 
-The platform uses two upload flows with different operational goals.
+A plataforma usa dois fluxos de upload com objetivos operacionais diferentes.
 
-## Asynchronous batch uploads
+## Uploads Assincronos Em Lote
 
-CSV/XLSX imports are processed asynchronously. The API receives the file with Multer, validates the spreadsheet, stores it in tenant-scoped local storage, creates an `ImportJob`, and sends the job to BullMQ/Redis. This is used for larger operational datasets where preview, row validation, progress and error reports are required.
+Importacoes CSV/XLSX sao processadas de forma assincrona. A API recebe o arquivo com Multer, valida a planilha, armazena em storage local com escopo por tenant, cria um `ImportJob` e envia o job para BullMQ/Redis. Esse fluxo e usado para conjuntos operacionais maiores, em que preview, validacao por linha, progresso e relatorios de erro sao necessarios.
 
-## Synchronous image uploads
+## Uploads Sincronos De Imagem
 
-Small images, such as carrier logos, use a synchronous endpoint. The API validates tenant access, RBAC, MIME type, extension and size, stores the file in tenant-scoped local image storage, updates the business record immediately and returns the updated DTO.
+Imagens pequenas, como logos de transportadoras, usam um endpoint sincrono. A API valida acesso ao tenant, RBAC, MIME type, extensao e tamanho, armazena o arquivo em storage local de imagens com escopo por tenant, atualiza o registro de negocio imediatamente e retorna o DTO atualizado.
 
-Current carrier logo endpoints:
+Endpoints atuais de logo de transportadora:
 
 - `POST /api/v1/carriers/:id/logo`
 - `GET /api/v1/carriers/:id/logo`
 
-The upload endpoint is documented in Swagger with `ApiConsumes('multipart/form-data')` and a binary `file` field. It accepts PNG, JPG and WebP images up to 2 MB. Local storage is intended for development and demonstration; production environments that need persistence across redeploys should replace the storage service with S3, Cloudflare R2 or another S3-compatible provider.
+O endpoint de upload e documentado no Swagger com `ApiConsumes('multipart/form-data')` e um campo binario `file`. Ele aceita imagens PNG, JPG e WebP ate 2 MB. O storage local e destinado a desenvolvimento e demonstracao; ambientes de producao que precisam de persistencia entre redeploys devem substituir o servico de storage por S3, Cloudflare R2 ou outro provider compativel com S3.
 
-Both upload strategies derive `tenantId` from the authenticated session. The browser must never send a free-form tenant identifier for upload authorization.
+As duas estrategias de upload derivam `tenantId` da sessao autenticada. O navegador nunca deve enviar um identificador livre de tenant para autorizacao de upload.

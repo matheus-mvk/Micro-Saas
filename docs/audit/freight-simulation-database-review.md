@@ -1,12 +1,12 @@
-# Freight Simulation Database Review
+# Revisao De Banco Da Simulacao De Frete
 
-Date: 2026-07-25
+Data: 2026-07-25
 
-Scope: MySQL/Prisma review for the future full freight simulation flow.
+Escopo: revisao MySQL/Prisma para o futuro fluxo completo de simulacao de frete.
 
-## Current Schema Summary
+## Resumo Do Schema Atual
 
-Current simulation-related schema is minimal:
+O schema atual relacionado a simulacao e minimo:
 
 - `branches`
 - `customers`
@@ -14,26 +14,26 @@ Current simulation-related schema is minimal:
 - `freight_simulations`
 - `audit_logs`
 
-`freight_simulations` currently stores a single flattened simulation-like row:
+`freight_simulations` atualmente armazena uma unica linha achatada semelhante a simulacao:
 
 - `tenant_id`
-- optional `customer_id`
-- optional `carrier_id`
-- origin/destination postal codes
-- real/cubic weight
+- `customer_id` opcional
+- `carrier_id` opcional
+- postal codes de origem/destino
+- peso real/cubado
 - length/width/height
-- cargo value
-- distance
-- estimated price
-- estimated deadline
+- valor da carga
+- distancia
+- preco estimado
+- prazo estimado
 - status
 - metadata JSON
 
-This shape is insufficient for a real comparative simulation because it cannot persist multiple packages, multiple carrier/service options, price components, rate versions, address snapshots, selected option or shipment relation.
+Esse formato e insuficiente para uma simulacao comparativa real porque nao consegue persistir multiplos pacotes, multiplas opcoes de transportadora/servico, componentes de preco, versoes de tabela, snapshots de endereco, opcao selecionada ou relacao com shipment.
 
-## Existing Useful Indexes
+## Indices Uteis Existentes
 
-Current indexes relevant to simulation:
+Indices atuais relevantes para simulacao:
 
 - `branches`: unique `(tenant_id, code)`, index `(tenant_id, active)`.
 - `customers`: unique `(tenant_id, document)`, index `(tenant_id, active, name)`.
@@ -41,131 +41,131 @@ Current indexes relevant to simulation:
 - `freight_simulations`: index `(tenant_id, status, created_at)`, index `(tenant_id, origin_postal_code, destination_postal_code)`.
 - `audit_logs`: index `(tenant_id, action, created_at)`, index `(actor_id, created_at)`.
 
-These indexes are a good starting point but do not cover the required future joins because the required tables do not exist.
+Esses indices sao um bom ponto de partida, mas nao cobrem os joins futuros obrigatorios porque as tabelas exigidas ainda nao existem.
 
-## Required Model Additions
+## Adicoes Obrigatorias De Modelo
 
-Minimum relational models for the executor:
+Modelos relacionais minimos para o executor:
 
-| Model | Purpose | Required constraints/indexes |
+| Modelo | Finalidade | Constraints/indices obrigatorios |
 | --- | --- | --- |
-| `CustomerAddress` | Multiple addresses per customer. | `(tenantId, customerId)`, `(tenantId, postalCode)`, one main address policy. |
-| `CarrierService` | Services/modalities under each carrier. | unique `(tenantId, carrierId, code)`, `(tenantId, carrierId, active)`, `(tenantId, active, modality)`. |
-| `CarrierCoverage` | Coverage rules for carrier service. | `(tenantId, carrierServiceId, active)`, indexes for origin/destination state/city/postal range. |
-| `FreightRateTable` | Versioned pricing table. | unique `(tenantId, carrierServiceId, version)`, `(tenantId, carrierServiceId, active, startsAt, endsAt)`. |
-| `FreightRateRange` | Weight bands/ranges. | `(tenantId, freightRateTableId, minWeightKg, maxWeightKg)`, overlap validated in service and tests. |
-| `FreightAdditionalCharge` | Fee configuration. | `(tenantId, freightRateTableId, type, active)`. |
-| `FreightSimulationAddress` | Immutable origin/destination snapshots. | `(tenantId, freightSimulationId, type)`. |
-| `FreightSimulationPackage` | Multiple packages/volumes. | `(tenantId, freightSimulationId)`. |
-| `FreightSimulationOption` | Carrier/service option result. | `(tenantId, freightSimulationId, totalPrice)`, `(tenantId, freightSimulationId, deadlineDays)`, unique selected option rule if modeled with flag. |
-| `FreightSimulationPriceComponent` | Breakdown rows. | `(tenantId, freightSimulationOptionId, type)`. |
-| `Shipment` | Operation created from option. | `(tenantId, trackingCode)`, `(tenantId, externalReference)`, `(tenantId, status, estimatedDeliveryAt)`, `(tenantId, customerId, createdAt)`. |
-| `ShipmentAddress` | Immutable shipment snapshots. | `(tenantId, shipmentId, type)`. |
-| `ShipmentPackage` | Shipment packages. | `(tenantId, shipmentId)`. |
+| `CustomerAddress` | Multiplos enderecos por cliente. | `(tenantId, customerId)`, `(tenantId, postalCode)`, politica de um endereco principal. |
+| `CarrierService` | Servicos/modalidades sob cada transportadora. | unique `(tenantId, carrierId, code)`, `(tenantId, carrierId, active)`, `(tenantId, active, modality)`. |
+| `CarrierCoverage` | Regras de cobertura para servico de transportadora. | `(tenantId, carrierServiceId, active)`, indices para state/city/postal range de origem/destino. |
+| `FreightRateTable` | Tabela de precificacao versionada. | unique `(tenantId, carrierServiceId, version)`, `(tenantId, carrierServiceId, active, startsAt, endsAt)`. |
+| `FreightRateRange` | Faixas/ranges de peso. | `(tenantId, freightRateTableId, minWeightKg, maxWeightKg)`, sobreposicao validada no service e em testes. |
+| `FreightAdditionalCharge` | Configuracao de taxas. | `(tenantId, freightRateTableId, type, active)`. |
+| `FreightSimulationAddress` | Snapshots imutaveis de origem/destino. | `(tenantId, freightSimulationId, type)`. |
+| `FreightSimulationPackage` | Multiplos pacotes/volumes. | `(tenantId, freightSimulationId)`. |
+| `FreightSimulationOption` | Resultado de opcao por transportadora/servico. | `(tenantId, freightSimulationId, totalPrice)`, `(tenantId, freightSimulationId, deadlineDays)`, regra unica de opcao selecionada se modelada por flag. |
+| `FreightSimulationPriceComponent` | Linhas de breakdown. | `(tenantId, freightSimulationOptionId, type)`. |
+| `Shipment` | Operacao criada a partir de opcao. | `(tenantId, trackingCode)`, `(tenantId, externalReference)`, `(tenantId, status, estimatedDeliveryAt)`, `(tenantId, customerId, createdAt)`. |
+| `ShipmentAddress` | Snapshots imutaveis de shipment. | `(tenantId, shipmentId, type)`. |
+| `ShipmentPackage` | Pacotes do shipment. | `(tenantId, shipmentId)`. |
 
-Snapshots may use JSON only for immutable source payloads or metadata, not to avoid modeling relationships, filters, ranges, statuses, price components or packages.
+Snapshots podem usar JSON somente para payloads de origem imutaveis ou metadata, nao para evitar modelagem de relacionamentos, filtros, ranges, status, componentes de preco ou pacotes.
 
-## Decimal and Precision Requirements
+## Requisitos De Decimal E Precisao
 
-Use Prisma `Decimal`/MySQL `DECIMAL`, not floating point, for:
+Use Prisma `Decimal`/MySQL `DECIMAL`, nao ponto flutuante, para:
 
-- money values: `DECIMAL(12,2)` or larger if needed;
-- percentages: `DECIMAL(8,4)`;
-- weight kg: `DECIMAL(10,3)`;
-- dimensions cm: `DECIMAL(10,2)`;
+- valores monetarios: `DECIMAL(12,2)` ou maior se necessario;
+- percentuais: `DECIMAL(8,4)`;
+- peso kg: `DECIMAL(10,3)`;
+- dimensoes cm: `DECIMAL(10,2)`;
 - volume m3: `DECIMAL(12,6)`;
-- distance km: `DECIMAL(10,2)`.
+- distancia km: `DECIMAL(10,2)`.
 
-The pricing engine must centralize rounding:
+O motor de precificacao deve centralizar arredondamento:
 
-- money rounded to 2 decimal places after each final component calculation;
-- internal weight and volume calculations keep at least 3 decimal places;
-- final total equals the sum of persisted price components.
+- dinheiro arredondado para 2 casas decimais apos cada calculo final de componente;
+- calculos internos de peso e volume mantem pelo menos 3 casas decimais;
+- total final igual a soma dos componentes de preco persistidos.
 
-## Query and Index Review For Critical Paths
+## Revisao De Queries E Indices Para Caminhos Criticos
 
-### Active carrier services
+### Servicos De Transportadora Ativos
 
-Expected query:
+Query esperada:
 
-- tenant equality;
-- carrier active;
-- service active;
-- optional carrier/service filters.
+- igualdade de tenant;
+- transportadora ativa;
+- servico ativo;
+- filtros opcionais de transportadora/servico.
 
-Required indexes:
+Indices obrigatorios:
 
 - `Carrier`: `(tenantId, active, name)`.
 - `CarrierService`: `(tenantId, active, carrierId)`.
 
-### Coverage lookup
+### Busca De Cobertura
 
-Expected query:
+Query esperada:
 
-- tenant equality;
-- carrierServiceId equality;
-- active equality;
-- origin/destination by state/city or postal ranges.
+- igualdade de tenant;
+- igualdade de carrierServiceId;
+- igualdade de active;
+- origem/destino por estado/cidade ou postal ranges.
 
-Required:
+Obrigatorio:
 
 - index `(tenantId, carrierServiceId, active)`;
-- separate range-aware indexes for postal prefix/range strategy chosen;
-- documented query plan. Avoid broad `%contains%` lookups for CEP.
+- indices separados range-aware para a estrategia escolhida de prefixo/range postal;
+- query plan documentado. Evitar consultas amplas `%contains%` para CEP.
 
-### Rate table vigente
+### Tabela De Frete Vigente
 
-Expected query:
+Query esperada:
 
-- tenant equality;
-- carrierServiceId equality;
-- active equality;
+- igualdade de tenant;
+- igualdade de carrierServiceId;
+- igualdade de active;
 - `startsAt <= simulationDate`;
 - `endsAt IS NULL OR endsAt >= simulationDate`;
-- order by version/effective date.
+- ordenar por versao/data efetiva.
 
-Required index:
+Indice obrigatorio:
 
 - `(tenantId, carrierServiceId, active, startsAt, endsAt)`.
 
-### Weight range lookup
+### Busca De Faixa De Peso
 
-Expected query:
+Query esperada:
 
-- tenant equality;
-- freightRateTableId equality;
+- igualdade de tenant;
+- igualdade de freightRateTableId;
 - `minWeightKg <= chargeableWeight`;
 - `maxWeightKg IS NULL OR maxWeightKg >= chargeableWeight`;
-- order by priority/minWeight.
+- ordenar por priority/minWeight.
 
-Required index:
+Indice obrigatorio:
 
 - `(tenantId, freightRateTableId, minWeightKg, maxWeightKg)`.
 
-The service must validate non-overlapping bands because MySQL cannot express this constraint directly with a simple unique index.
+O service deve validar faixas nao sobrepostas porque MySQL nao consegue expressar essa constraint diretamente com um unique index simples.
 
-### History listing
+### Listagem De Historico
 
-Required list filters:
+Filtros obrigatorios de listagem:
 
-- period;
-- customer;
-- user;
-- carrier;
-- service;
-- origin/destination;
-- selected option;
-- shipment relation.
+- periodo;
+- cliente;
+- usuario;
+- transportadora;
+- servico;
+- origem/destino;
+- opcao selecionada;
+- relacao com shipment.
 
-Required indexes:
+Indices obrigatorios:
 
-- `FreightSimulation`: `(tenantId, createdAt)`, `(tenantId, customerId, createdAt)`, `(tenantId, createdById, createdAt)` after adding `createdById`.
+- `FreightSimulation`: `(tenantId, createdAt)`, `(tenantId, customerId, createdAt)`, `(tenantId, createdById, createdAt)` apos adicionar `createdById`.
 - `FreightSimulationOption`: `(tenantId, freightSimulationId)`, `(tenantId, carrierId, createdAt)`, `(tenantId, carrierServiceId, createdAt)`.
-- `Shipment`: `(tenantId, simulationId)` or `(tenantId, selectedOptionId)`.
+- `Shipment`: `(tenantId, simulationId)` ou `(tenantId, selectedOptionId)`.
 
 ### Dashboard
 
-Dashboard must avoid loading all rows into Node.js. Use aggregate queries or grouped raw SQL where Prisma aggregate is not expressive enough. Add indexes for:
+Dashboard deve evitar carregar todas as linhas no Node.js. Use aggregate queries ou SQL bruto agrupado quando Prisma aggregate nao for expressivo o suficiente. Adicione indices para:
 
 - `(tenantId, createdAt)`;
 - `(tenantId, status, createdAt)`;
@@ -173,45 +173,45 @@ Dashboard must avoid loading all rows into Node.js. Use aggregate queries or gro
 - `(tenantId, carrierServiceId, createdAt)`;
 - `(tenantId, estimatedDeliveryAt)`.
 
-### Audit
+### Auditoria
 
-Simulation audit filters require:
+Filtros de auditoria de simulacao exigem:
 
 - `(tenantId, action, createdAt)`;
-- `(tenantId, entityType, entityId, createdAt)` if details link by resource.
+- `(tenantId, entityType, entityId, createdAt)` se detalhes linkarem por recurso.
 
-## Transaction Requirements
+## Requisitos De Transacao
 
-Use transactions for:
+Use transacoes para:
 
-- creating simulation plus addresses/packages/options/components;
-- selecting option and clearing previous selection;
-- creating shipment from selected option plus address/package snapshots plus initial tracking event;
-- rate table version changes that affect multiple rows;
-- seed setup for coherent demo data where feasible.
+- criar simulacao com enderecos/pacotes/opcoes/componentes;
+- selecionar opcao e limpar selecao anterior;
+- criar shipment a partir de opcao selecionada com snapshots de endereco/pacote e evento inicial de tracking;
+- mudancas de versao de tabela de frete que afetem multiplas linhas;
+- setup de seed para dados demo coerentes quando viavel.
 
-Do not include external API calls inside DB transactions. Fetch CEP/route data before opening the transaction or use cached data.
+Nao inclua chamadas de API externa dentro de transacoes de DB. Busque dados de CEP/rota antes de abrir a transacao ou use dados em cache.
 
-## Concurrency Requirements
+## Requisitos De Concorrencia
 
-Constraints must be the final defense for:
+Constraints devem ser a defesa final para:
 
-- unique carrier service code per carrier and tenant;
-- unique rate table version per service and tenant;
-- idempotent shipment creation from selected option;
-- unique tracking code within tenant;
-- idempotent seed IDs/upserts.
+- codigo unico de servico por transportadora e tenant;
+- versao unica de tabela de frete por servico e tenant;
+- criacao idempotente de shipment a partir de opcao selecionada;
+- tracking code unico dentro do tenant;
+- IDs/upserts idempotentes da seed.
 
-For option selection, use a transaction and either:
+Para selecao de opcao, use uma transacao e uma destas alternativas:
 
-- a single selected option field on `FreightSimulation`, or
-- a unique constraint strategy that prevents multiple selected options for one simulation.
+- um unico campo de opcao selecionada em `FreightSimulation`, ou
+- estrategia de unique constraint que impeça multiplas opcoes selecionadas para uma simulacao.
 
-## Current Database Risks
+## Riscos Atuais De Banco
 
-- `FreightSimulation` currently has no createdBy user relation, no branch relation and no selected option relation.
-- `metadata` JSON stores demo context and could become a dumping ground if not controlled.
-- `Customer` has no addresses; address history cannot be preserved.
-- `Carrier` has no services; pricing cannot distinguish economic/express/same day/etc.
-- There is no relational representation for price components, making dashboard/insights impossible without parsing JSON.
-- No executable DB tests currently prove cross-tenant isolation or seed idempotency.
+- `FreightSimulation` atualmente nao tem relacao de usuario `createdBy`, relacao de filial ou relacao de opcao selecionada.
+- `metadata` JSON armazena contexto demo e pode virar deposito generico se nao for controlado.
+- `Customer` nao possui enderecos; historico de endereco nao pode ser preservado.
+- `Carrier` nao possui servicos; precificacao nao consegue distinguir economico/expresso/same day/etc.
+- Nao ha representacao relacional para componentes de preco, tornando dashboard/insights impossiveis sem parsear JSON.
+- Nenhum teste executavel de DB atualmente prova isolamento cross-tenant ou idempotencia da seed.

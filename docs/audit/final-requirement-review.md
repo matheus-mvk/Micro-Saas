@@ -1,28 +1,28 @@
-# Final Requirement Review
+# Revisao Final De Requisitos
 
-Date: 2026-07-25
+Data: 2026-07-25
 
-Source priority: original challenge text supplied in the conversation, existing audits, actual code, Prisma schema, migrations, tests and documentation.
+Prioridade das fontes: texto original do desafio fornecido na conversa, auditorias existentes, codigo real, schema Prisma, migrations, testes e documentacao.
 
-## Executive Summary
+## Resumo Executivo
 
-The repository is a solid foundation, not a completed challenge implementation. This execution corrected concrete blockers and improved the demonstrable path: MySQL migration compatibility, seed safety and demo data, tenant-scoped dashboard backend, dashboard frontend integration, admin shell behavior and documentation.
+O repositorio e uma fundacao solida, nao uma implementacao completa do desafio. Esta execucao corrigiu bloqueios concretos e melhorou o caminho demonstravel: compatibilidade de migration MySQL, seguranca da seed e dados demo, backend de dashboard tenant-scoped, integracao frontend do dashboard, comportamento do shell admin e documentacao.
 
-The platform is not yet a complete logistics intelligence platform. Most required business modules remain unimplemented or scaffolded.
+A plataforma ainda nao e uma plataforma completa de inteligencia logistica. A maioria dos modulos de negocio obrigatorios permanece nao implementada ou apenas estruturada.
 
-## Corrected In This Execution
+## Corrigido Nesta Execucao
 
-- MySQL index name too long in initial migration.
-- Added `db:deploy` script for Docker/CI migration flow.
-- Added production guard to demo seed.
-- Added seed data for current dashboard-supported tables.
-- Added private tenant-scoped dashboard summary endpoint.
-- Replaced dashboard hard-coded KPIs with real API data.
-- Improved authenticated layout error/retry state.
-- Improved admin shell mobile navigation and disabled unavailable modules.
-- Created missing Testing/QA and Senior MySQL Database Analyst agents.
-- Created final audit and validation documentation.
+- Nome de indice MySQL longo demais na migration inicial.
+- Adicionado script `db:deploy` para fluxo de migration Docker/CI.
+- Adicionado guard de producao para seed demo.
+- Adicionados dados de seed para tabelas atualmente suportadas pelo dashboard.
+- Adicionado endpoint privado de resumo do dashboard tenant-scoped.
+- Substituidos KPIs hard-coded do dashboard por dados reais de API.
+- Melhorado estado de erro/retry do layout autenticado.
+- Melhorada navegacao mobile do shell admin e desabilitados modulos indisponiveis.
+- Criados agentes ausentes de Testing/QA e Senior MySQL Database Analyst.
+- Criada documentacao final de auditoria e validacao.
 
-## Not Completed
+## Nao Concluido
 
-OAuth, MFA, password recovery, user CRUD, customer addresses, carrier services, freight tables, deterministic freight pricing, simulation options, history, shipments, tracking, upload parsing, BullMQ worker, realtime progress, insights, audit UI and full RBAC remain incomplete.
+OAuth, MFA, recuperacao de senha, CRUD de usuarios, enderecos de cliente, servicos de transportadora, tabelas de frete, precificacao deterministica de frete, opcoes de simulacao, historico, shipments, tracking, parsing de upload, worker BullMQ, progresso realtime, insights, UI de auditoria e RBAC completo permanecem incompletos.

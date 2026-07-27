@@ -1,25 +1,25 @@
-# Complete Logistics Platform Implementation Prompt
+# Prompt Completo De Implementacao Da Plataforma Logistica
 
-You are Codex working in the repository `/mnt/c/projetos/micro-saas`.
+Voce e o Codex trabalhando no repositorio `/mnt/c/projetos/micro-saas`.
 
-Your task is to implement, integrate, test and document the complete multi-tenant logistics intelligence SaaS platform. This is an implementation execution, not another audit. You must change code, schema, migrations, frontend, backend, tests, seed and documentation as needed, while respecting repository rules.
+Sua tarefa e implementar, integrar, testar e documentar a plataforma SaaS completa de inteligencia logistica multi-tenant. Esta e uma execucao de implementacao, nao outra auditoria. Voce deve alterar codigo, schema, migrations, frontend, backend, testes, seed e documentacao conforme necessario, respeitando as regras do repositorio.
 
-## Repository Rules
+## Regras Do Repositorio
 
-- Work only inside this repository.
-- Do not use proprietary code or unverified snippets.
-- Do not invent features without recording the hypothesis.
-- Do not silently change ADRs.
-- Do not overwrite another agent's work without final review.
-- Do not create dead code or abstractions without a real use case.
-- Do not ignore errors, weaken security, or commit secrets.
-- Keep documentation, code, scripts and decisions aligned.
-- Do not use `docker compose down -v`, `prisma migrate reset`, delete volumes, delete migrations indiscriminately, or run destructive production commands.
-- Use a clean disposable database for destructive validation only after explicit coordination.
+- Trabalhe somente dentro deste repositorio.
+- Nao use codigo proprietario ou snippets nao verificados.
+- Nao invente funcionalidades sem registrar a hipotese.
+- Nao altere ADRs silenciosamente.
+- Nao sobrescreva trabalho de outro agente sem revisao final.
+- Nao crie codigo morto ou abstracoes sem caso de uso real.
+- Nao ignore erros, nao enfraqueca seguranca e nao commite segredos.
+- Mantenha documentacao, codigo, scripts e decisoes alinhados.
+- Nao use `docker compose down -v`, `prisma migrate reset`, apague volumes, apague migrations indiscriminadamente ou execute comandos destrutivos de producao.
+- Use banco limpo descartavel para validacao destrutiva somente depois de coordenacao explicita.
 
-## Source Material To Read First
+## Material Fonte Para Ler Primeiro
 
-Read these files before implementation:
+Leia estes arquivos antes da implementacao:
 
 - `README.md`
 - `AGENTS.md`
@@ -27,22 +27,22 @@ Read these files before implementation:
 - `docs/audit/logistics-simulation-gap-analysis.md`
 - `docs/audit/logistics-requirement-matrix.md`
 - `docs/audit/authentication-audit.md`
-- `docs/audit/final-requirement-review.md` if present
-- `docs/audit/mysql-performance-audit.md` if present
+- `docs/audit/final-requirement-review.md` se existir
+- `docs/audit/mysql-performance-audit.md` se existir
 - `docs/development/logistics-implementation-plan.md`
 - `docs/development/logistics-manual-test-scenarios.md`
 - `apps/api/prisma/schema.prisma`
-- all Prisma migrations
-- all backend modules under `apps/api/src`
-- all frontend pages and services under `apps/web/src`
+- todas as migrations Prisma
+- todos os modulos backend em `apps/api/src`
+- todas as paginas e services frontend em `apps/web/src`
 - `.cloud/agents`
 - `.cloud/skills`
 
-The original product objective is a SaaS multi-tenant logistics intelligence and freight analysis platform, not only a freight calculator.
+O objetivo original do produto e uma plataforma SaaS multi-tenant de inteligencia logistica e analise de fretes, nao apenas uma calculadora de frete.
 
-## Current Audited State
+## Estado Auditado Atual
 
-Backend endpoints currently found:
+Endpoints backend encontrados atualmente:
 
 - `GET /api/v1/health`
 - `GET /api/v1/health/live`
@@ -53,13 +53,13 @@ Backend endpoints currently found:
 - `GET /api/v1/auth/me`
 - `GET /api/v1/dashboard/summary`
 
-Frontend routes currently found:
+Rotas frontend encontradas atualmente:
 
 - `/`
 - `/login`
 - `/dashboard`
 
-Prisma models currently found:
+Modelos Prisma encontrados atualmente:
 
 - `Tenant`
 - `Branch`
@@ -71,11 +71,11 @@ Prisma models currently found:
 - `ImportJob`
 - `AuditLog`
 
-Most logistics services are missing, scaffolded, or partial. Do not treat these as complete.
+A maior parte dos servicos logisticos esta ausente, apenas estruturada ou parcial. Nao trate esses itens como completos.
 
-## Mandatory Agents
+## Agentes Obrigatorios
 
-Use or create agents matching the existing `.cloud/agents` pattern:
+Use ou crie agentes seguindo o padrao existente em `.cloud/agents`:
 
 - Backend Specialist
 - Frontend Specialist
@@ -86,231 +86,231 @@ Use or create agents matching the existing `.cloud/agents` pattern:
 - Senior MySQL Database Analyst
 - Final Integrator and Reviewer
 
-The Final Integrator coordinates shared files and resolves conflicts. Schema, migrations, shared contracts, auth, RBAC, Docker, env and root scripts require final review.
+O Final Integrator coordena arquivos compartilhados e resolve conflitos. Schema, migrations, contratos compartilhados, auth, RBAC, Docker, env e scripts raiz exigem revisao final.
 
-## Completion Rule
+## Regra De Conclusao
 
-A service is complete only when it has:
+Um servico esta completo somente quando possui:
 
-1. business objective;
-2. actors and permissions;
-3. model/migration/constraints/indexes when persistence is needed;
-4. backend controller/use case/service/repository;
-5. DTOs and validation;
-6. authorization and tenant isolation;
-7. audit events;
-8. error handling and Swagger;
-9. frontend page/components;
-10. loading, empty, error, success and no-permission states;
-11. server-side pagination/filtering/sorting when applicable;
-12. unit tests;
-13. integration tests;
-14. relevant e2e tests;
-15. demo data;
-16. manual test scenario;
-17. documentation;
-18. passing lint/typecheck/test/build;
-19. Security Specialist review;
-20. Senior MySQL Database Analyst review;
-21. Final Integrator review.
+1. objetivo de negocio;
+2. atores e permissoes;
+3. modelo/migration/constraints/indexes quando persistencia for necessaria;
+4. controller/use case/service/repository backend;
+5. DTOs e validacao;
+6. autorizacao e isolamento de tenant;
+7. eventos de auditoria;
+8. tratamento de erros e Swagger;
+9. pagina/componentes frontend;
+10. estados de carregamento, vazio, erro, sucesso e sem permissao;
+11. paginacao/filtro/ordenacao server-side quando aplicavel;
+12. testes unitarios;
+13. testes de integracao;
+14. testes e2e relevantes;
+15. dados demo;
+16. cenario de teste manual;
+17. documentacao;
+18. lint/typecheck/test/build passando;
+19. revisao do Security Specialist;
+20. revisao do Senior MySQL Database Analyst;
+21. revisao do Final Integrator.
 
-Do not mark as complete when only a table, Prisma model, empty controller, visual screen, frontend mock, placeholder, fixed data, button without action, endpoint without persistence or documentation exists.
+Nao marque como completo quando existir somente tabela, modelo Prisma, controller vazio, tela visual, mock frontend, placeholder, dado fixo, botao sem acao, endpoint sem persistencia ou documentacao.
 
-## Wave 0 - Foundation
+## Onda 0 - Fundacao
 
-Implement first:
+Implementar primeiro:
 
-- Fix Vitest startup failure currently observed as `SyntaxError: Unexpected token '*'`.
-- Configure Vitest/cache/output paths so tests do not fail merely because `node_modules/.vite/vitest/results.json` is not writable in stricter environments.
-- Run and document `lint`, `typecheck`, `test`, `build`, `prisma validate`, `docker compose config`.
-- Validate migration strategy without destructive reset.
-- Review current initial migration and previous MySQL identifier issue.
-- Define complete logistics relational model with Senior MySQL Database Analyst.
-- Define shared DTOs in `packages/shared`.
-- Define RBAC matrix for ADMIN, MANAGER, OPERATOR.
-- Define tenant isolation strategy for queries, jobs, cache, uploads and realtime.
-- Add CSRF strategy for cookie-authenticated mutations.
-- Fix unsafe Socket.IO tenant join before adding realtime events.
-- Update `.env.example` for all external integrations without committing secrets.
+- Corrigir falha de inicializacao do Vitest observada como `SyntaxError: Unexpected token '*'`.
+- Configurar caminhos de Vitest/cache/output para que testes nao falhem apenas porque `node_modules/.vite/vitest/results.json` nao pode ser escrito em ambientes mais restritos.
+- Rodar e documentar `lint`, `typecheck`, `test`, `build`, `prisma validate`, `docker compose config`.
+- Validar estrategia de migration sem reset destrutivo.
+- Revisar migration inicial atual e problema anterior de identificador MySQL.
+- Definir modelo relacional logistico completo com Senior MySQL Database Analyst.
+- Definir DTOs compartilhados em `packages/shared`.
+- Definir matriz RBAC para ADMIN, MANAGER, OPERATOR.
+- Definir estrategia de isolamento de tenant para queries, jobs, cache, uploads e realtime.
+- Adicionar estrategia CSRF para mutations autenticadas por cookie.
+- Corrigir entrada insegura em sala Socket.IO por tenant antes de adicionar eventos realtime.
+- Atualizar `.env.example` para todas as integracoes externas sem commitar segredos.
 
-## Wave 1 - Identity, Tenants and Users
+## Onda 1 - Identidade, Tenants E Usuarios
 
-Implement:
+Implementar:
 
-- tenant service: create, consult, edit, activate, deactivate, settings;
-- branch service: create, list, edit, activate, deactivate, address/contact/code/main branch;
-- user management: invite/create, list/search/filter/paginate, detail, edit name, edit role, activate, deactivate, logical remove, revoke sessions, reset MFA, resend invite, status, last access, auth methods;
-- roles: ADMIN, MANAGER, OPERATOR with explicit backend permission matrix;
-- prevent removal/deactivation of last active ADMIN;
-- prevent self-elevation without permission;
-- revoke sessions after deactivation and critical permission changes;
-- session list/revoke/current logout/global logout;
-- refresh token reuse detection tests;
-- password recovery with one-time expiring token and development email adapter;
-- OAuth Google with state, callback, verified email, tenant/user association and error page;
-- OAuth GitHub including verified email lookup when public email is unavailable;
-- MFA/TOTP enrollment, challenge, disable, recovery codes, regeneration and audit.
+- servico de tenant: criar, consultar, editar, ativar, desativar, configuracoes;
+- servico de filial: criar, listar, editar, ativar, desativar, endereco/contato/codigo/filial principal;
+- gestao de usuarios: convidar/criar, listar/buscar/filtrar/paginar, detalhe, editar nome, editar role, ativar, desativar, remocao logica, revogar sessoes, resetar MFA, reenviar convite, status, ultimo acesso, metodos de autenticacao;
+- roles: ADMIN, MANAGER, OPERATOR com matriz explicita de permissao no backend;
+- impedir remocao/desativacao do ultimo ADMIN ativo;
+- impedir autoelevacao sem permissao;
+- revogar sessoes apos desativacao e mudancas criticas de permissao;
+- lista/revogacao de sessoes/logout atual/logout global;
+- testes de deteccao de reuso de refresh token;
+- recuperacao de senha com token unico expiravel e adapter de e-mail de desenvolvimento;
+- OAuth Google com state, callback, e-mail verificado, associacao tenant/user e pagina de erro;
+- OAuth GitHub incluindo consulta de e-mail verificado quando e-mail publico estiver indisponivel;
+- enrollment, desafio, desativacao, recovery codes, regeneracao e auditoria de MFA/TOTP.
 
-Acceptance:
+Aceite:
 
-- `administrador@dev.com` / `@DEV1512` logs in as ADMIN in tenant `demo-logistics`.
-- Refresh refuses inactive users and inactive tenants.
-- No sensitive tokens/secrets are stored in `localStorage`.
-- Backend returns 403 for role violations.
+- `administrador@dev.com` / `@DEV1512` faz login como ADMIN no tenant `demo-logistics`.
+- Refresh recusa usuarios inativos e tenants inativos.
+- Nenhum token/segredo sensivel e armazenado em `localStorage`.
+- Backend retorna 403 para violacoes de role.
 
-## Wave 2 - Logistics Master Data
+## Onda 2 - Cadastros Mestres Logisticos
 
-Implement:
+Implementar:
 
-- customers CRUD with person type, name, legal name, CPF/CNPJ, state registration, email, phone, main contact, notes, status, responsible user, branch when applicable;
-- customer addresses with multiple types, CEP, street, number, complement, district, city, state, country, coordinates, main/pickup/delivery flags;
-- ViaCEP or BrasilAPI integration with timeout, cache, fallback, mocks and tests;
-- carriers CRUD with legal data, contact, status, integration metadata without exposing secrets;
-- carrier services with code, name, modality, description, default deadline, cubic factor, weight min/max, minimum price, coverage and pricing association;
-- coverage rules by country/state/city/postal range/region/origin-destination with overlap validation and route test endpoint.
+- CRUD de clientes com tipo de pessoa, nome, razao social, CPF/CNPJ, inscricao estadual, e-mail, telefone, contato principal, observacoes, status, usuario responsavel e filial quando aplicavel;
+- enderecos de clientes com multiplos tipos, CEP, rua, numero, complemento, bairro, cidade, estado, pais, coordenadas e flags principal/coleta/entrega;
+- integracao ViaCEP ou BrasilAPI com timeout, cache, fallback, mocks e testes;
+- CRUD de transportadoras com dados legais, contato, status e metadata de integracao sem expor segredos;
+- servicos de transportadora com codigo, nome, modalidade, descricao, prazo padrao, fator cubico, peso min/max, preco minimo, cobertura e associacao de precificacao;
+- regras de cobertura por pais/estado/cidade/faixa postal/regiao/origem-destino com validacao de sobreposicao e endpoint de teste de rota.
 
-Acceptance:
+Aceite:
 
-- CRUDs are tenant-scoped, paginated server-side, audited and tested.
-- Inactive carriers/services are excluded from new simulations.
+- CRUDs sao tenant-scoped, paginados server-side, auditados e testados.
+- Transportadoras/servicos inativos sao excluidos de novas simulacoes.
 
-## Wave 3 - Freight Pricing
+## Onda 3 - Precificacao De Frete
 
-Implement:
+Implementar:
 
-- freight rate tables associated with carrier/service/coverage;
-- versioning and vigency;
-- weight bands with min/max/base/per-kg/excess/deadline/priority;
-- fees: fixed, ad valorem, GRIS, toll, insurance, extra fees, discounts;
-- restrictions and currency;
-- overlap validation;
-- historical rule snapshots;
-- deterministic pricing engine independent from controllers.
+- tabelas de frete associadas a transportadora/servico/cobertura;
+- versionamento e vigencia;
+- faixas de peso com min/max/base/por kg/excedente/prazo/prioridade;
+- taxas: fixa, ad valorem, GRIS, pedagio, seguro, taxas extras, descontos;
+- restricoes e moeda;
+- validacao de sobreposicao;
+- snapshots historicos de regra;
+- motor deterministico de precificacao independente de controllers.
 
-Pricing engine must:
+O motor de precificacao deve:
 
-- normalize units;
-- compute total real weight;
-- compute total volume;
-- compute cubic weight as volume times cubic factor using documented units;
-- compute chargeable weight deterministically;
-- select active coverage, rate table and band;
-- calculate breakdown and total with Decimal-safe precision;
-- explain every component.
+- normalizar unidades;
+- computar peso real total;
+- computar volume total;
+- computar peso cubado como volume vezes fator cubico usando unidades documentadas;
+- computar peso taxavel de forma deterministica;
+- selecionar cobertura, tabela de frete e faixa ativas;
+- calcular breakdown e total com precisao Decimal-safe;
+- explicar cada componente.
 
-Acceptance:
+Aceite:
 
-- Unit tests cover cubage, chargeable weight, minimum price, bands, fees, rounding and edge limits.
+- Testes unitarios cobrem cubagem, peso taxavel, preco minimo, faixas, taxas, arredondamento e limites de borda.
 
-## Wave 4 - Freight Simulation
+## Onda 4 - Simulacao De Frete
 
-Implement:
+Implementar:
 
-- simulation page/form with optional customer, origin/destination, CEP lookup, city/state, cargo value, desired date, notes, service/carrier filters and multiple volumes;
-- route/distance integration such as OpenRouteService or a justified equivalent with timeout, retry, cache, fallback and mocks;
-- backend create/calculate simulation endpoint;
-- deterministic processing for each eligible service;
-- persisted input, volumes, options, unavailable reasons, breakdown and rule versions;
-- result comparison with sorting/filtering/details;
-- cheapest and fastest flags;
-- option selection transaction and audit;
-- simulation history list/detail with filters and pagination;
-- create Shipment from selected option.
+- pagina/formulario de simulacao com cliente opcional, origem/destino, consulta de CEP, cidade/estado, valor da carga, data desejada, observacoes, filtros de servico/transportadora e multiplos volumes;
+- integracao de rota/distancia como OpenRouteService ou equivalente justificado com timeout, retry, cache, fallback e mocks;
+- endpoint backend de criacao/calculo de simulacao;
+- processamento deterministico para cada servico elegivel;
+- entrada, volumes, opcoes, motivos de indisponibilidade, breakdown e versoes de regra persistidos;
+- comparacao de resultados com ordenacao/filtro/detalhes;
+- flags de menor preco e menor prazo;
+- transacao de selecao de opcao e auditoria;
+- listagem/detalhe de historico de simulacao com filtros e paginacao;
+- criacao de Shipment a partir da opcao selecionada.
 
-Acceptance:
+Aceite:
 
-- Evaluator can run the complete freight simulation flow from login to history and shipment creation.
+- O avaliador consegue executar o fluxo completo de simulacao de frete desde login ate historico e criacao de shipment.
 
-## Wave 5 - Shipments and Tracking
+## Onda 5 - Shipments E Tracking
 
-Implement:
+Implementar:
 
-- shipments created from simulation, manually and by import;
-- fields: customer, carrier, service, tracking code, external reference, origin/destination snapshots, volumes, weight, cargo value, freight value, ETA, current status, delivery date, source, user, tenant;
-- allowed edits and cancellation rules;
-- tracking events with statuses `CREATED`, `PICKUP_SCHEDULED`, `PICKED_UP`, `IN_TRANSIT`, `ARRIVED_AT_HUB`, `OUT_FOR_DELIVERY`, `DELIVERED`, `DELIVERY_FAILED`, `RETURNING`, `RETURNED`, `CANCELED`;
-- non-status events `ETA_UPDATED`, `LOCATION_UPDATED`, `NOTE_ADDED`, `EXCEPTION_REPORTED`, `CORRECTION_CREATED`;
-- immutable event timeline;
-- explicit state machine;
-- idempotency for external events;
-- event creation and shipment status update in same transaction;
-- realtime tracking update after secure realtime is implemented.
+- shipments criados a partir de simulacao, manualmente e por importacao;
+- campos: cliente, transportadora, servico, tracking code, referencia externa, snapshots de origem/destino, volumes, peso, valor da carga, valor do frete, ETA, status atual, data de entrega, origem, usuario, tenant;
+- edicoes permitidas e regras de cancelamento;
+- eventos de tracking com status `CREATED`, `PICKUP_SCHEDULED`, `PICKED_UP`, `IN_TRANSIT`, `ARRIVED_AT_HUB`, `OUT_FOR_DELIVERY`, `DELIVERED`, `DELIVERY_FAILED`, `RETURNING`, `RETURNED`, `CANCELED`;
+- eventos sem status `ETA_UPDATED`, `LOCATION_UPDATED`, `NOTE_ADDED`, `EXCEPTION_REPORTED`, `CORRECTION_CREATED`;
+- timeline de eventos imutavel;
+- maquina de estado explicita;
+- idempotencia para eventos externos;
+- criacao de evento e atualizacao de status do shipment na mesma transacao;
+- atualizacao realtime de tracking depois que realtime seguro estiver implementado.
 
-Acceptance:
+Aceite:
 
-- Invalid status transitions fail.
-- Corrections do not mutate original events.
-- Timeline and current status stay consistent.
+- Transicoes de status invalidas falham.
+- Correcoes nao alteram eventos originais.
+- Timeline e status atual permanecem consistentes.
 
-## Wave 6 - Imports, Async and Realtime
+## Onda 6 - Importacoes, Async E Realtime
 
-Implement at least one fully functional import flow, preferably customers or shipments:
+Implementar pelo menos um fluxo de importacao totalmente funcional, preferencialmente clientes ou shipments:
 
-- CSV and XLSX upload;
-- extension, MIME, size, filename, content, headers and row validation;
-- preview/pre-validation;
-- ImportJob and ImportJobRow/Error models;
-- tenant-scoped file storage;
-- BullMQ job with tenantId, userId, type, payload, idempotency key, attempts, timeout and correlation ID;
-- worker process, health check, retry/backoff, failure state, metrics and cleanup;
-- progress persistence;
-- Socket.IO progress events using authenticated server-derived tenant rooms;
-- frontend connection/reconnection/fallback polling;
-- downloadable error report protected against formula injection.
+- upload CSV e XLSX;
+- validacao de extensao, MIME, tamanho, nome do arquivo, conteudo, headers e linhas;
+- preview/pre-validacao;
+- modelos ImportJob e ImportJobRow/Error;
+- armazenamento de arquivo tenant-scoped;
+- job BullMQ com tenantId, userId, type, payload, idempotency key, attempts, timeout e correlation ID;
+- processo worker, health check, retry/backoff, estado de falha, metricas e limpeza;
+- persistencia de progresso;
+- eventos de progresso Socket.IO usando salas de tenant autenticadas e derivadas pelo servidor;
+- conexao/reconexao/fallback polling no frontend;
+- relatorio de erros baixavel protegido contra formula injection.
 
-Acceptance:
+Aceite:
 
-- Upload of valid file persists rows.
-- Invalid rows produce report.
-- Duplicate file follows documented checksum/idempotency rule.
-- User from another tenant cannot access file/job/events.
+- Upload de arquivo valido persiste linhas.
+- Linhas invalidas geram relatorio.
+- Arquivo duplicado segue regra documentada de checksum/idempotencia.
+- Usuario de outro tenant nao consegue acessar arquivo/job/eventos.
 
-## Wave 7 - Dashboard, Insights and Audit
+## Onda 7 - Dashboard, Insights E Auditoria
 
-Implement:
+Implementar:
 
-- dashboard filters: period, branch, customer, carrier, service, status;
-- KPIs: total simulations, average freight, average lowest value, estimated savings, total shipments, in transit, delayed, delivered, failed, success rate, predicted and actual deadlines, import counts and errors;
-- charts: simulations over time, costs over time, carrier performance, shipment statuses, frequent routes, predicted vs actual deadline, cost distribution and import quality;
-- optimized SQL/Prisma queries with indexes and no avoidable N+1;
-- insights model and deterministic generator with type, title, description, severity, evidence, metric, period, generated date, validity, tenant, context link, read/dismiss state;
-- audit query API/UI with period/user/action/resource filters, details and pagination.
+- filtros de dashboard: periodo, filial, cliente, transportadora, servico, status;
+- KPIs: total de simulacoes, frete medio, menor valor medio, economia estimada, total de shipments, em transito, atrasados, entregues, falhos, taxa de sucesso, prazos previstos e reais, contagens e erros de importacao;
+- graficos: simulacoes ao longo do tempo, custos ao longo do tempo, performance de transportadora, status de shipment, rotas frequentes, prazo previsto vs real, distribuicao de custo e qualidade de importacao;
+- queries SQL/Prisma otimizadas com indices e sem N+1 evitavel;
+- modelo de insight e gerador deterministico com tipo, titulo, descricao, severidade, evidencia, metrica, periodo, data de geracao, validade, tenant, link de contexto, estado lido/dispensado;
+- API/UI de consulta de auditoria com filtros de periodo/usuario/acao/recurso, detalhes e paginacao.
 
-Acceptance:
+Aceite:
 
-- No KPI or insight uses fixed frontend data.
-- Dashboard and insights consider only current tenant data.
+- Nenhum KPI ou insight usa dado fixo no frontend.
+- Dashboard e insights consideram somente dados do tenant atual.
 
-## Wave 8 - Public and Admin Experience
+## Onda 8 - Experiencia Publica E Admin
 
-Implement:
+Implementar:
 
-- complete landing page sections: header, hero, problem, solution, features, flow demo, benefits, illustrative indicators, differentiators, security, integrations, CTA, footer;
-- responsive menu and anchor navigation;
-- SEO metadata, Open Graph and semantic structure;
-- all admin pages for users, customers, carriers, services, rate tables, simulations, history, shipments, tracking, imports, dashboard, insights, audit and settings;
-- accessible forms/tables/dialogs;
-- loading, empty, error, success and no-permission states;
-- no mock-only frontend data.
+- secoes completas da landing page: header, hero, problema, solucao, funcionalidades, demo de fluxo, beneficios, indicadores ilustrativos, diferenciais, seguranca, integracoes, CTA, footer;
+- menu responsivo e navegacao por ancoras;
+- metadados SEO, Open Graph e estrutura semantica;
+- todas as paginas admin para usuarios, clientes, transportadoras, servicos, tabelas de frete, simulacoes, historico, shipments, tracking, importacoes, dashboard, insights, auditoria e configuracoes;
+- forms/tables/dialogs acessiveis;
+- estados de carregamento, vazio, erro, sucesso e sem permissao;
+- nenhum dado frontend apenas mock.
 
-Acceptance:
+Aceite:
 
-- Every visible button has a working action or is intentionally absent.
-- All pages have backend integration or are not presented as implemented.
+- Todo botao visivel tem uma acao funcional ou esta intencionalmente ausente.
+- Todas as paginas possuem integracao backend ou nao sao apresentadas como implementadas.
 
-## Wave 9 - Demo Data, Tests, Docs and Deploy
+## Onda 9 - Dados Demo, Testes, Docs E Deploy
 
-Implement:
+Implementar:
 
-- complete idempotent seed with two tenants, branches, users, disabled user, customers, addresses, carriers, services, coverage, rate tables, versions, bands, simulations, options, selected option, shipments, volumes, tracking, imports, errors, audit, dashboard data, insights, sessions and permissions;
-- seed production guard and concurrent/idempotency tests;
-- unit tests for domain logic;
-- integration tests for API + database;
-- e2e tests for landing, login, dashboard, CRUDs, simulation, shipment, tracking, import, audit, MFA, RBAC and tenant isolation;
-- Docker Compose with API, web, worker, MySQL and Redis;
-- README and technical docs for architecture, setup, migrations, seed, OAuth, MFA, integrations, queues, realtime, observability and deploy.
+- seed completa idempotente com dois tenants, filiais, usuarios, usuario desativado, clientes, enderecos, transportadoras, servicos, cobertura, tabelas de frete, versoes, faixas, simulacoes, opcoes, opcao selecionada, shipments, volumes, tracking, importacoes, erros, auditoria, dados de dashboard, insights, sessoes e permissoes;
+- guard de producao da seed e testes de concorrencia/idempotencia;
+- testes unitarios para logica de dominio;
+- testes de integracao para API + database;
+- testes e2e para landing, login, dashboard, CRUDs, simulacao, shipment, tracking, importacao, auditoria, MFA, RBAC e isolamento de tenant;
+- Docker Compose com API, web, worker, MySQL e Redis;
+- README e docs tecnicas para arquitetura, setup, migrations, seed, OAuth, MFA, integracoes, filas, realtime, observabilidade e deploy.
 
-Final validation must run and report:
+A validacao final deve executar e reportar:
 
 - `pnpm lint`
 - `pnpm typecheck`
@@ -319,30 +319,30 @@ Final validation must run and report:
 - `pnpm build`
 - `pnpm db:generate`
 - `pnpm --filter @logistics/api exec prisma validate`
-- migrations on a clean disposable database
-- seed twice without duplication
+- migrations em banco limpo descartavel
+- seed duas vezes sem duplicidade
 - `docker compose config`
-- Docker build/start health checks
-- manual test scenarios in `docs/development/logistics-manual-test-scenarios.md`
+- health checks de build/start Docker
+- cenarios manuais de teste em `docs/development/logistics-manual-test-scenarios.md`
 
-## Final Response Required
+## Resposta Final Obrigatoria
 
-At the end, report:
+Ao final, reportar:
 
-1. agents used;
-2. files changed;
-3. migrations created;
-4. indexes added/removed;
-5. endpoints implemented;
-6. pages implemented;
-7. tests added;
-8. tests executed and results;
-9. seed twice result;
-10. Docker result;
-11. cross-tenant test result;
-12. external configuration still required;
-13. known limitations;
-14. whether login `administrador@dev.com` works;
-15. whether the platform is ready for demonstration.
+1. agentes usados;
+2. arquivos alterados;
+3. migrations criadas;
+4. indices adicionados/removidos;
+5. endpoints implementados;
+6. paginas implementadas;
+7. testes adicionados;
+8. testes executados e resultados;
+9. resultado da seed duas vezes;
+10. resultado do Docker;
+11. resultado de teste cross-tenant;
+12. configuracao externa ainda exigida;
+13. limitacoes conhecidas;
+14. se o login `administrador@dev.com` funciona;
+15. se a plataforma esta pronta para demonstracao.
 
-Do not claim success for commands or flows that were not executed.
+Nao declare sucesso para comandos ou fluxos que nao foram executados.

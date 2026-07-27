@@ -1,65 +1,65 @@
-# Freight Simulation Current State
+# Estado Atual Da Simulacao De Frete
 
-Date: 2026-07-25
+Data: 2026-07-25
 
-Scope: read-only audit of the freight simulation flow after the latest foundation/customer/security work. This audit does not implement functional code.
+Escopo: auditoria read-only do fluxo de simulacao de frete apos o ultimo trabalho de fundacao/clientes/seguranca. Esta auditoria nao implementa codigo funcional.
 
-## Confirmed Implemented Foundation
+## Fundacao Implementada Confirmada
 
-The following items exist in code and should not be reimplemented from scratch by the next executor:
+Os itens abaixo existem no codigo e nao devem ser reimplementados do zero pelo proximo executor:
 
-- Basic authentication: `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`.
-- Refresh token rejects non-active users: `apps/api/src/modules/auth/auth.service.ts` checks `session.user.status !== UserStatus.ACTIVE`.
-- Authenticated tenant context: `PrivateByDefaultGuard` and `AuthContextService` derive `tenantId`, `userId` and `role` from a verified access token and an active user.
-- Realtime tenant isolation foundation: `NotificationsGateway` authenticates the Socket.IO handshake and joins only the tenant room derived from the authenticated token/cookie.
-- Initial customers API: `apps/api/src/modules/customers/*`.
-- Customer server-side pagination: `CustomersService.list()` uses `skip`, `take`, tenant filter and `count`.
-- Customer CPF/CNPJ validation: implemented in `CustomersService`.
-- Customer audit: `AuditAction.CUSTOMER_CHANGED` is recorded on create/update/status changes.
-- Customer frontend: route `/customers`, service `apps/web/src/services/customers-service.ts`, component `CustomerManagement`.
-- Dashboard summary: `GET /api/v1/dashboard/summary` counts current tenant data from MySQL.
+- Autenticacao basica: `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`.
+- Refresh token rejeita usuarios nao ativos: `apps/api/src/modules/auth/auth.service.ts` verifica `session.user.status !== UserStatus.ACTIVE`.
+- Contexto autenticado de tenant: `PrivateByDefaultGuard` e `AuthContextService` derivam `tenantId`, `userId` e `role` de access token verificado e usuario ativo.
+- Fundacao de isolamento realtime de tenant: `NotificationsGateway` autentica o handshake Socket.IO e entra somente na sala de tenant derivada do token/cookie autenticado.
+- API inicial de customers: `apps/api/src/modules/customers/*`.
+- Paginacao server-side de customers: `CustomersService.list()` usa `skip`, `take`, filtro de tenant e `count`.
+- Validacao CPF/CNPJ de customer: implementada em `CustomersService`.
+- Auditoria de customer: `AuditAction.CUSTOMER_CHANGED` e registrada em mudancas de create/update/status.
+- Frontend de customer: rota `/customers`, service `apps/web/src/services/customers-service.ts`, componente `CustomerManagement`.
+- Resumo do dashboard: `GET /api/v1/dashboard/summary` conta dados do tenant atual a partir do MySQL.
 
-## Known Platform Problems
+## Problemas Conhecidos Da Plataforma
 
-- API and web tests fail before specs execute with `SyntaxError: Unexpected token '*'`.
-- Web build compiles but did not finish local Next validation in the previous run.
-- Lint was inconclusive locally.
-- Seed is minimal and does not cover the full simulation narrative.
-- E2E does not cover login to simulation to shipment.
+- Testes da API e web falham antes das specs com `SyntaxError: Unexpected token '*'`.
+- Build Web compila, mas nao concluiu a validacao local do Next na execucao anterior.
+- Lint ficou inconclusivo localmente.
+- Seed e minima e nao cobre a narrativa completa de simulacao.
+- E2E nao cobre login ate simulacao ate shipment.
 
-## Freight Simulation Flow State
+## Estado Do Fluxo De Simulacao De Frete
 
-The full freight simulation flow is not functional. The current repository has:
+O fluxo completo de simulacao de frete nao e funcional. O repositorio atual possui:
 
-- A simple `FreightSimulation` Prisma model with origin/destination postal codes, real/cubic weight fields, distance, estimated price, deadline and metadata.
-- `FreightSimulationsModule` as an empty Nest module.
-- One demo `freightSimulation.upsert()` in `apps/api/prisma/seed.ts` with static values.
-- Dashboard aggregate that counts freight simulations and averages `estimatedPrice`.
+- Um modelo Prisma simples `FreightSimulation` com postal codes de origem/destino, campos de peso real/cubado, distancia, preco estimado, prazo e metadata.
+- `FreightSimulationsModule` como modulo Nest vazio.
+- Um `freightSimulation.upsert()` demo em `apps/api/prisma/seed.ts` com valores estaticos.
+- Agregado de dashboard que conta freight simulations e calcula media de `estimatedPrice`.
 
-The current repository does not have:
+O repositorio atual nao possui:
 
-- simulation controller;
-- simulation service/use case;
-- simulation frontend page;
-- multi-volume input;
-- customer address model/service;
-- branch CRUD;
-- carrier CRUD API/UI;
-- carrier transport service model;
-- coverage model or route eligibility;
-- freight rate tables, versions, ranges or additional charges;
-- deterministic pricing engine;
-- CEP lookup adapter;
-- route/distance adapter;
-- persisted simulation options;
-- price component breakdown table;
-- simulation history list/detail;
-- option selection;
-- shipment creation;
-- tracking initialization;
-- simulation-specific dashboard KPIs or insights.
+- controller de simulacao;
+- service/use case de simulacao;
+- pagina frontend de simulacao;
+- entrada multi-volume;
+- modelo/servico de endereco de cliente;
+- CRUD de filiais;
+- API/UI de CRUD de transportadora;
+- modelo de servico de transporte de transportadora;
+- modelo de cobertura ou elegibilidade de rota;
+- tabelas de frete, versoes, ranges ou cobrancas adicionais;
+- motor deterministico de precificacao;
+- adapter de consulta CEP;
+- adapter de rota/distancia;
+- opcoes de simulacao persistidas;
+- tabela de breakdown de componentes de preco;
+- listagem/detalhe de historico de simulacao;
+- selecao de opcao;
+- criacao de shipment;
+- inicializacao de tracking;
+- KPIs ou insights especificos de simulacao no dashboard.
 
-## Existing Files Relevant To The Flow
+## Arquivos Existentes Relevantes Ao Fluxo
 
 Backend:
 
@@ -83,21 +83,21 @@ Frontend:
 - `apps/web/src/features/dashboard/dashboard-summary.tsx`
 - `apps/web/src/components/layout/app-shell.tsx`
 
-Shared contracts:
+Contratos compartilhados:
 
 - `packages/shared/src/index.ts`
 
-## Existing Models
+## Modelos Existentes
 
-| Model | Relevance | Current state for simulation |
+| Modelo | Relevancia | Estado atual para simulacao |
 | --- | --- | --- |
-| `Branch` | origin/operation unit candidate | Exists only as model and seed. No API/UI. No address fields. |
-| `Customer` | customer selected in simulation | Exists with basic CRUD and tenant isolation. No address relation. |
-| `Carrier` | transport company candidate | Exists as simple model and seed. No API/UI. No carrier services. |
-| `FreightSimulation` | current simulation record | Exists but too shallow for full flow. No packages/options/components/snapshots. |
-| `AuditLog` | audit support | Exists and customer/auth writes use it. No simulation-specific audit actions. |
+| `Branch` | candidata a origem/unidade operacional | Existe apenas como modelo e seed. Sem API/UI. Sem campos de endereco. |
+| `Customer` | cliente selecionado na simulacao | Existe com CRUD basico e isolamento de tenant. Sem relacao de endereco. |
+| `Carrier` | candidata a empresa de transporte | Existe como modelo simples e seed. Sem API/UI. Sem carrier services. |
+| `FreightSimulation` | registro atual de simulacao | Existe, mas raso demais para o fluxo completo. Sem packages/options/components/snapshots. |
+| `AuditLog` | suporte de auditoria | Existe e escritas de customer/auth o usam. Sem acoes de auditoria especificas de simulacao. |
 
-## Missing Models From Minimum Expected Model
+## Modelos Ausentes Do Modelo Minimo Esperado
 
 - `CustomerAddress`
 - `CarrierService`
@@ -113,11 +113,11 @@ Shared contracts:
 - `ShipmentAddress`
 - `ShipmentPackage`
 
-`Branch`, `Carrier`, `FreightSimulation` and `AuditLog` exist, but need expansion or related tables.
+`Branch`, `Carrier`, `FreightSimulation` e `AuditLog` existem, mas precisam de expansao ou tabelas relacionadas.
 
-## Existing Endpoints
+## Endpoints Existentes
 
-Relevant existing endpoints:
+Endpoints existentes relevantes:
 
 - `GET /api/v1/customers`
 - `GET /api/v1/customers/:id`
@@ -126,44 +126,44 @@ Relevant existing endpoints:
 - `PATCH /api/v1/customers/:id/status`
 - `GET /api/v1/dashboard/summary`
 
-Missing simulation endpoints:
+Endpoints de simulacao ausentes:
 
-- address lookup;
-- branch CRUD;
-- carrier CRUD;
-- carrier transport service CRUD;
-- coverage CRUD/test;
-- freight rate table CRUD;
-- rate range CRUD;
-- additional charge CRUD;
-- simulation create/calculate;
-- simulation detail/history;
-- option selection;
-- shipment creation from option;
-- simulation dashboard KPIs;
-- simulation insights.
+- consulta de endereco;
+- CRUD de filial;
+- CRUD de transportadora;
+- CRUD de servico de transporte de transportadora;
+- CRUD/teste de cobertura;
+- CRUD de tabela de frete;
+- CRUD de range de frete;
+- CRUD de cobranca adicional;
+- criacao/calculo de simulacao;
+- detalhe/historico de simulacao;
+- selecao de opcao;
+- criacao de shipment a partir de opcao;
+- KPIs de dashboard de simulacao;
+- insights de simulacao.
 
-## Existing Pages
+## Paginas Existentes
 
-Relevant existing pages:
+Paginas existentes relevantes:
 
 - `/login`
 - `/dashboard`
 - `/customers`
 
-Missing pages:
+Paginas ausentes:
 
-- branch settings/origin selection;
-- carrier management;
-- carrier services;
-- coverage management;
-- freight rate tables and ranges;
-- freight simulation form/results;
-- freight simulation history/detail;
-- shipment detail created from simulation;
-- simulation dashboard details;
-- simulation insights.
+- configuracoes de filial/selecao de origem;
+- gestao de transportadoras;
+- servicos de transportadora;
+- gestao de cobertura;
+- tabelas de frete e ranges;
+- formulario/resultados de simulacao de frete;
+- historico/detalhe de simulacao de frete;
+- detalhe de shipment criado a partir de simulacao;
+- detalhes de dashboard de simulacao;
+- insights de simulacao.
 
-## Current Acceptance Position
+## Posicao Atual De Aceite
 
-The current code supports logging in, viewing a basic dashboard and maintaining basic customers. It does not support a complete freight simulation. A future implementation must build the missing domain and UI around the existing auth, tenant context, customer CRUD and audit foundation.
+O codigo atual suporta login, visualizacao de dashboard basico e manutencao basica de clientes. Ele nao suporta uma simulacao de frete completa. Uma implementacao futura deve construir o dominio e a UI ausentes ao redor da fundacao existente de auth, contexto de tenant, CRUD de clientes e auditoria.

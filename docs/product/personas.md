@@ -1,5 +1,5 @@
 # Personas
 
-- Admin: configures company access, users, integrations and audit posture.
-- Manager: compares costs, tracks indicators and reviews operational exceptions.
-- Operator: runs simulations, imports files and follows processing progress.
+- Admin: configura acesso da empresa, usuarios, integracoes e postura de auditoria.
+- Manager: compara custos, acompanha indicadores e revisa excecoes operacionais.
+- Operator: executa simulacoes, importa arquivos e acompanha progresso de processamento.

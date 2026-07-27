@@ -1,33 +1,33 @@
-# Freight Pricing
+# Precificacao De Frete
 
 Status: `IN_DESIGN`
 
-## Problem
+## Problema
 
-Freight pricing varies by carrier, service, origin, destination, weight range, cubed weight, declared cargo value, taxes, insurance, minimum freight, tolls, and validity window. A simple field on `Carrier` cannot model this safely.
+Precificacao de frete varia por transportadora, servico, origem, destino, faixa de peso, peso cubado, valor declarado da carga, impostos, seguro, frete minimo, pedagios e janela de vigencia. Um campo simples em `Carrier` nao modela isso com seguranca.
 
-## Alternatives
+## Alternativas
 
-| Option | Pros | Cons | Recommendation |
+| Opcao | Pros | Contras | Recomendacao |
 | --- | --- | --- | --- |
-| Relational normalized tables | Queryable, auditable, indexable, good for reports | More schema work | Recommended for MVP core |
-| Hybrid relational + validated JSON | Handles provider-specific fee breakdown | JSON can hide rules if overused | Use only for metadata/breakdown |
-| JSON-only rules | Flexible at first | Hard to validate, compare, index, migrate, and audit | Reject for MVP |
-| Strategy code-only | Testable for fixed rules | Business changes require deploy | Use for calculation services, not as storage |
-| Rules engine | Powerful for complex policies | Heavy, hard to explain, premature | Defer |
+| Tabelas relacionais normalizadas | Consultavel, auditavel, indexavel, bom para relatorios | Mais trabalho de schema | Recomendado para o core do MVP |
+| Relacional hibrido + JSON validado | Lida com breakdown especifico de provider | JSON pode esconder regras se usado em excesso | Usar somente para metadata/breakdown |
+| Regras somente em JSON | Flexivel no inicio | Dificil de validar, comparar, indexar, migrar e auditar | Rejeitar para MVP |
+| Strategy somente em codigo | Testavel para regras fixas | Mudancas de negocio exigem deploy | Usar para servicos de calculo, nao como armazenamento |
+| Rules engine | Poderoso para politicas complexas | Pesado, dificil de explicar, prematuro | Adiar |
 
-## Recommended MVP
+## MVP Recomendado
 
-Use versioned relational rate tables:
+Use tabelas de tarifas relacionais e versionadas:
 
-- `FreightRateTable`: tenant, carrier service, version, status, validity, source/import job.
-- `FreightRateLane`: origin/destination scope, region or postal code range.
-- `FreightRateWeightBand`: min/max chargeable weight.
-- `FreightRateFee`: minimum amount, fixed fee, price per kg, ad valorem, GRIS, toll, insurance.
+- `FreightRateTable`: tenant, carrier service, versao, status, vigencia, origem/import job.
+- `FreightRateLane`: escopo de origem/destino, regiao ou faixa de CEP.
+- `FreightRateWeightBand`: peso cobrado minimo/maximo.
+- `FreightRateFee`: valor minimo, taxa fixa, preco por kg, ad valorem, GRIS, pedagio, seguro.
 
-Allow a validated JSON `breakdown` on simulation option results to preserve how a price was produced. Do not store active pricing rules as arbitrary JSON.
+Permita um JSON `breakdown` validado nos resultados de option da simulacao para preservar como o preco foi produzido. Nao armazene regras ativas de precificacao como JSON arbitrario.
 
-## Simulation Flow
+## Fluxo De Simulacao
 
 ```mermaid
 flowchart TD
@@ -40,30 +40,30 @@ flowchart TD
   Rank --> Result[Comparison response]
 ```
 
-## Key Rules
+## Regras Principais
 
-- Chargeable weight is max of real weight and volumetric weight.
-- Persist input snapshot and rule version used.
-- A simulation result expires when rate validity ends or configured TTL passes.
-- A selected option can create a shipment, but a simulation may remain only historical.
-- Use Decimal for all money, weights, dimensions, percentages, and distance.
+- Peso cobrado e o maior valor entre peso real e peso volumetrico.
+- Persistir snapshot de entrada e versao de regra usada.
+- Resultado de simulacao expira quando a vigencia da tarifa termina ou quando o TTL configurado passa.
+- Uma opcao selecionada pode criar um shipment, mas uma simulacao pode permanecer apenas historica.
+- Use Decimal para dinheiro, pesos, dimensoes, percentuais e distancia.
 
-## External APIs
+## APIs Externas
 
-Recommended first integrations:
+Integracoes iniciais recomendadas:
 
-1. ViaCEP or BrasilAPI for Brazilian postal code/address enrichment.
-2. OpenRouteService for distance and route estimation.
+1. ViaCEP ou BrasilAPI para enriquecimento de CEP/endereco no Brasil.
+2. OpenRouteService para estimativa de distancia e rota.
 
-Use timeouts, retries with backoff, per-tenant cache, fallback to manual distance input, and mocks in tests.
+Use timeouts, retries com backoff, cache por tenant, fallback para entrada manual de distancia e mocks em testes.
 
-## Tests
+## Testes
 
-- cubed weight;
-- minimum freight;
+- peso cubado;
+- frete minimo;
 - ad valorem/GRIS;
-- validity window;
-- inactive carrier/service/rate table;
-- unavailable external API fallback;
-- tenant isolation;
-- selected option to shipment mapping.
+- janela de vigencia;
+- transportadora/servico/tabela inativa;
+- fallback de API externa indisponivel;
+- isolamento de tenant;
+- mapeamento de opcao selecionada para shipment.

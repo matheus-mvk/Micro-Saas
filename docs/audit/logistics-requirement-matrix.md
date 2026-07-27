@@ -1,48 +1,48 @@
-# Logistics Requirement Matrix
+# Matriz De Requisitos Logisticos
 
-Date: 2026-07-25
+Data: 2026-07-25
 
-Classification values: `IMPLEMENTED_AND_VERIFIED`, `IMPLEMENTED_WITHOUT_TESTS`, `PARTIALLY_IMPLEMENTED`, `SCAFFOLDED`, `VISUAL_ONLY`, `DOCUMENTED_ONLY`, `NOT_IMPLEMENTED`, `BROKEN`, `NEEDS_REVIEW`, `BLOCKED_BY_EXTERNAL_CONFIGURATION`.
+Valores de classificacao: `IMPLEMENTED_AND_VERIFIED`, `IMPLEMENTED_WITHOUT_TESTS`, `PARTIALLY_IMPLEMENTED`, `SCAFFOLDED`, `VISUAL_ONLY`, `DOCUMENTED_ONLY`, `NOT_IMPLEMENTED`, `BROKEN`, `NEEDS_REVIEW`, `BLOCKED_BY_EXTERNAL_CONFIGURATION`.
 
-| Requirement | Module | Backend | Frontend | Database | Tests | Security/Tenant | Status | Evidence | Required work |
+| Requisito | Modulo | Backend | Frontend | Database | Testes | Seguranca/Tenant | Status | Evidencia | Trabalho obrigatorio |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Node.js/NestJS/TypeScript API | Foundation | App boots conceptually; controllers for health/auth/dashboard | N/A | Prisma configured | Some unit tests, test startup broken | Guards/filter/middleware exist | PARTIALLY_IMPLEMENTED | `apps/api/src/app.module.ts` | Fix test runner, add domain modules. |
-| Next.js frontend | Foundation | N/A | 3 real routes | N/A | Basic tests, startup broken | Uses credentials include | PARTIALLY_IMPLEMENTED | `apps/web/src/app` | Add admin pages and e2e. |
-| Prisma/MySQL | Database | PrismaService and schema | N/A | 9 tables | No DB integration tests | TenantId exists in some models | PARTIALLY_IMPLEMENTED | `schema.prisma` | Add full logistics schema, constraints and indexes. |
-| Docker Compose | Infrastructure | API service | Web service | MySQL/Redis services | `docker compose config` passed | Dev defaults exposed | PARTIALLY_IMPLEMENTED | `docker-compose.yml` | Production docs/hardening and worker service. |
-| Redis | Infrastructure | RedisService and health ping | N/A | N/A | Redis service unit exists but tests fail startup | Tenant key helper exists | PARTIALLY_IMPLEMENTED | `redis.service.ts` | Use in cache/jobs/rate-limit with tests. |
-| BullMQ | Async | Queue registered | N/A | N/A | None | No tenant payload enforcement | SCAFFOLDED | `queue.module.ts` | Add processors/workers and job APIs. |
-| Socket.IO | Realtime | Gateway exists but unsafe tenant join | No client flow | N/A | None | Client can choose tenant | BROKEN | `notifications.gateway.ts` | Auth handshake and tenant-scoped rooms. |
-| Landing page | Public web | N/A | Exists with static commercial content | N/A | Basic landing tests fail startup | Public | PARTIALLY_IMPLEMENTED | `/` page | Complete required sections, SEO, a11y fixes. |
-| Login local | Auth | Real login endpoint | Real login form | Users/refresh/audit | No auth integration/e2e | Basic protections and audit | PARTIALLY_IMPLEMENTED | `/auth/login` | Add CSRF, e2e, session lifecycle, inactive user refresh check. |
-| OAuth Google | Auth | None | None | No identity table | None | N/A | NOT_IMPLEMENTED | Env vars only | Full provider flow, state, callback, linking, audit. |
-| OAuth GitHub | Auth | None | None | No identity table | None | N/A | NOT_IMPLEMENTED | Env vars only | Full provider flow including verified email API. |
-| MFA/TOTP | Auth | None | None | No secret/recovery tables | None | N/A | NOT_IMPLEMENTED | `TOTP_ISSUER` only | Enrollment, challenge, recovery codes, audit. |
-| Password recovery | Auth | None | None | No reset token table | None | N/A | NOT_IMPLEMENTED | No routes | Secure token flow and email/dev adapter. |
-| Sessions | Auth | Refresh tokens persist | No sessions page | `refresh_tokens` | No integration tests | Partial revocation | PARTIALLY_IMPLEMENTED | `/auth/refresh`, `/auth/logout` | List/revoke sessions, global logout, reuse tests. |
-| RBAC | Security | Guard/decorator only | Disabled menu items | Role enum | Guard test only | No matrix | SCAFFOLDED | `roles.guard.ts` | Backend permission matrix and tests. |
-| Tenants | Multi-tenancy | Auth context and seed only | No tenant UI | `tenants` | No cross-tenant tests | Partial | PARTIALLY_IMPLEMENTED | `Tenant` model | Tenant service/settings and isolation tests. |
-| Branches | Organization | Empty module | No UI | `branches` | None | TenantId in table | SCAFFOLDED | `BranchesModule` | CRUD, address/contact/main branch, filters. |
-| Users | Admin | Empty module | No UI | `users` | No CRUD tests | No matrix enforcement | SCAFFOLDED | `UsersModule` | Full user management and audit. |
-| Customers | Logistics master data | Empty module | No UI | `customers` | None | TenantId and unique document | SCAFFOLDED | `CustomersModule` | CRUD, addresses, document validation. |
-| Addresses | Logistics master data | None | None | None | None | N/A | NOT_IMPLEMENTED | No model | Address service, CEP integration, snapshots. |
-| Carriers | Logistics master data | Empty module | No UI | `carriers` | None | TenantId and unique document/code | SCAFFOLDED | `CarriersModule` | CRUD and performance links. |
-| Carrier services | Logistics master data | None | None | None | None | N/A | NOT_IMPLEMENTED | No model | Service model/API/UI. |
-| Coverage | Logistics rules | None | None | None | None | N/A | NOT_IMPLEMENTED | No model | Coverage rules and eligibility tests. |
-| Freight tables | Pricing | None | None | None | None | N/A | DOCUMENTED_ONLY | Pricing docs | Versioned tables/bands/fees. |
-| Pricing engine | Pricing | None | None | None | None | N/A | NOT_IMPLEMENTED | No service | Deterministic engine and tests. |
-| Simulation journey | Freight | No endpoint | No page | One simple table | None | TenantId exists | PARTIALLY_IMPLEMENTED | `freight_simulations` | Full create/calculate/results/history. |
-| Simulation history | Freight | None | None | Same simple table | None | N/A | NOT_IMPLEMENTED | No endpoint/page | List/detail filters and options. |
-| Shipments | Operations | None | None | None | None | N/A | NOT_IMPLEMENTED | No model | Shipment model/API/UI. |
-| Tracking | Operations | None | None | None | None | N/A | DOCUMENTED_ONLY | Tracking docs | Immutable timeline/status machine. |
-| Upload import | Imports | No endpoint/worker | No page | `import_jobs` only | None | Partial tenantId | SCAFFOLDED | `ImportsModule` | CSV/XLSX upload, worker, errors, realtime. |
-| Dashboard | Intelligence | Summary endpoint | Summary cards | Counts real tables | No dashboard tests | Tenant filtered | IMPLEMENTED_WITHOUT_TESTS | `/dashboard/summary` | Full KPIs, filters, charts, tests. |
-| Insights | Intelligence | Empty module | No UI | None | None | N/A | NOT_IMPLEMENTED | `InsightsModule` | Deterministic insight model/generator/UI. |
-| Audit | Governance | Write service only | No UI | `audit_logs` | None | Partial tenant fields | PARTIALLY_IMPLEMENTED | `AuditService` | Query API/UI, event coverage, before/after. |
-| Observability | Operations | Health/logging exist | N/A | N/A | Health e2e exists but not executed | Logs sanitized partially | PARTIALLY_IMPLEMENTED | `health.controller.ts` | Metrics, queue/worker/integration health. |
-| Demo data | Demo | Seed exists | Dashboard can show minimal data | Minimal data | No seed tests | Two tenants created | PARTIALLY_IMPLEMENTED | `seed.ts` | Full coherent dataset and idempotency tests. |
-| Automated tests | Quality | Several unit specs | Several UI specs | No DB tests | Vitest startup fails with `npx pnpm`; stricter sandbox also blocks Vitest cache writes | No cross-tenant/e2e coverage | BROKEN | Test command output and QA sandbox output | Fix runtime/cache strategy and add required coverage. |
+| API Node.js/NestJS/TypeScript | Fundacao | App inicia conceitualmente; controllers de health/auth/dashboard | N/A | Prisma configurado | Alguns testes unitarios, inicializacao de testes quebrada | Guards/filter/middleware existem | PARTIALLY_IMPLEMENTED | `apps/api/src/app.module.ts` | Corrigir test runner e adicionar modulos de dominio. |
+| Frontend Next.js | Fundacao | N/A | 3 rotas reais | N/A | Testes basicos, inicializacao quebrada | Usa credentials include | PARTIALLY_IMPLEMENTED | `apps/web/src/app` | Adicionar paginas admin e e2e. |
+| Prisma/MySQL | Database | PrismaService e schema | N/A | 9 tabelas | Sem testes de integracao DB | TenantId existe em alguns modelos | PARTIALLY_IMPLEMENTED | `schema.prisma` | Adicionar schema logistico completo, constraints e indices. |
+| Docker Compose | Infraestrutura | Servico API | Servico Web | Servicos MySQL/Redis | `docker compose config` passou | Defaults dev expostos | PARTIALLY_IMPLEMENTED | `docker-compose.yml` | Docs/hardening de producao e servico worker. |
+| Redis | Infraestrutura | RedisService e health ping | N/A | N/A | Unit de Redis existe, mas testes falham na inicializacao | Helper de chave por tenant existe | PARTIALLY_IMPLEMENTED | `redis.service.ts` | Usar em cache/jobs/rate-limit com testes. |
+| BullMQ | Async | Fila registrada | N/A | N/A | Nenhum | Sem enforcement de tenant no payload | SCAFFOLDED | `queue.module.ts` | Adicionar processors/workers e APIs de job. |
+| Socket.IO | Realtime | Gateway existe, mas entrada de tenant e insegura | Sem fluxo client | N/A | Nenhum | Cliente pode escolher tenant | BROKEN | `notifications.gateway.ts` | Handshake auth e salas tenant-scoped. |
+| Landing page | Web publica | N/A | Existe com conteudo comercial estatico | N/A | Testes basicos de landing falham na inicializacao | Publica | PARTIALLY_IMPLEMENTED | pagina `/` | Completar secoes exigidas, SEO e ajustes a11y. |
+| Login local | Auth | Endpoint real de login | Form real de login | Users/refresh/audit | Sem integration/e2e de auth | Protecoes basicas e auditoria | PARTIALLY_IMPLEMENTED | `/auth/login` | Adicionar CSRF, e2e, ciclo de sessao e checagem de refresh de usuario inativo. |
+| OAuth Google | Auth | Nenhum | Nenhum | Sem tabela de identidade | Nenhum | N/A | NOT_IMPLEMENTED | Apenas env vars | Fluxo completo de provider, state, callback, linking e auditoria. |
+| OAuth GitHub | Auth | Nenhum | Nenhum | Sem tabela de identidade | Nenhum | N/A | NOT_IMPLEMENTED | Apenas env vars | Fluxo completo de provider incluindo API de e-mail verificado. |
+| MFA/TOTP | Auth | Nenhum | Nenhum | Sem tabelas de secret/recovery | Nenhum | N/A | NOT_IMPLEMENTED | Apenas `TOTP_ISSUER` | Enrollment, desafio, recovery codes e auditoria. |
+| Recuperacao de senha | Auth | Nenhum | Nenhum | Sem tabela de reset token | Nenhum | N/A | NOT_IMPLEMENTED | Sem rotas | Fluxo seguro de token e adapter de e-mail/dev. |
+| Sessoes | Auth | Refresh tokens persistem | Sem pagina de sessoes | `refresh_tokens` | Sem testes de integracao | Revogacao parcial | PARTIALLY_IMPLEMENTED | `/auth/refresh`, `/auth/logout` | Listar/revogar sessoes, logout global e testes de reuso. |
+| RBAC | Seguranca | Apenas guard/decorator | Itens de menu desabilitados | Role enum | Apenas teste de guard | Sem matriz | SCAFFOLDED | `roles.guard.ts` | Matriz de permissao backend e testes. |
+| Tenants | Multi-tenancy | Apenas contexto auth e seed | Sem UI de tenant | `tenants` | Sem testes cross-tenant | Parcial | PARTIALLY_IMPLEMENTED | modelo `Tenant` | Servico/configuracoes de tenant e testes de isolamento. |
+| Filiais | Organizacao | Modulo vazio | Sem UI | `branches` | Nenhum | TenantId na tabela | SCAFFOLDED | `BranchesModule` | CRUD, endereco/contato/filial principal e filtros. |
+| Usuarios | Admin | Modulo vazio | Sem UI | `users` | Sem testes CRUD | Sem enforcement de matriz | SCAFFOLDED | `UsersModule` | Gestao completa de usuarios e auditoria. |
+| Clientes | Cadastro logistico | Modulo vazio | Sem UI | `customers` | Nenhum | TenantId e document unico | SCAFFOLDED | `CustomersModule` | CRUD, enderecos e validacao de documento. |
+| Enderecos | Cadastro logistico | Nenhum | Nenhum | Nenhum | Nenhum | N/A | NOT_IMPLEMENTED | Sem modelo | Servico de endereco, integracao CEP e snapshots. |
+| Transportadoras | Cadastro logistico | Modulo vazio | Sem UI | `carriers` | Nenhum | TenantId e document/code unicos | SCAFFOLDED | `CarriersModule` | CRUD e links de performance. |
+| Servicos de transportadora | Cadastro logistico | Nenhum | Nenhum | Nenhum | Nenhum | N/A | NOT_IMPLEMENTED | Sem modelo | Modelo/API/UI de servico. |
+| Cobertura | Regras logisticas | Nenhum | Nenhum | Nenhum | Nenhum | N/A | NOT_IMPLEMENTED | Sem modelo | Regras de cobertura e testes de elegibilidade. |
+| Tabelas de frete | Precificacao | Nenhum | Nenhum | Nenhum | Nenhum | N/A | DOCUMENTED_ONLY | Docs de precificacao | Tabelas/faixas/taxas versionadas. |
+| Motor de precificacao | Precificacao | Nenhum | Nenhum | Nenhum | Nenhum | N/A | NOT_IMPLEMENTED | Sem servico | Motor deterministico e testes. |
+| Jornada de simulacao | Frete | Sem endpoint | Sem pagina | Uma tabela simples | Nenhum | TenantId existe | PARTIALLY_IMPLEMENTED | `freight_simulations` | Criacao/calculo/resultados/historico completos. |
+| Historico de simulacao | Frete | Nenhum | Nenhum | Mesma tabela simples | Nenhum | N/A | NOT_IMPLEMENTED | Sem endpoint/pagina | Filtros de listagem/detalhe e opcoes. |
+| Shipments | Operacoes | Nenhum | Nenhum | Nenhum | Nenhum | N/A | NOT_IMPLEMENTED | Sem modelo | Modelo/API/UI de shipment. |
+| Tracking | Operacoes | Nenhum | Nenhum | Nenhum | Nenhum | N/A | DOCUMENTED_ONLY | Docs de tracking | Timeline imutavel/maquina de status. |
+| Upload import | Importacoes | Sem endpoint/worker | Sem pagina | Apenas `import_jobs` | Nenhum | TenantId parcial | SCAFFOLDED | `ImportsModule` | Upload CSV/XLSX, worker, erros e realtime. |
+| Dashboard | Inteligencia | Endpoint summary | Cards summary | Conta tabelas reais | Sem testes de dashboard | Filtro de tenant | IMPLEMENTED_WITHOUT_TESTS | `/dashboard/summary` | KPIs completos, filtros, graficos e testes. |
+| Insights | Inteligencia | Modulo vazio | Sem UI | Nenhum | Nenhum | N/A | NOT_IMPLEMENTED | `InsightsModule` | Modelo/gerador/UI de insight deterministico. |
+| Auditoria | Governanca | Apenas service de escrita | Sem UI | `audit_logs` | Nenhum | Campos de tenant parciais | PARTIALLY_IMPLEMENTED | `AuditService` | API/UI de consulta, cobertura de eventos e before/after. |
+| Observabilidade | Operacoes | Health/logging existem | N/A | N/A | Health e2e existe, mas nao executado | Logs parcialmente sanitizados | PARTIALLY_IMPLEMENTED | `health.controller.ts` | Metricas e health de fila/worker/integracao. |
+| Dados demo | Demo | Seed existe | Dashboard pode mostrar dados minimos | Dados minimos | Sem testes de seed | Dois tenants criados | PARTIALLY_IMPLEMENTED | `seed.ts` | Dataset coerente completo e testes de idempotencia. |
+| Testes automatizados | Qualidade | Varias specs unitarias | Varias specs UI | Sem testes DB | Inicializacao do Vitest falha com `npx pnpm`; sandbox mais restrita tambem bloqueia escritas de cache do Vitest | Sem cobertura cross-tenant/e2e | BROKEN | Saida de comando de teste e sandbox QA | Corrigir estrategia runtime/cache e adicionar cobertura obrigatoria. |
 
-## Final Requirement Result
+## Resultado Final Dos Requisitos
 
-No requirement should be marked `IMPLEMENTED_AND_VERIFIED` from this audit because the test runner failed for existing tests, `prisma validate` was inconclusive in the main run, and core domain flows are incomplete. The most advanced implemented surface is local auth plus dashboard summary, but even those need integration/e2e/security coverage before final completion.
+Nenhum requisito deve ser marcado como `IMPLEMENTED_AND_VERIFIED` a partir desta auditoria porque o test runner falhou para testes existentes, `prisma validate` ficou inconclusivo na execucao principal e os fluxos centrais de dominio estao incompletos. A superficie implementada mais avancada e auth local com resumo de dashboard, mas mesmo esses itens precisam de cobertura integration/e2e/security antes da conclusao final.

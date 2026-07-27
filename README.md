@@ -60,8 +60,12 @@ Servicos padrao:
 Guias completos:
 
 - Setup local, Docker, producao e TiDB: [docs/infrastructure/setup-runbook.md](docs/infrastructure/setup-runbook.md)
+- Auditoria de cobertura do desafio tecnico: [docs/audit/technical-challenge-documentation-audit.md](docs/audit/technical-challenge-documentation-audit.md)
+- Catalogo de funcionalidades: [docs/product/feature-catalog.md](docs/product/feature-catalog.md)
 - Matriz de acesso e funcionalidades por perfil: [docs/security/access-control-matrix.md](docs/security/access-control-matrix.md)
 - Contas de teste e SQL manual para TiDB: [docs/development/access-test-accounts.md](docs/development/access-test-accounts.md)
+- Integracoes externas: [docs/architecture/external-integrations.md](docs/architecture/external-integrations.md)
+- Regras de insights deterministicos: [docs/architecture/insight-rules.md](docs/architecture/insight-rules.md)
 
 ## Validacao
 

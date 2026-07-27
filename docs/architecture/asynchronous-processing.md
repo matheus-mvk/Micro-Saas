@@ -1,4 +1,4 @@
-# Asynchronous Processing
+# Processamento Assincrono
 
 ```mermaid
 flowchart TD
@@ -10,4 +10,4 @@ flowchart TD
   WebSocket --> Frontend
 ```
 
-Redis backs BullMQ. Job payloads must carry trusted tenant context from the authenticated session and use idempotency when processing files or simulations.
+Redis sustenta BullMQ. Payloads de jobs devem carregar contexto confiavel de tenant derivado da sessao autenticada e usar idempotencia ao processar arquivos ou simulacoes.

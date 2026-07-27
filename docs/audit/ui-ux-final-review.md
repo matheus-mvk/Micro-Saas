@@ -1,26 +1,26 @@
-# UI UX Final Review
+# Revisao Final De UI/UX
 
-Date: 2026-07-25
+Data: 2026-07-25
 
-## Screens Reviewed
+## Telas Revisadas
 
-All current screen-level surfaces listed in `docs/audit/screen-inventory.md` were reviewed.
+Todas as superficies atuais em nivel de tela listadas em `docs/audit/screen-inventory.md` foram revisadas.
 
-## Changes Made
+## Alteracoes Realizadas
 
-- Dashboard now consumes a real backend endpoint instead of local hard-coded zero values.
-- Dashboard has loading, error, retry and empty states.
-- Authenticated layout shows clearer session validation failure and retry.
-- Admin shell no longer routes every module item to `/dashboard`; unavailable modules are disabled and labeled.
-- Mobile navigation toggle was implemented for the admin shell.
+- Dashboard agora consome endpoint backend real em vez de valores zero hard-coded locais.
+- Dashboard possui estados de carregamento, erro, tentar novamente e vazio.
+- Layout autenticado exibe falha de validacao de sessao mais clara e opcao de retry.
+- Shell admin nao roteia mais todos os itens de modulo para `/dashboard`; modulos indisponiveis estao desabilitados e rotulados.
+- Toggle de navegacao mobile foi implementado para o shell admin.
 
-## Remaining Gaps
+## Lacunas Restantes
 
-- Landing page is visually coherent but does not yet include every original challenge section.
-- There are no real screens for users, customers, carriers, imports, freight rules, history, shipments, tracking, audit, insights or settings.
-- Error pages still use inline styles and should be moved into a shared error-state component.
-- No browser screenshot validation was completed in this execution.
+- Landing page e visualmente coerente, mas ainda nao inclui todas as secoes do desafio original.
+- Nao ha telas reais para usuarios, clientes, transportadoras, importacoes, regras de frete, historico, shipments, tracking, auditoria, insights ou configuracoes.
+- Paginas de erro ainda usam estilos inline e devem ser movidas para um componente compartilhado de estado de erro.
+- Nenhuma validacao por screenshot de browser foi concluida nesta execucao.
 
 ## Status
 
-Current UI is suitable for demonstrating foundation, login and dashboard summary only. It is not a complete logistics intelligence platform UI.
+A UI atual e adequada para demonstrar fundacao, login e resumo de dashboard somente. Ela nao e uma UI completa de plataforma de inteligencia logistica.

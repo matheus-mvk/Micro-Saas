@@ -1,39 +1,39 @@
-# Risks And Recommendations
+# Riscos E Recomendacoes
 
-This document captures infrastructure risks and recommended mitigations for the platform.
+Este documento registra riscos de infraestrutura e mitigacoes recomendadas para a plataforma.
 
-## Key Risks
+## Riscos Principais
 
-| Risk | Impact | Recommendation |
+| Risco | Impacto | Recomendacao |
 | --- | --- | --- |
-| Missing tenant predicate in data access | Cross-tenant data exposure | Enforce tenant-scoped repository helpers and test unauthorized cross-tenant access. |
-| Cache keys without tenant scope | Data leakage or stale data | Prefix tenant-specific cache keys with tenant ID or tenant slug. |
-| Background jobs without tenant context | Work executes against wrong tenant | Require tenant ID in job payloads and validate it before side effects. |
-| Manual production migrations | Downtime or data corruption | Use versioned migrations with staging dry runs and rollback notes. |
-| Missing `pnpm-lock.yaml` | Non-reproducible dependency installs | Commit the lockfile and require frozen installs in CI. |
-| Long-lived secrets | Increased blast radius after exposure | Use managed secrets and rotate credentials. |
-| Unbounded worker concurrency | Queue storms and database saturation | Set explicit concurrency, retries, backoff, and dead-letter handling. |
-| Insufficient observability | Slow incident response | Emit structured logs with request ID, tenant ID, user ID, service, and version. |
-| Unscanned container images | Known vulnerabilities in production | Add image scanning before deployment. |
+| Predicado de tenant ausente no acesso a dados | Exposicao de dados cross-tenant | Reforcar helpers de repository tenant-scoped e testar acesso cross-tenant nao autorizado. |
+| Chaves de cache sem escopo de tenant | Vazamento de dados ou dados obsoletos | Prefixar chaves de cache especificas de tenant com tenant ID ou slug do tenant. |
+| Jobs em background sem contexto de tenant | Trabalho executado contra tenant errado | Exigir tenant ID no payload dos jobs e valida-lo antes de efeitos colaterais. |
+| Migrations manuais em producao | Downtime ou corrupcao de dados | Usar migrations versionadas com dry runs em staging e notas de rollback. |
+| `pnpm-lock.yaml` ausente | Instalacoes de dependencias nao reproduziveis | Commitar o lockfile e exigir instalacoes congeladas na CI. |
+| Segredos de longa duracao | Aumento do raio de impacto apos exposicao | Usar segredos gerenciados e rotacionar credenciais. |
+| Concorrencia de worker sem limite | Tempestades de fila e saturacao do banco | Definir concorrencia, retries, backoff e tratamento de dead-letter explicitamente. |
+| Observabilidade insuficiente | Resposta lenta a incidentes | Emitir logs estruturados com request ID, tenant ID, user ID, servico e versao. |
+| Imagens de container sem scan | Vulnerabilidades conhecidas em producao | Adicionar scan de imagem antes do deploy. |
 
-## Recommendations
+## Recomendacoes
 
-1. Define tenant isolation as an explicit architecture decision record.
-2. Commit `pnpm-lock.yaml` and require frozen pnpm installs.
-3. Add tenant isolation tests before production onboarding.
-4. Build immutable container images and deploy by digest.
-5. Use managed database backups with tested restore procedures.
-6. Keep destructive migrations separate from application deploys.
-7. Add staging smoke tests that exercise login, tenant resolution, core logistics workflows, and worker processing.
-8. Add alerting for error rate, latency, queue depth, failed jobs, database saturation, and tenant-specific anomaly spikes.
+1. Definir isolamento de tenant como decisao arquitetural explicita.
+2. Commitar `pnpm-lock.yaml` e exigir instalacoes pnpm congeladas.
+3. Adicionar testes de isolamento de tenant antes do onboarding em producao.
+4. Construir imagens de container imutaveis e fazer deploy por digest.
+5. Usar backups gerenciados de banco com procedimentos de restore testados.
+6. Manter migrations destrutivas separadas dos deploys da aplicacao.
+7. Adicionar smoke tests em staging cobrindo login, resolucao de tenant, fluxos logisticos centrais e processamento de worker.
+8. Adicionar alertas para taxa de erro, latencia, profundidade de fila, jobs falhos, saturacao do banco e picos de anomalia por tenant.
 
-## Minimum Production Readiness Checklist
+## Checklist Minimo De Prontidao Para Producao
 
-- CI required on protected branches.
-- Secrets stored outside the repository.
-- Staging mirrors production topology.
-- Database backups and restore test are documented.
-- Rollback procedure is documented and tested.
-- Logs include correlation IDs and tenant context.
-- Health checks exist for web, API, workers, database, cache, and queues.
-- Incident response ownership is defined.
+- CI obrigatoria em branches protegidas.
+- Segredos armazenados fora do repositorio.
+- Staging espelha a topologia de producao.
+- Backups de banco e teste de restore documentados.
+- Procedimento de rollback documentado e testado.
+- Logs incluem correlation IDs e contexto de tenant.
+- Health checks existem para web, API, workers, banco, cache e filas.
+- Responsabilidade por resposta a incidentes definida.

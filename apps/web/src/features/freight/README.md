@@ -1,3 +1,3 @@
-# Freight Feature
+# Funcionalidade De Frete
 
-Status: planned. This feature will own freight simulation flows after business calculation rules are specified.
+Status: planejado. Esta funcionalidade sera responsavel pelos fluxos de simulacao de frete depois que as regras de calculo de negocio forem especificadas.

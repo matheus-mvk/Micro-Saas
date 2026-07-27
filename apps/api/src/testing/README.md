@@ -1,3 +1,3 @@
-# API Testing Helpers
+# Auxiliares De Teste Da API
 
-Shared testing helpers for Nest modules will live here when module-level integration tests begin. The foundation currently keeps test helpers local to each spec to avoid premature abstraction.
+Auxiliares de teste compartilhados para modulos Nest ficarao aqui quando testes de integracao por modulo comecarem. A fundacao atual mantem helpers de teste locais em cada spec para evitar abstracao prematura.

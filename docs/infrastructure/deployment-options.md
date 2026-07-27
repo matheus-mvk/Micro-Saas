@@ -1,95 +1,95 @@
-# Deployment Options
+# Opcoes De Deploy
 
-This document outlines deployment options for the platform. Final selection should follow traffic profile, compliance needs, team operations capacity, and tenant isolation requirements.
+Este documento descreve opcoes de deploy para a plataforma. A selecao final deve considerar perfil de trafego, necessidades de compliance, capacidade operacional do time e requisitos de isolamento de tenant.
 
-## Option 1: Managed Container Platform
+## Opcao 1: Plataforma Gerenciada De Containers
 
-Examples: AWS ECS/Fargate, Google Cloud Run, Azure Container Apps, Render, Fly.io.
+Exemplos: AWS ECS/Fargate, Google Cloud Run, Azure Container Apps, Render, Fly.io.
 
-Best fit:
+Melhor encaixe:
 
-- Small to medium operations team.
-- Containerized services.
-- Need for straightforward autoscaling.
-- Preference for managed load balancing and runtime upgrades.
+- Time de operacoes pequeno a medio.
+- Servicos containerizados.
+- Necessidade de autoscaling simples.
+- Preferencia por load balancing e upgrades de runtime gerenciados.
 
-Recommended pattern:
+Padrao recomendado:
 
-- Build immutable API, web, and worker images in CI.
-- Push images to a registry.
-- Deploy to staging first.
-- Run migrations as an explicit release step.
-- Promote the same image digest to production.
+- Construir imagens imutaveis de API, web e worker na CI.
+- Enviar imagens para um registry.
+- Fazer deploy primeiro em staging.
+- Rodar migrations como etapa explicita de release.
+- Promover o mesmo digest de imagem para producao.
 
-## Option 2: Kubernetes
+## Opcao 2: Kubernetes
 
-Best fit:
+Melhor encaixe:
 
-- Multiple services with independent scaling.
-- Strong need for custom networking, operators, or internal platform controls.
-- Team has Kubernetes operational experience.
+- Multiplos servicos com escala independente.
+- Forte necessidade de rede customizada, operators ou controles internos de plataforma.
+- Time com experiencia operacional em Kubernetes.
 
-Recommended pattern:
+Padrao recomendado:
 
-- Helm or Kustomize manifests.
-- Separate namespaces for staging and production.
-- External secrets operator or cloud-native secret integration.
-- Horizontal pod autoscaling based on service metrics.
-- Pod disruption budgets for critical services.
+- Manifests Helm ou Kustomize.
+- Namespaces separados para staging e producao.
+- Operador de segredos externos ou integracao cloud-native de segredos.
+- Horizontal pod autoscaling baseado em metricas de servico.
+- Pod disruption budgets para servicos criticos.
 
-Avoid Kubernetes if the team does not have capacity to own cluster operations.
+Evite Kubernetes se o time nao tiver capacidade de operar o cluster.
 
-## Option 3: Traditional VM Deployment
+## Opcao 3: Deploy Tradicional Em VM
 
-Best fit:
+Melhor encaixe:
 
-- Early prototype with low operational complexity.
-- Strict environment constraints.
-- Existing VM-based operations.
+- Prototipo inicial com baixa complexidade operacional.
+- Restricoes rigidas de ambiente.
+- Operacao existente baseada em VMs.
 
-Recommended pattern:
+Padrao recomendado:
 
-- Docker Compose or systemd-managed containers.
-- Automated provisioning.
-- Off-host backups.
-- Reverse proxy with TLS automation.
-- Explicit rollback scripts.
+- Docker Compose ou containers gerenciados por systemd.
+- Provisionamento automatizado.
+- Backups fora do host.
+- Reverse proxy com automacao TLS.
+- Scripts explicitos de rollback.
 
-This option is simple but becomes risky as tenant count and traffic grow.
+Esta opcao e simples, mas se torna arriscada conforme a quantidade de tenants e o trafego crescem.
 
-## Database Deployment
+## Deploy Do Banco De Dados
 
-Recommended starting point:
+Ponto de partida recomendado:
 
-- Managed MySQL-compatible relational database.
-- Automated backups.
+- Banco relacional gerenciado compativel com MySQL.
+- Backups automatizados.
 - Point-in-time recovery.
-- Separate staging and production instances.
-- Migration process with pre-deploy checks.
+- Instancias separadas de staging e producao.
+- Processo de migration com verificacoes pre-deploy.
 
-Tenant isolation strategy must be explicit:
+A estrategia de isolamento de tenant deve ser explicita:
 
-- Shared database and shared schema: recommended initial pooled model, highest need for query discipline.
-- Shared database and schema per tenant: stronger isolation, more migration complexity.
-- Database per tenant: strongest isolation, highest operational overhead.
+- Banco compartilhado e schema compartilhado: modelo pooled inicial recomendado, com maior necessidade de disciplina em queries.
+- Banco compartilhado e schema por tenant: isolamento mais forte, maior complexidade de migrations.
+- Banco por tenant: isolamento mais forte, maior overhead operacional.
 
-## Release Strategy
+## Estrategia De Release
 
-Recommended release flow:
+Fluxo de release recomendado:
 
 1. Merge to protected branch after CI passes.
-2. Build and tag immutable image.
-3. Deploy to staging.
-4. Run migrations and smoke tests.
-5. Promote the same image digest to production.
-6. Monitor errors, latency, queue depth, and tenant-specific anomalies.
+2. Construir e taguear imagem imutavel.
+3. Fazer deploy em staging.
+4. Rodar migrations e smoke tests.
+5. Promover o mesmo digest de imagem para producao.
+6. Monitorar erros, latencia, profundidade de fila e anomalias especificas de tenant.
 
-## Rollback Strategy
+## Estrategia De Rollback
 
-Rollback must account for code and data:
+Rollback deve considerar codigo e dados:
 
-- Keep previous image digests available.
-- Prefer backward-compatible migrations.
-- Separate destructive migrations into later releases.
-- Keep a documented procedure for disabling risky feature flags.
-- Validate restore procedures regularly.
+- Manter digests de imagens anteriores disponiveis.
+- Preferir migrations retrocompativeis.
+- Separar migrations destrutivas em releases posteriores.
+- Manter procedimento documentado para desabilitar feature flags arriscadas.
+- Validar procedimentos de restore regularmente.

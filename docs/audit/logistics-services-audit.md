@@ -1,29 +1,29 @@
-# Logistics Services Audit
+# Auditoria Dos Servicos Logisticos
 
-Date: 2026-07-25
+Data: 2026-07-25
 
-Scope: read-only functional audit of the logistics SaaS platform. No functional code, schema, migration, seed, or infrastructure file was changed in this execution.
+Escopo: auditoria funcional read-only da plataforma logistics SaaS. Nenhum arquivo funcional de codigo, schema, migration, seed ou infraestrutura foi alterado nesta execucao.
 
-## Executive Summary
+## Resumo Executivo
 
-The repository is a usable technical foundation, not a complete logistics intelligence platform. It contains:
+O repositorio e uma fundacao tecnica utilizavel, nao uma plataforma completa de inteligencia logistica. Ele contem:
 
-- NestJS API foundation with global private-by-default guard, request context, structured errors, health checks, Redis service, BullMQ queue registration, Socket.IO gateway, local auth, audit writes for auth events, and a basic dashboard summary endpoint.
-- Next.js frontend with public landing page, login page, authenticated layout, admin shell, and dashboard summary connected to a real backend endpoint.
-- Prisma/MySQL schema with 9 tables: `tenants`, `branches`, `users`, `refresh_tokens`, `customers`, `carriers`, `freight_simulations`, `import_jobs`, `audit_logs`.
-- Seed for demo admin, two tenants, users, one customer, one carrier, one freight simulation, one import job, and one audit log.
+- Fundacao de API NestJS com guard global private-by-default, contexto de requisicao, erros estruturados, health checks, servico Redis, registro de fila BullMQ, gateway Socket.IO, autenticacao local, escritas de auditoria para eventos de auth e endpoint basico de resumo do dashboard.
+- Frontend Next.js com landing page publica, pagina de login, layout autenticado, shell administrativo e resumo de dashboard conectado a endpoint backend real.
+- Schema Prisma/MySQL com 9 tabelas: `tenants`, `branches`, `users`, `refresh_tokens`, `customers`, `carriers`, `freight_simulations`, `import_jobs`, `audit_logs`.
+- Seed para admin demo, dois tenants, usuarios, um cliente, uma transportadora, uma simulacao de frete, um import job e um audit log.
 
-The core logistics services required by the challenge are absent or scaffolded: carrier services, coverage, freight rate tables, weight bands, deterministic pricing engine, simulation options, history detail, shipments, tracking, upload/import processing, workers, secure realtime flow, insights, audit UI, user/customer/carrier CRUDs, OAuth, MFA, password recovery, and cross-tenant tests.
+Os servicos logisticos centrais exigidos pelo desafio estao ausentes ou apenas estruturados: servicos de transportadora, cobertura, tabelas de frete, faixas de peso, motor deterministico de precificacao, opcoes de simulacao, detalhe de historico, shipments, tracking, processamento de upload/importacao, workers, fluxo realtime seguro, insights, UI de auditoria, CRUDs de usuarios/clientes/transportadoras, OAuth, MFA, recuperacao de senha e testes cross-tenant.
 
-## Evidence Baseline
+## Linha De Base De Evidencias
 
-Frontend routes found:
+Rotas frontend encontradas:
 
 - `/`: `apps/web/src/app/(public)/page.tsx`
 - `/login`: `apps/web/src/app/(auth)/login/page.tsx`
 - `/dashboard`: `apps/web/src/app/(dashboard)/dashboard/page.tsx`
 
-Backend HTTP endpoints found by static search:
+Endpoints HTTP backend encontrados por busca estatica:
 
 - `GET /api/v1/health`
 - `GET /api/v1/health/live`
@@ -34,73 +34,73 @@ Backend HTTP endpoints found by static search:
 - `GET /api/v1/auth/me`
 - `GET /api/v1/dashboard/summary`
 
-Realtime handlers found:
+Handlers realtime encontrados:
 
-- Socket.IO namespace `/realtime`
-- `tenant:join` message in `apps/api/src/infrastructure/realtime/notifications.gateway.ts`
+- namespace Socket.IO `/realtime`
+- mensagem `tenant:join` em `apps/api/src/infrastructure/realtime/notifications.gateway.ts`
 
-Validation commands executed in this audit:
+Comandos de validacao executados nesta auditoria:
 
-- `npx pnpm --filter @logistics/api typecheck`: passed.
-- `npx pnpm --filter @logistics/web typecheck`: passed.
-- `npx pnpm --filter @logistics/api test`: failed at Vitest startup with `SyntaxError: Unexpected token '*'`.
-- `npx pnpm --filter @logistics/web test`: failed at Vitest startup with `SyntaxError: Unexpected token '*'`.
-- `docker compose config`: passed and printed effective development configuration.
-- `npx pnpm --filter @logistics/api exec prisma validate`: started, printed Prisma package warning, did not complete within the observed windows and was interrupted with exit code 130.
+- `npx pnpm --filter @logistics/api typecheck`: passou.
+- `npx pnpm --filter @logistics/web typecheck`: passou.
+- `npx pnpm --filter @logistics/api test`: falhou na inicializacao do Vitest com `SyntaxError: Unexpected token '*'`.
+- `npx pnpm --filter @logistics/web test`: falhou na inicializacao do Vitest com `SyntaxError: Unexpected token '*'`.
+- `docker compose config`: passou e imprimiu a configuracao efetiva de desenvolvimento.
+- `npx pnpm --filter @logistics/api exec prisma validate`: iniciou, exibiu aviso do pacote Prisma, nao concluiu dentro das janelas observadas e foi interrompido com codigo 130.
 
-QA subagent validation in a stricter read-only sandbox also found:
+Validacao por subagente de QA em sandbox read-only mais restrito tambem encontrou:
 
 - `node -v`: `v18.19.1`.
-- `pnpm -v`: failed because `pnpm` was not available directly in PATH.
-- package-local `tsc` for API and web: passed.
-- package-local Vitest for API and web: failed because Vitest tried to write `node_modules/.vite/vitest/results.json` in a read-only sandbox.
-- package-local `prisma validate`: failed because `DATABASE_URL` was absent in that sandbox.
-- `docker compose config`: failed in that sandbox because Docker was unavailable there.
+- `pnpm -v`: falhou porque `pnpm` nao estava disponivel diretamente no PATH.
+- `tsc` local ao pacote para API e web: passou.
+- Vitest local ao pacote para API e web: falhou porque Vitest tentou escrever `node_modules/.vite/vitest/results.json` em sandbox read-only.
+- `prisma validate` local ao pacote: falhou porque `DATABASE_URL` estava ausente nesse sandbox.
+- `docker compose config`: falhou nesse sandbox porque Docker estava indisponivel.
 
-## Service Classification
+## Classificacao Dos Servicos
 
-| Service | Status | Current behavior | Evidence | Main gaps | Acceptance criteria |
+| Servico | Status | Comportamento atual | Evidencia | Principais lacunas | Criterios de aceite |
 | --- | --- | --- | --- | --- | --- |
-| Tenants and companies | PARTIALLY_IMPLEMENTED | `Tenant` model, seed with two tenants, auth context derives tenant from token/user. No tenant CRUD or settings. | `schema.prisma`, `TenantsModule` empty, `AuthContextService` | No tenant service, admin operations, tenant settings, tenant lifecycle, cross-tenant tests. | Tenant CRUD/settings, tenant-scoped queries, tests proving no cross-tenant read/write/list/aggregation/realtime/import leakage. |
-| Branches | SCAFFOLDED | `Branch` model, seed creates branches, user may have `branchId`. No endpoints. | `schema.prisma`, `BranchesModule` empty | No branch CRUD, address/contact/main branch, dashboard/simulation filters, branch permissions. | Branch CRUD, tenant isolation, user association, optional/required branch decision documented and tested. |
-| Authentication | PARTIALLY_IMPLEMENTED | Local login, password hash, access token, refresh token rotation, cookies, logout, `/me`, audit, login attempt limiting. | `auth.controller.ts`, `auth.service.ts`, `auth-login-attempt.service.ts` | No OAuth Google/GitHub, MFA/TOTP, password recovery, session management UI/API, CSRF, full e2e. Refresh does not verify user status before issuing new tokens. | Full identity flows with tests, secure cookies, CSRF, revocation, session list/revoke, recovery, OAuth, MFA, audit. |
-| Users and RBAC | SCAFFOLDED | `User` model and roles exist. `RolesGuard` exists but no business endpoint uses a permission matrix. | `users.module.ts` empty, `roles.guard.ts` | No user CRUD/invite/status/profile/session/MFA reset, no matrix enforcement. | Admin user management, RBAC matrix in backend, last admin rule, session revocation, audit, tests per role. |
-| Customers | SCAFFOLDED | `Customer` model and seed demo customer. No API or UI. | `customers.module.ts` empty, `Customer` model | Missing person type, legal name, CPF/CNPJ validation, addresses, CRUD, filters, pagination, historical references. | Full customer CRUD with addresses, document uniqueness per tenant, server pagination, audit and tests. |
-| Addresses | NOT_IMPLEMENTED | No address model or service. | No `Address` model found | No multiple addresses, CEP lookup, snapshots, geocoding, customer/shipment address history. | Address model/service, ViaCEP/BrasilAPI integration, snapshots for simulations/shipments, tests. |
-| Carriers | SCAFFOLDED | `Carrier` model and seed demo carrier. No API or UI. | `carriers.module.ts` empty, `Carrier` model | Missing carrier CRUD, status workflow, service list, performance, integration secrets. | Full carrier CRUD, CNPJ uniqueness per tenant, audit, history-preserving references, tests. |
-| Carrier services/modalities | NOT_IMPLEMENTED | No model, endpoint, UI, seed, or tests. | No `CarrierService` model | No service code/name/modal/factor/weights/status/coverage/pricing association. | Model, CRUD, unique code per carrier, active filtering in simulations, tests. |
-| Coverage | NOT_IMPLEMENTED | No model or deterministic eligibility logic. | No coverage tables | No origin/destination zones, postal ranges, regions, exceptions, route testing. | Coverage model, overlap validation, deterministic service eligibility, unavailable reasons, tests. |
-| Freight rate tables | DOCUMENTED_ONLY | Architecture docs mention pricing, but no schema or API. | `docs/architecture/freight-pricing.md` | No tables/versioning/vigency/rules/fees/ranges. | Versioned rate tables, constraints, audit, valid date logic, historical snapshots. |
-| Weight bands and prices | NOT_IMPLEMENTED | No model or calculation use case. | No `FreightRateBand` model | No min/max weight validation, overlap protection, decimal rounding rules. | Decimal-safe band model, overlap checks, pricing tests at limits. |
-| Pricing engine | NOT_IMPLEMENTED | No deterministic domain service. Current seed stores estimated values directly. | No pricing service files | No cubage, chargeable weight, fee breakdown, reproducibility, unit tests. | Pure deterministic engine, decimal precision, explainable breakdown, unit tests. |
-| Freight simulation | PARTIALLY_IMPLEMENTED | `FreightSimulation` model exists and seed creates one calculated row. No endpoint or frontend journey. | `FreightSimulation` model, seed | No create/list/detail/calculate, no multi-volume, no options, no pricing rules, no selection, no history UI. | End-to-end simulation flow with persisted input/options/rule versions and tests. |
-| Simulation history | NOT_IMPLEMENTED | No listing/detail endpoints or page. | No controller/page | No filters, pagination, option details, selected option, shipment relation. | Tenant-scoped history list/detail, filters, server pagination, tests. |
-| Option selection | NOT_IMPLEMENTED | No simulation option model. | No `FreightSimulationOption` model | Cannot select an option, audit selection, or create shipment from it. | Single selected option transaction, audit, cross-tenant protection, tests. |
-| Shipments | DOCUMENTED_ONLY | Architecture docs mention shipments. No model/code. | `docs/architecture/recommended-domain-model.md` | No operational shipment entity, snapshots, volumes, statuses, creation flows. | Shipment model/API/UI, create from simulation/manual/import, snapshots, audit, tests. |
-| Tracking | DOCUMENTED_ONLY | Threat model/docs exist, but no tables/API/UI. | `docs/architecture/tracking.md` | No immutable events, status machine, idempotency, timeline, realtime updates. | Status machine, immutable tracking events, transaction with shipment status, realtime, tests. |
-| Upload/import | SCAFFOLDED | `ImportJob` model and BullMQ queue registration exist. No upload endpoint/worker. | `imports.module.ts`, `queue.module.ts`, `ImportJob` model | No CSV/XLSX parser, validation, storage, preview, rows, errors, worker, report, idempotency. | At least one complete import flow with worker, progress, error report, tenant isolation, tests. |
-| Async processing | PARTIALLY_IMPLEMENTED | BullMQ root and `imports` queue configured with retry/backoff. | `QueueModule` | No processor, worker process, health, metrics, job payload validation. | Real worker, queue health, retries, idempotency, tenant/correlation ID, tests. |
-| Realtime | BROKEN | Socket joins tenant room from client-provided `tenantId` without auth. | `notifications.gateway.ts` | Cross-tenant event leakage risk; no frontend realtime client. | Authenticated handshake, server-derived tenant, authorized rooms, fallback polling, tests. |
-| Dashboard | PARTIALLY_IMPLEMENTED | Real `/dashboard/summary` counts tenant-scoped basic records. Frontend consumes it. | `dashboard.service.ts`, `dashboard-summary.tsx` | Missing required KPIs, filters, charts, shipments, delay/success, import quality, tests. | Full KPIs and charts from DB, filters, optimized queries, tests. |
-| Insights | NOT_IMPLEMENTED | Module empty, no schema. | `insights.module.ts` | No deterministic generation, storage, read/dismiss state. | Insight model/generator/UI, evidence/thresholds, tests. |
-| Audit | PARTIALLY_IMPLEMENTED | Audit service writes auth/seed events. No audit endpoints/UI. | `audit.service.ts`, `AuditLog` model | No consult/filter/detail page, before/after, broad event coverage, tests. | Audit all relevant actions, sanitized payloads, query UI/API, tests. |
-| Observability | PARTIALLY_IMPLEMENTED | Pino, request ID, exception filter, liveness/readiness for MySQL/Redis. | `main.ts`, `health.controller.ts` | No metrics endpoint, worker/queue health, integration metrics, slow query visibility. | Logs, health, queue/worker checks, metrics and safe errors. |
-| Landing page | PARTIALLY_IMPLEMENTED | Professional public page with static preview and CTA. | `apps/web/src/app/(public)/page.tsx` | Missing several required sections, anchor nav, responsive menu, SEO/OpenGraph depth, demo disclaimers for numbers. | Complete commercial landing with required sections, accessibility/performance/SEO tests. |
-| Admin UI | PARTIALLY_IMPLEMENTED | Login, authenticated layout, dashboard and shell exist. Other menu items disabled. | `app-shell.tsx`, dashboard files | No pages for users/customers/carriers/freight/imports/insights/audit/settings. | All administrative pages integrated with backend and DB, full states and tests. |
-| Demo data | PARTIALLY_IMPLEMENTED | Demo admin and minimal seed data. | `prisma/seed.ts` | Missing most required operational dataset: services, coverage, rate tables, options, shipments, tracking, insights, import errors. | Coherent two-tenant dataset covering every screen and workflow, idempotent and tested. |
-| Tests | BROKEN | Unit/test files exist but Vitest startup fails in current environment. Coverage is narrow. | `*.spec.ts`, `apps/web/tests/*` | No domain tests for logistics, tenant, RBAC, e2e flows; test runner failing. | Fix test environment, add unit/integration/e2e coverage for all core flows. |
+| Tenants e empresas | PARTIALLY_IMPLEMENTED | Modelo `Tenant`, seed com dois tenants, contexto de auth deriva tenant de token/usuario. Sem CRUD ou configuracoes de tenant. | `schema.prisma`, `TenantsModule` vazio, `AuthContextService` | Sem servico de tenant, operacoes admin, configuracoes, ciclo de vida e testes cross-tenant. | CRUD/configuracoes de tenant, queries tenant-scoped, testes provando ausencia de vazamento em leitura/escrita/listagem/agregacao/realtime/importacao. |
+| Filiais | SCAFFOLDED | Modelo `Branch`, seed cria filiais, usuario pode ter `branchId`. Sem endpoints. | `schema.prisma`, `BranchesModule` vazio | Sem CRUD de filial, endereco/contato/filial principal, filtros de dashboard/simulacao e permissoes por filial. | CRUD de filiais, isolamento de tenant, associacao de usuario, decisao de filial opcional/obrigatoria documentada e testada. |
+| Autenticacao | PARTIALLY_IMPLEMENTED | Login local, hash de senha, access token, refresh token rotativo, cookies, logout, `/me`, auditoria e limitacao de tentativas de login. | `auth.controller.ts`, `auth.service.ts`, `auth-login-attempt.service.ts` | Sem OAuth Google/GitHub, MFA/TOTP, recuperacao de senha, UI/API de gestao de sessoes, CSRF e e2e completo. Refresh nao verifica status do usuario antes de emitir novos tokens. | Fluxos completos de identidade com testes, cookies seguros, CSRF, revogacao, lista/revogacao de sessoes, recuperacao, OAuth, MFA e auditoria. |
+| Usuarios e RBAC | SCAFFOLDED | Modelo `User` e roles existem. `RolesGuard` existe, mas nenhum endpoint de negocio usa matriz de permissoes. | `users.module.ts` vazio, `roles.guard.ts` | Sem CRUD/convite/status/perfil/redefinicao MFA/sessoes de usuario, sem enforcement de matriz. | Gestao admin de usuarios, matriz RBAC no backend, regra de ultimo admin, revogacao de sessao, auditoria e testes por role. |
+| Clientes | SCAFFOLDED | Modelo `Customer` e cliente demo na seed. Sem API ou UI. | `customers.module.ts` vazio, modelo `Customer` | Ausentes tipo de pessoa, razao social, validacao CPF/CNPJ, enderecos, CRUD, filtros, paginacao e referencias historicas. | CRUD completo de clientes com enderecos, unicidade de documento por tenant, paginacao server-side, auditoria e testes. |
+| Enderecos | NOT_IMPLEMENTED | Sem modelo ou servico de endereco. | Nenhum modelo `Address` encontrado | Sem multiplos enderecos, consulta de CEP, snapshots, geocoding e historico de endereco de cliente/shipment. | Modelo/servico de endereco, integracao ViaCEP/BrasilAPI, snapshots para simulacoes/shipments e testes. |
+| Transportadoras | SCAFFOLDED | Modelo `Carrier` e transportadora demo na seed. Sem API ou UI. | `carriers.module.ts` vazio, modelo `Carrier` | Ausentes CRUD de transportadora, workflow de status, lista de servicos, performance e segredos de integracao. | CRUD completo de transportadoras, unicidade de CNPJ por tenant, auditoria, referencias preservando historico e testes. |
+| Servicos/modalidades de transportadora | NOT_IMPLEMENTED | Sem modelo, endpoint, UI, seed ou testes. | Nenhum modelo `CarrierService` | Sem codigo/nome/modal/fator/pesos/status/cobertura/associacao com precificacao. | Modelo, CRUD, codigo unico por transportadora, filtro de ativos em simulacoes e testes. |
+| Cobertura | NOT_IMPLEMENTED | Sem modelo ou logica deterministica de elegibilidade. | Sem tabelas de cobertura | Sem zonas de origem/destino, ranges postais, regioes, excecoes e teste de rota. | Modelo de cobertura, validacao de sobreposicao, elegibilidade deterministica de servico, motivos de indisponibilidade e testes. |
+| Tabelas de frete | DOCUMENTED_ONLY | Docs de arquitetura mencionam precificacao, mas nao ha schema ou API. | `docs/architecture/freight-pricing.md` | Sem tabelas/versionamento/vigencia/regras/taxas/faixas. | Tabelas versionadas, restricoes, auditoria, logica de data valida e snapshots historicos. |
+| Faixas de peso e precos | NOT_IMPLEMENTED | Sem modelo ou caso de uso de calculo. | Nenhum modelo `FreightRateBand` | Sem validacao de peso min/max, protecao contra sobreposicao e regras de arredondamento decimal. | Modelo de faixa Decimal-safe, checagens de sobreposicao e testes de precificacao nos limites. |
+| Motor de precificacao | NOT_IMPLEMENTED | Sem servico deterministico de dominio. Seed atual armazena valores estimados diretamente. | Sem arquivos de servico de precificacao | Sem cubagem, peso taxavel, breakdown de taxas, reprodutibilidade e testes unitarios. | Motor puro deterministico, precisao decimal, breakdown explicavel e testes unitarios. |
+| Simulacao de frete | PARTIALLY_IMPLEMENTED | Modelo `FreightSimulation` existe e seed cria uma linha calculada. Sem endpoint ou jornada frontend. | Modelo `FreightSimulation`, seed | Sem create/list/detail/calculate, multi-volume, opcoes, regras de precificacao, selecao e UI de historico. | Fluxo de simulacao de ponta a ponta com entrada/opcoes/versoes de regra persistidas e testes. |
+| Historico de simulacao | NOT_IMPLEMENTED | Sem endpoints de listagem/detalhe ou pagina. | Sem controller/page | Sem filtros, paginacao, detalhes de opcao, opcao selecionada e relacao com shipment. | Listagem/detalhe tenant-scoped de historico, filtros, paginacao server-side e testes. |
+| Selecao de opcao | NOT_IMPLEMENTED | Sem modelo de opcao de simulacao. | Nenhum modelo `FreightSimulationOption` | Nao e possivel selecionar opcao, auditar selecao ou criar shipment a partir dela. | Transacao com uma unica opcao selecionada, auditoria, protecao cross-tenant e testes. |
+| Shipments | DOCUMENTED_ONLY | Docs de arquitetura mencionam shipments. Sem modelo/codigo. | `docs/architecture/recommended-domain-model.md` | Sem entidade operacional de shipment, snapshots, volumes, status e fluxos de criacao. | Modelo/API/UI de shipment, criacao por simulacao/manual/importacao, snapshots, auditoria e testes. |
+| Tracking | DOCUMENTED_ONLY | Threat model/docs existem, mas sem tabelas/API/UI. | `docs/architecture/tracking.md` | Sem eventos imutaveis, maquina de status, idempotencia, timeline e atualizacoes realtime. | Maquina de status, eventos de tracking imutaveis, transacao com status do shipment, realtime e testes. |
+| Upload/importacao | SCAFFOLDED | Modelo `ImportJob` e registro de fila BullMQ existem. Sem endpoint de upload/worker. | `imports.module.ts`, `queue.module.ts`, modelo `ImportJob` | Sem parser CSV/XLSX, validacao, armazenamento, preview, linhas, erros, worker, relatorio e idempotencia. | Ao menos um fluxo completo de importacao com worker, progresso, relatorio de erros, isolamento de tenant e testes. |
+| Processamento async | PARTIALLY_IMPLEMENTED | BullMQ root e fila `imports` configurados com retry/backoff. | `QueueModule` | Sem processor, processo worker, health, metricas e validacao de payload de job. | Worker real, saude de fila, retries, idempotencia, tenant/correlation ID e testes. |
+| Realtime | BROKEN | Socket entra na sala do tenant a partir de `tenantId` enviado pelo cliente sem auth. | `notifications.gateway.ts` | Risco de vazamento de eventos entre tenants; sem client realtime no frontend. | Handshake autenticado, tenant derivado pelo servidor, salas autorizadas, fallback por polling e testes. |
+| Dashboard | PARTIALLY_IMPLEMENTED | `/dashboard/summary` real conta registros basicos tenant-scoped. Frontend consome. | `dashboard.service.ts`, `dashboard-summary.tsx` | Faltam KPIs exigidos, filtros, graficos, shipments, atraso/sucesso, qualidade de importacao e testes. | KPIs e graficos completos do DB, filtros, queries otimizadas e testes. |
+| Insights | NOT_IMPLEMENTED | Modulo vazio, sem schema. | `insights.module.ts` | Sem geracao deterministica, armazenamento e estado read/dismiss. | Modelo/gerador/UI de insight, evidencias/limites e testes. |
+| Auditoria | PARTIALLY_IMPLEMENTED | Servico de auditoria escreve eventos de auth/seed. Sem endpoints/UI de auditoria. | `audit.service.ts`, modelo `AuditLog` | Sem consulta/filtro/detalhe, before/after, cobertura ampla de eventos e testes. | Auditar todas as acoes relevantes, payloads sanitizados, UI/API de consulta e testes. |
+| Observabilidade | PARTIALLY_IMPLEMENTED | Pino, request ID, exception filter, liveness/readiness para MySQL/Redis. | `main.ts`, `health.controller.ts` | Sem endpoint de metricas, health de worker/fila, metricas de integracao e visibilidade de query lenta. | Logs, health, checagens de fila/worker, metricas e erros seguros. |
+| Landing page | PARTIALLY_IMPLEMENTED | Pagina publica profissional com preview estatico e CTA. | `apps/web/src/app/(public)/page.tsx` | Faltam varias secoes exigidas, anchor nav, menu responsivo, profundidade SEO/OpenGraph e disclaimers de numeros demo. | Landing comercial completa com secoes exigidas, testes de acessibilidade/performance/SEO. |
+| UI Admin | PARTIALLY_IMPLEMENTED | Login, layout autenticado, dashboard e shell existem. Outros itens de menu desabilitados. | `app-shell.tsx`, arquivos de dashboard | Sem paginas de users/customers/carriers/freight/imports/insights/audit/settings. | Todas as paginas administrativas integradas ao backend e DB, estados completos e testes. |
+| Dados demo | PARTIALLY_IMPLEMENTED | Admin demo e seed minima. | `prisma/seed.ts` | Falta a maior parte do dataset operacional exigido: servicos, cobertura, tabelas, opcoes, shipments, tracking, insights e erros de importacao. | Dataset coerente de dois tenants cobrindo toda tela e workflow, idempotente e testado. |
+| Testes | BROKEN | Arquivos unit/test existem, mas inicializacao do Vitest falha no ambiente atual. Cobertura estreita. | `*.spec.ts`, `apps/web/tests/*` | Sem testes de dominio para logistica, tenant, RBAC e fluxos e2e; test runner falhando. | Corrigir ambiente de teste, adicionar cobertura unit/integration/e2e para todos os fluxos principais. |
 
-## Critical Risks
+## Riscos Criticos
 
-1. Realtime is unsafe: a client can request `tenant:join` with any `tenantId`.
-2. Required logistics domain is mostly absent: no carrier services, coverage, rate tables, pricing engine, simulation options, shipments, tracking or insights.
-3. Auth is incomplete for the challenge: OAuth, MFA, password recovery and sessions UI/API are missing.
-4. Mutations authenticated by cookies do not have dedicated CSRF protection.
-5. Dashboard is real but too narrow and has no backend test.
-6. Demo login may fail on a database where the initial migration previously failed, because missing tables can break audit/session writes.
-7. Tests do not execute in the observed environment due Vitest startup error.
-8. Test execution is sensitive to environment: the stricter QA sandbox additionally blocks Vitest cache writes.
+1. Realtime inseguro: um cliente pode solicitar `tenant:join` com qualquer `tenantId`.
+2. Dominio logistico exigido esta majoritariamente ausente: sem servicos de transportadora, cobertura, tabelas de frete, motor de precificacao, opcoes de simulacao, shipments, tracking ou insights.
+3. Auth esta incompleto para o desafio: faltam OAuth, MFA, recuperacao de senha e UI/API de sessoes.
+4. Mutations autenticadas por cookies nao possuem protecao CSRF dedicada.
+5. Dashboard e real, mas estreito demais e sem teste backend.
+6. Login demo pode falhar em banco onde a migration inicial tenha falhado anteriormente, porque tabelas ausentes podem quebrar escritas de auditoria/sessao.
+7. Testes nao executam no ambiente observado por erro de inicializacao do Vitest.
+8. Execucao de testes e sensivel ao ambiente: a sandbox de QA mais restrita tambem bloqueia escritas de cache do Vitest.
 
-## Required Prompt Input
+## Entrada Obrigatoria Para Prompt
 
-The executor prompt must require implementation, not documentation-only completion. A feature must not be marked complete unless it has model/migration when needed, backend, authorization, tenant isolation, frontend integration, states, tests, demo data and documentation.
+O prompt executor deve exigir implementacao, nao conclusao apenas documental. Uma funcionalidade nao deve ser marcada como completa sem modelo/migration quando necessario, backend, autorizacao, isolamento de tenant, integracao frontend, estados, testes, dados demo e documentacao.

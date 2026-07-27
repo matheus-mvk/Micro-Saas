@@ -1,12 +1,12 @@
-# Tracking Architecture
+# Arquitetura De Tracking
 
 Status: `IN_DESIGN`
 
-## Purpose
+## Proposito
 
-Tracking records logistics facts for a shipment. It is not the same as audit. A tracking event can be imported, manual, external, webhook-driven, or system-generated.
+Tracking registra fatos logisticos de um shipment. Ele nao e o mesmo que auditoria. Um evento de tracking pode ser importado, manual, externo, dirigido por webhook ou gerado pelo sistema.
 
-## Event Flow
+## Fluxo De Evento
 
 ```mermaid
 sequenceDiagram
@@ -25,28 +25,28 @@ sequenceDiagram
   Queue->>WS: publish tenant-scoped update
 ```
 
-## Required Steps
+## Etapas Obrigatorias
 
-1. authenticate actor or integration;
-2. resolve tenant from trusted context;
-3. authorize resource action;
-4. find shipment by `id + tenantId`;
-5. validate source and external identity;
-6. check idempotency;
-7. validate event type;
-8. validate status transition when present;
-9. handle out-of-order events;
-10. create immutable `TrackingEvent`;
-11. update `Shipment.currentStatus` and `currentStatusAt` if applicable;
-12. commit in one transaction;
-13. write audit for manual/system action;
-14. publish domain event;
-15. notify WebSocket rooms;
-16. invalidate tenant-scoped cache;
-17. update metrics/projections;
-18. return safe response.
+1. autenticar ator ou integracao;
+2. resolver tenant a partir de contexto confiavel;
+3. autorizar a acao sobre o recurso;
+4. encontrar shipment por `id + tenantId`;
+5. validar origem e identidade externa;
+6. verificar idempotencia;
+7. validar tipo de evento;
+8. validar transicao de status quando presente;
+9. tratar eventos fora de ordem;
+10. criar `TrackingEvent` imutavel;
+11. atualizar `Shipment.currentStatus` e `currentStatusAt` quando aplicavel;
+12. commitar em uma transacao;
+13. gravar auditoria para acao manual/sistemica;
+14. publicar evento de dominio;
+15. notificar salas WebSocket;
+16. invalidar cache tenant-scoped;
+17. atualizar metricas/projecoes;
+18. retornar resposta segura.
 
-## Status Machine
+## Maquina De Status
 
 ```mermaid
 stateDiagram-v2
@@ -70,35 +70,35 @@ stateDiagram-v2
   CANCELED --> [*]
 ```
 
-## Status Rules
+## Regras De Status
 
-- Terminal statuses: `DELIVERED`, `RETURNED`, `CANCELED`.
-- Administrative transitions may reopen terminal status only through a correction event with elevated permission and audit.
-- Non-status events: `ETA_UPDATED`, `LOCATION_UPDATED`, `NOTE_ADDED`, `EXCEPTION_REPORTED` unless explicitly mapped to a status.
-- Out-of-order events are stored, but current status changes only if the event is allowed to supersede `currentStatusAt`.
-- Corrections never mutate original events; `correctsEventId` points to the corrected event.
+- Status terminais: `DELIVERED`, `RETURNED`, `CANCELED`.
+- Transicoes administrativas podem reabrir status terminal somente por evento de correcao com permissao elevada e auditoria.
+- Eventos sem status: `ETA_UPDATED`, `LOCATION_UPDATED`, `NOTE_ADDED`, `EXCEPTION_REPORTED`, salvo quando explicitamente mapeados para um status.
+- Eventos fora de ordem sao armazenados, mas o status atual muda somente se o evento puder sobrescrever `currentStatusAt`.
+- Correcoes nunca alteram eventos originais; `correctsEventId` aponta para o evento corrigido.
 
-## Idempotency
+## Idempotencia
 
-- External events: unique `(tenantId, source, externalEventId)`.
-- Manual events: optional `Idempotency-Key` for retry-safe clients.
-- Imports: idempotency from `(tenantId, importJobId, rowNumber, normalizedHash)` or source external ID.
+- Eventos externos: unicidade por `(tenantId, source, externalEventId)`.
+- Eventos manuais: `Idempotency-Key` opcional para clientes seguros contra retry.
+- Imports: idempotencia por `(tenantId, importJobId, rowNumber, normalizedHash)` ou ID externo de origem.
 
-## Concurrency
+## Concorrencia
 
-Use a transaction for event insert and shipment update. Add optimistic concurrency with a shipment `version` field before high-volume tracking ingestion. For integrations with at-least-once delivery, retry on deadlocks and idempotency conflicts.
+Use uma transacao para inserir evento e atualizar shipment. Adicione concorrencia otimista com campo `version` em shipment antes de ingestao de tracking de alto volume. Para integracoes com entrega at-least-once, aplique retry em deadlocks e conflitos de idempotencia.
 
-## Tests
+## Testes
 
-- valid event;
-- invalid transition;
-- duplicate external event;
-- out-of-order event;
-- terminal status guard;
-- correction event;
-- event without status change;
-- wrong tenant;
-- unauthorized user;
-- atomic event/status update;
-- WebSocket notification;
-- audit write.
+- evento valido;
+- transicao invalida;
+- evento externo duplicado;
+- evento fora de ordem;
+- protecao de status terminal;
+- evento de correcao;
+- evento sem mudanca de status;
+- tenant errado;
+- usuario nao autorizado;
+- atualizacao atomica de evento/status;
+- notificacao WebSocket;
+- escrita de auditoria.

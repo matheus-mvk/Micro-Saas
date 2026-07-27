@@ -1,5 +1,5 @@
-# AI Usage
+# Uso De IA
 
-AI tools may accelerate scaffolding, review and documentation, but decisions must be validated against repository code and requirements.
+Ferramentas de IA podem acelerar scaffolding, revisao e documentacao, mas as decisoes devem ser validadas contra o codigo do repositorio e os requisitos.
 
-Generated code must pass the same lint, typecheck, tests and security review as hand-written code.
+Codigo gerado deve passar pelo mesmo lint, typecheck, testes e revisao de seguranca que codigo escrito manualmente.

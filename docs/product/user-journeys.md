@@ -1,14 +1,14 @@
-# User Journeys
+# Jornadas De Usuario
 
 Status: `IN_DESIGN`
 
 ## Personas
 
-- Tenant Admin: configures users, roles, integrations, tenant settings, and audit review.
-- Logistics Manager: monitors cost, SLA, carriers, exceptions, and insights.
-- Operator: runs simulations, imports files, registers tracking events, and handles shipment exceptions.
+- Admin do tenant: configura usuarios, roles, integracoes, configuracoes do tenant e revisao de auditoria.
+- Gestor logistico: monitora custo, SLA, transportadoras, excecoes e insights.
+- Operador: executa simulacoes, importa arquivos, registra eventos de tracking e trata excecoes de shipment.
 
-## Journey: Login and Tenant Context
+## Jornada: Login E Contexto De Tenant
 
 ```mermaid
 sequenceDiagram
@@ -25,16 +25,16 @@ sequenceDiagram
   API-->>Web: HttpOnly refresh cookie + session summary
 ```
 
-1. User opens login.
-2. User authenticates with email/password or OAuth.
-3. System challenges MFA when policy requires it.
-4. Backend resolves tenant and membership from trusted identity.
-5. Frontend receives session summary without refresh token exposure.
-6. Dashboard loads with visible tenant, role, and period.
+1. Usuario abre o login.
+2. Usuario autentica com e-mail/senha ou OAuth.
+3. Sistema solicita MFA quando a politica exige.
+4. Backend resolve tenant e membership a partir de identidade confiavel.
+5. Frontend recebe resumo de sessao sem expor refresh token.
+6. Dashboard carrega com tenant, role e periodo visiveis.
 
-Failure states: invalid credentials, MFA required, user disabled, tenant disabled, no membership, session expired, rate limited.
+Estados de falha: credenciais invalidas, MFA obrigatorio, usuario desabilitado, tenant desabilitado, sem membership, sessao expirada, rate limit.
 
-## Journey: Freight Simulation
+## Jornada: Simulacao De Frete
 
 ```mermaid
 sequenceDiagram
@@ -53,9 +53,9 @@ sequenceDiagram
   Web->>API: create shipment from option
 ```
 
-UX requirements: show validation next to fields, compare options in a table, explain selected recommendation, mark provider failures as partial data.
+Requisitos de UX: mostrar validacao junto aos campos, comparar opcoes em tabela, explicar a recomendacao selecionada e marcar falhas de provider como dados parciais.
 
-## Journey: Shipment Tracking
+## Jornada: Tracking De Shipment
 
 ```mermaid
 sequenceDiagram
@@ -71,34 +71,34 @@ sequenceDiagram
   WS-->>Web: timeline refresh event
 ```
 
-UX requirements: immutable timeline, current status summary, event source labels, out-of-order marker, correction events, and audit link for manual events.
+Requisitos de UX: timeline imutavel, resumo do status atual, labels de origem do evento, marcador de evento fora de ordem, eventos de correcao e link de auditoria para eventos manuais.
 
-## Journey: Import
+## Jornada: Importacao
 
-1. Operator selects import type.
-2. Upload validates extension, MIME, size, and spreadsheet safety.
-3. System previews mapped columns.
-4. Operator confirms processing.
-5. API creates `ImportJob` and enqueues job.
-6. Worker validates rows and writes records with idempotency.
-7. WebSocket reports progress.
-8. Result screen shows success count, warning count, error rows, and exportable report.
+1. Operador seleciona o tipo de importacao.
+2. Upload valida extensao, MIME, tamanho e seguranca da planilha.
+3. Sistema exibe preview das colunas mapeadas.
+4. Operador confirma o processamento.
+5. API cria `ImportJob` e enfileira o job.
+6. Worker valida linhas e grava registros com idempotencia.
+7. WebSocket informa progresso.
+8. Tela de resultado mostra contagem de sucesso, avisos, linhas com erro e relatorio exportavel.
 
-## Journey: Dashboard and Insights
+## Jornada: Dashboard E Insights
 
-1. Manager selects tenant, branch, and period.
-2. Dashboard shows KPIs with source timestamp.
-3. Manager filters by carrier, route, customer, status, or risk.
-4. Insight cards explain rule, evidence, impact, and recommended action.
-5. Manager dismisses, marks as read, or opens the underlying records.
+1. Gestor seleciona tenant, filial e periodo.
+2. Dashboard mostra KPIs com timestamp da fonte.
+3. Gestor filtra por transportadora, rota, cliente, status ou risco.
+4. Cards de insight explicam regra, evidencia, impacto e acao recomendada.
+5. Gestor dispensa, marca como lido ou abre os registros relacionados.
 
-## Journey: Administration
+## Jornada: Administracao
 
-1. Admin invites user with role and optional branch scope.
-2. System sends invitation and records audit.
-3. User accepts invitation, sets password, configures MFA if required.
-4. Admin reviews audit log for user and permission changes.
+1. Admin convida usuario com role e escopo opcional de filial.
+2. Sistema envia convite e registra auditoria.
+3. Usuario aceita convite, define senha e configura MFA se exigido.
+4. Admin revisa audit log de mudancas de usuario e permissao.
 
-## Accessibility and Feedback
+## Acessibilidade E Feedback
 
-Every journey must define loading, empty, error, forbidden, partial data, offline, and retry states. Technical errors must map to user-facing recovery guidance and include request ID only when useful for support.
+Toda jornada deve definir estados de loading, empty, erro, forbidden, dados parciais, offline e retry. Erros tecnicos devem ser traduzidos para orientacao de recuperacao para usuario e incluir request ID somente quando util para suporte.

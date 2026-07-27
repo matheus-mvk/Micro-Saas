@@ -1,5 +1,5 @@
 # Skills
 
-Skills in `.cloud/skills` describe module status, scope, tenant rules, permissions, tests, errors, decisions and pending work.
+Skills em `.cloud/skills` descrevem status de modulo, escopo, regras de tenant, permissoes, testes, erros, decisoes e trabalho pendente.
 
-No skill may be marked `IMPLEMENTED` unless the code exists and validations pass.
+Nenhuma skill pode ser marcada como `IMPLEMENTED` a menos que o codigo exista e as validacoes passem.

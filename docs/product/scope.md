@@ -1,7 +1,7 @@
-# Scope
+# Escopo
 
-Implemented now: foundation, public landing, visual login, dashboard placeholder, backend health and platform infrastructure.
+Implementado agora: fundacao, landing publica, login visual, placeholder de dashboard, health do backend e infraestrutura da plataforma.
 
-Prepared: auth, users, customers, carriers, freight simulations, imports, dashboard, insights, audit and notifications.
+Preparado: auth, usuarios, clientes, transportadoras, simulacoes de frete, imports, dashboard, insights, auditoria e notificacoes.
 
-Out of scope now: complete CRUDs, complete auth, OAuth, MFA, freight calculation and production deployment.
+Fora do escopo agora: CRUDs completos, auth completa, OAuth, MFA, calculo de frete e deploy de producao.

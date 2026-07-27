@@ -1,48 +1,48 @@
-# Local Environment
+# Ambiente Local
 
-This document defines the local development baseline for the SaaS platform.
+Este documento define a base de desenvolvimento local para a plataforma SaaS.
 
-## Prerequisites
+## Pre-requisitos
 
-Install these tools locally:
+Instale estas ferramentas localmente:
 
 - Git.
-- Node.js LTS compatible with the application runtime.
-- `pnpm` through Corepack. The root manifest currently declares `pnpm@9.15.4`.
+- Node.js LTS compativel com o runtime da aplicacao.
+- `pnpm` via Corepack. O manifesto raiz declara atualmente `pnpm@9.15.4`.
 - Docker Engine and Docker Compose v2.
-- A MySQL client.
-- Optional Redis CLI for cache and queue diagnostics.
+- Um cliente MySQL.
+- Redis CLI opcional para diagnostico de cache e filas.
 
-The repository is a pnpm workspace with Turborepo. When `pnpm-lock.yaml` is present, use frozen installs:
+O repositorio e um workspace pnpm com Turborepo. Quando `pnpm-lock.yaml` estiver presente, use instalacoes congeladas:
 
 ```bash
 corepack enable
 pnpm install --frozen-lockfile
 ```
 
-Until the lockfile is integrated, use:
+Enquanto o lockfile nao estiver integrado, use:
 
 ```bash
 corepack enable
 pnpm install
 ```
 
-## Environment Files
+## Arquivos de Ambiente
 
-Use a checked-in example file when available, such as `.env.example`, and create a local `.env` from it. Do not commit local secret values.
+Use um arquivo de exemplo versionado quando disponivel, como `.env.example`, e crie um `.env` local a partir dele. Nao commite valores locais de segredos.
 
-Recommended variable groups:
+Grupos de variaveis recomendados:
 
-- Application: `NODE_ENV`, `API_PORT`, `WEB_PORT`, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_URL`.
-- Database: `DATABASE_URL`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`.
-- Cache and queue: `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`.
-- Auth: `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, token expiration, OAuth client settings, `TOTP_ISSUER`.
-- Browser access: `COOKIE_DOMAIN`, `CORS_ORIGINS`.
-- Observability: `LOG_LEVEL` and future trace exporter settings.
+- Aplicacao: `NODE_ENV`, `API_PORT`, `WEB_PORT`, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_URL`.
+- Banco de dados: `DATABASE_URL`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`.
+- Cache e fila: `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`.
+- Auth: `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, expiracao de tokens, configuracoes de cliente OAuth, `TOTP_ISSUER`.
+- Acesso pelo navegador: `COOKIE_DOMAIN`, `CORS_ORIGINS`.
+- Observabilidade: `LOG_LEVEL` e configuracoes futuras de exportador de traces.
 
-## Startup Flow
+## Fluxo de Inicializacao
 
-Use the repository scripts:
+Use os scripts do repositorio:
 
 ```bash
 corepack enable
@@ -55,17 +55,17 @@ pnpm test
 pnpm dev
 ```
 
-Default local endpoints:
+Endpoints locais padrao:
 
 - API: `http://localhost:3333/api/v1`.
-- Swagger in development: `http://localhost:3333/api/docs` or `http://localhost:3333/docs`.
+- Swagger em desenvolvimento: `http://localhost:3333/api/docs` ou `http://localhost:3333/docs`.
 - Web: `http://localhost:3000`.
-- MySQL inside Docker network: `mysql:3306`.
-- MySQL from Windows or DBeaver: `localhost:3307`.
+- MySQL dentro da rede Docker: `mysql:3306`.
+- MySQL a partir do Windows ou DBeaver: `localhost:3307`.
 
-## Local Services
+## Servicos Locais
 
-Start external dependencies through Docker Compose when available:
+Inicie dependencias externas via Docker Compose quando disponivel:
 
 ```bash
 docker compose up -d
@@ -73,36 +73,36 @@ docker compose ps
 docker compose logs -f
 ```
 
-Run migrations and seed data only through repository-owned scripts:
+Rode migrations e seed somente pelos scripts do proprio repositorio:
 
 ```bash
 pnpm db:migrate
 pnpm db:seed
 ```
 
-When the API runs as a container, keep `DATABASE_URL` pointing to the internal Docker service:
+Quando a API roda como container, mantenha `DATABASE_URL` apontando para o servico Docker interno:
 
 ```bash
 mysql://logistics:logistics_password@mysql:3306/logistics_saas
 ```
 
-For external tools on Windows, such as DBeaver, use host `localhost`, port `3307`, database `logistics_saas`, user `logistics`, and password `logistics_password`.
+Para ferramentas externas no Windows, como DBeaver, use host `localhost`, porta `3307`, banco `logistics_saas`, usuario `logistics` e senha `logistics_password`.
 
-Local seed data should include at least two tenants so cross-tenant access bugs are visible during development.
+Dados locais de seed devem incluir pelo menos dois tenants para que falhas de acesso cross-tenant fiquem visiveis durante o desenvolvimento.
 
-## Multi-Tenant Local Checks
+## Verificacoes Locais Multi-Tenant
 
-Before opening a pull request that touches tenant-aware behavior, validate:
+Antes de abrir um pull request que altera comportamento sensivel a tenant, valide:
 
-- Requests for tenant A cannot read or mutate tenant B records.
-- Background jobs carry tenant context explicitly.
-- Cache keys include tenant scope where data is tenant-specific.
-- Webhook handlers resolve tenant context before side effects.
-- Admin or support impersonation is audited and time-limited.
+- Requisicoes do tenant A nao conseguem ler nem alterar registros do tenant B.
+- Jobs em background carregam contexto de tenant explicitamente.
+- Chaves de cache incluem escopo de tenant quando o dado e especifico de tenant.
+- Handlers de webhook resolvem contexto de tenant antes de efeitos colaterais.
+- Impersonacao administrativa ou de suporte e auditada e limitada por tempo.
 
-## Local Data Hygiene
+## Higiene de Dados Locais
 
-- Keep local databases disposable.
-- Avoid using production data locally.
-- If realistic data is required, use anonymized fixtures.
-- Reset local volumes when migration history or seed data changes incompatibly.
+- Mantenha bancos locais descartaveis.
+- Evite usar dados de producao localmente.
+- Se dados realistas forem necessarios, use fixtures anonimizadas.
+- Reinicie volumes locais quando o historico de migrations ou os dados de seed mudarem de forma incompativel.

@@ -1,42 +1,42 @@
 # Docker
 
-This document describes the expected Docker contract for the platform. It does not modify Dockerfiles or compose files.
+Este documento descreve o contrato Docker esperado para a plataforma. Ele nao modifica Dockerfiles nem arquivos Compose.
 
-## Goals
+## Objetivos
 
-- Reproducible images built from committed source and lockfiles.
-- Runtime configuration through environment variables, not baked secrets.
-- Fast local dependency startup through Docker Compose.
-- Production images with minimal attack surface.
+- Imagens reproduziveis criadas a partir do codigo e lockfiles commitados.
+- Configuracao de runtime por variaveis de ambiente, sem segredos embutidos na imagem.
+- Inicializacao rapida de dependencias locais via Docker Compose.
+- Imagens de producao com superficie minima de ataque.
 
-## Image Expectations
+## Expectativas de Imagem
 
-Application images for the NestJS API, Next.js web app, and workers should:
+Imagens da API NestJS, da aplicacao Web Next.js e dos workers devem:
 
-- Use an explicit base image tag.
-- Install dependencies from a lockfile.
-- Run as a non-root user.
-- Expose only required ports.
-- Include a healthcheck when the runtime supports it.
-- Keep build-time and runtime dependencies separated.
-- Avoid copying `.env`, local caches, test output, or generated secrets.
+- Usar uma tag explicita de imagem base.
+- Instalar dependencias a partir de um lockfile.
+- Rodar com usuario nao root.
+- Expor apenas as portas necessarias.
+- Incluir healthcheck quando o runtime suportar.
+- Manter dependencias de build e runtime separadas.
+- Evitar copiar `.env`, caches locais, saidas de teste ou segredos gerados.
 
-## Compose Expectations
+## Expectativas de Compose
 
-Local `docker-compose.yml` should define development dependencies and local application services. Recommended service groups:
+O `docker-compose.yml` local deve definir dependencias de desenvolvimento e servicos locais da aplicacao. Grupos de servico recomendados:
 
-- API process on port `3333`.
-- Web process on port `3000`.
-- MySQL database.
-- Redis for cache, BullMQ queues, and Socket.IO coordination when needed.
-- Worker process for BullMQ consumers.
-- Optional observability tools for local debugging.
+- Processo da API na porta `3333`.
+- Processo Web na porta `3000`.
+- Banco MySQL.
+- Redis para cache, filas BullMQ e coordenacao Socket.IO quando necessario.
+- Processo worker para consumidores BullMQ.
+- Ferramentas opcionais de observabilidade para debugging local.
 
-Every stateful service should use named volumes. Ports should be documented and should not conflict with common local tooling.
+Todo servico com estado deve usar volumes nomeados. Portas devem ser documentadas e nao devem conflitar com ferramentas locais comuns.
 
-The MySQL container listens on port `3306` inside the Docker network. To avoid conflicts with a local Windows MySQL instance, the host mapping publishes it as `localhost:3307`. Container-to-container connections must continue using `mysql:3306`.
+O container MySQL escuta na porta `3306` dentro da rede Docker. Para evitar conflitos com uma instancia MySQL local no Windows, o mapeamento do host publica o banco em `localhost:3307`. Conexoes entre containers devem continuar usando `mysql:3306`.
 
-## Common Commands
+## Comandos Comuns
 
 ```bash
 docker compose config
@@ -47,11 +47,11 @@ docker compose down
 docker compose down -v
 ```
 
-Use `docker compose down -v` only when local data can be discarded.
+Use `docker compose down -v` somente quando os dados locais puderem ser descartados.
 
-## Build Validation
+## Validacao de Build
 
-When Dockerfiles are integrated, validate builds from a clean checkout:
+Quando Dockerfiles forem integrados, valide builds a partir de um checkout limpo:
 
 ```bash
 docker compose config
@@ -59,22 +59,22 @@ docker compose build
 docker compose up --build
 ```
 
-For multi-service repositories, prefer service-specific image names and documented build contexts.
+Para repositorios com multiplos servicos, prefira nomes de imagem especificos por servico e contextos de build documentados.
 
-## Runtime Configuration
+## Configuracao de Runtime
 
-Do not pass secrets with command-line flags where they can appear in shell history or process lists. Prefer environment files for local development and managed secret stores in staging and production.
+Nao passe segredos por flags de linha de comando quando eles puderem aparecer no historico do shell ou em listas de processos. Prefira arquivos de ambiente no desenvolvimento local e cofres de segredos gerenciados em staging e producao.
 
-For multi-tenant services, confirm that environment defaults cannot silently route all requests to a single tenant in staging or production.
+Para servicos multi-tenant, confirme que defaults de ambiente nao podem rotear silenciosamente todas as requisicoes para um unico tenant em staging ou producao.
 
-## Production Notes
+## Notas de Producao
 
-Production containers should be immutable. Configuration changes should create a new deployment or task revision, not mutate a running container.
+Containers de producao devem ser imutaveis. Mudancas de configuracao devem criar um novo deploy ou revisao de task, nao alterar um container em execucao.
 
-Recommended runtime controls:
+Controles de runtime recomendados:
 
-- Read-only root filesystem where feasible.
-- Memory and CPU limits.
-- Liveness and readiness probes.
-- Structured logs to stdout/stderr.
-- Explicit graceful shutdown timeout.
+- Filesystem raiz somente leitura quando viavel.
+- Limites de memoria e CPU.
+- Probes de liveness e readiness.
+- Logs estruturados em stdout/stderr.
+- Timeout explicito para graceful shutdown.

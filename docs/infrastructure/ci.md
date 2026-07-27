@@ -1,68 +1,68 @@
-# Continuous Integration
+# Integracao Continua
 
-The CI workflow lives at `.github/workflows/ci.yml`.
+O workflow de CI fica em `.github/workflows/ci.yml`.
 
-## Workflow Behavior
+## Comportamento Do Workflow
 
-The workflow is intentionally defensive while the application manifests are owned by other agents:
+O workflow e intencionalmente defensivo enquanto os manifests da aplicacao pertencem a outros agentes:
 
-- It checks out the repository.
-- It installs Node.js.
-- It detects the package manager from the lockfile or `packageManager` field.
-- It installs dependencies only when `package.json` exists.
-- It runs available scripts among `lint`, `typecheck`, `test`, and `build`.
-- It validates Docker Compose configuration when compose files exist.
+- Faz checkout do repositorio.
+- Instala Node.js.
+- Detecta o gerenciador de pacotes pelo lockfile ou pelo campo `packageManager`.
+- Instala dependencias somente quando `package.json` existe.
+- Executa scripts disponiveis entre `lint`, `typecheck`, `test` e `build`.
+- Valida a configuracao Docker Compose quando arquivos Compose existem.
 
-This lets the workflow exist before all application files are integrated, while still becoming stricter automatically as scripts and Docker files are added.
+Isso permite que o workflow exista antes de todos os arquivos da aplicacao serem integrados, mas ainda fique mais rigoroso automaticamente conforme scripts e arquivos Docker sao adicionados.
 
-## Required Quality Gates
+## Gates De Qualidade Obrigatorios
 
-Once the application is integrated, these scripts should exist and be meaningful:
+Quando a aplicacao estiver integrada, estes scripts devem existir e ter significado real:
 
-- `lint`: static analysis and formatting policy.
-- `typecheck`: TypeScript or equivalent compile-time validation.
-- `test`: deterministic unit and integration tests.
-- `build`: production build verification through Turborepo.
+- `lint`: analise estatica e politica de formatacao.
+- `typecheck`: validacao em tempo de compilacao com TypeScript ou equivalente.
+- `test`: testes unitarios e de integracao deterministicos.
+- `build`: verificacao de build de producao via Turborepo.
 
-The current root manifest already exposes these scripts through `pnpm`.
+O manifesto raiz atual ja expoe esses scripts por `pnpm`.
 
-For a multi-tenant SaaS, CI should also include tests for:
+Para um SaaS multi-tenant, a CI tambem deve incluir testes para:
 
-- Tenant-scoped repositories and queries.
-- Authorization checks across tenant boundaries.
-- Cache key tenant scoping.
-- Background job tenant context propagation.
-- Migration safety for shared tables.
+- Repositories e queries tenant-scoped.
+- Verificacoes de autorizacao entre fronteiras de tenant.
+- Escopo de tenant em chaves de cache.
+- Propagacao de contexto de tenant em jobs em background.
+- Seguranca de migrations para tabelas compartilhadas.
 
-## Branch Protection
+## Protecao De Branch
 
-Recommended protected branch requirements:
+Requisitos recomendados para branch protegida:
 
-- Require pull request review.
-- Require the CI workflow to pass.
-- Require conversation resolution.
-- Block force pushes.
-- Require linear history if that matches the team workflow.
+- Exigir revisao de pull request.
+- Exigir que o workflow de CI passe.
+- Exigir resolucao de conversas.
+- Bloquear force pushes.
+- Exigir historico linear se isso combinar com o fluxo do time.
 
-## Secrets In CI
+## Segredos Na CI
 
-CI should not require production secrets. Use test-only credentials and ephemeral services.
+A CI nao deve exigir segredos de producao. Use credenciais somente de teste e servicos efemeros.
 
-If integration tests need external dependencies:
+Se testes de integracao precisarem de dependencias externas:
 
-- Prefer containerized services started by the workflow.
-- Use GitHub Actions secrets only for non-production test accounts.
-- Rotate secrets on a defined schedule.
-- Avoid logging connection strings or tokens.
+- Prefira servicos containerizados iniciados pelo workflow.
+- Use segredos do GitHub Actions somente para contas de teste nao produtivas.
+- Rotacione segredos em uma agenda definida.
+- Evite registrar connection strings ou tokens em logs.
 
-## Future Extensions
+## Extensoes Futuras
 
-Add these jobs once the application structure is available:
+Adicione estes jobs quando a estrutura da aplicacao estiver disponivel:
 
-- Dependency vulnerability audit with an agreed severity threshold.
-- Container image build and scan.
-- Database migration dry run.
-- End-to-end smoke tests against a preview environment.
-- Artifact upload for coverage and build outputs.
+- Auditoria de vulnerabilidades de dependencias com threshold de severidade acordado.
+- Build e scan de imagem de container.
+- Dry run de migration de banco.
+- Smoke tests end-to-end contra ambiente de preview.
+- Upload de artefatos de cobertura e saidas de build.
 
-When `pnpm-lock.yaml` is committed, CI uses `pnpm install --frozen-lockfile`. Until then it falls back to `pnpm install --no-frozen-lockfile` so the workflow can run during repository assembly.
+Quando `pnpm-lock.yaml` estiver commitado, a CI usa `pnpm install --frozen-lockfile`. Ate la, ela usa fallback para `pnpm install --no-frozen-lockfile` para que o workflow rode durante a montagem do repositorio.

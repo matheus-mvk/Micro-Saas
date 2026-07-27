@@ -1,6 +1,6 @@
-# Product Glossary
+# Glossario Do Produto
 
-- Freight simulation: estimated freight scenario with route, weights, dimensions, value, carrier and expected result.
-- Tenant: company using the platform with logically isolated data.
-- Import: asynchronous ingestion of CSV or XLSX files.
-- Insight: automatic observation generated from operational data.
+- Freight simulation: cenario estimado de frete com rota, pesos, dimensoes, valor, transportadora e resultado esperado.
+- Tenant: empresa que usa a plataforma com dados logicamente isolados.
+- Import: ingestao assincrona de arquivos CSV ou XLSX.
+- Insight: observacao automatica gerada a partir de dados operacionais.

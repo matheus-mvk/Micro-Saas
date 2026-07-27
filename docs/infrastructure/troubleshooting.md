@@ -1,10 +1,10 @@
 # Troubleshooting
 
-Use this guide for local, CI, Docker, and deployment failures.
+Use este guia para falhas locais, de CI, Docker e deploy.
 
-## Local Install Fails
+## Falha Na Instalacao Local
 
-Check the package manager and lockfile:
+Verifique o gerenciador de pacotes e o lockfile:
 
 ```bash
 ls
@@ -13,18 +13,18 @@ corepack --version
 pnpm --version
 ```
 
-Then install with the matching command:
+Depois instale com o comando correspondente:
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm install
 ```
 
-Use `pnpm install --frozen-lockfile` when `pnpm-lock.yaml` exists. Use plain `pnpm install` only while the lockfile is not yet integrated.
+Use `pnpm install --frozen-lockfile` quando `pnpm-lock.yaml` existir. Use `pnpm install` simples apenas enquanto o lockfile ainda nao estiver integrado.
 
-## Docker Compose Fails
+## Falha No Docker Compose
 
-Validate compose syntax:
+Valide a sintaxe do Compose:
 
 ```bash
 docker compose config
@@ -32,62 +32,62 @@ docker compose ps
 docker compose logs -f
 ```
 
-Common causes:
+Causas comuns:
 
-- Required environment variable is missing.
-- Host port is already in use.
-- Named volume contains data from an incompatible schema.
-- Service healthcheck has not completed.
-- Container cannot resolve another service name.
+- Variavel de ambiente obrigatoria ausente.
+- Porta do host ja em uso.
+- Volume nomeado contem dados de um schema incompativel.
+- Healthcheck do servico ainda nao foi concluido.
+- Container nao consegue resolver o nome de outro servico.
 
-If Windows already has a local MySQL listening on `localhost:3306`, keep it running and use the container database through `localhost:3307` from Windows tools. Do not change the internal container URL `mysql:3306`.
+Se o Windows ja tiver um MySQL local escutando em `localhost:3306`, mantenha-o rodando e use o banco do container por `localhost:3307` nas ferramentas Windows. Nao altere a URL interna do container `mysql:3306`.
 
-For disposable local data, reset volumes:
+Para dados locais descartaveis, reinicie os volumes:
 
 ```bash
 docker compose down -v
 docker compose up -d
 ```
 
-## CI Fails On Install
+## CI Falha Na Instalacao
 
-Check:
+Verifique:
 
-- Lockfile matches the package manager.
-- `package.json` and lockfile were committed together.
-- Private registry tokens are configured only when needed.
-- Postinstall scripts do not require unavailable local services.
+- O lockfile corresponde ao gerenciador de pacotes.
+- `package.json` e lockfile foram commitados juntos.
+- Tokens de registry privado estao configurados somente quando necessario.
+- Scripts de postinstall nao exigem servicos locais indisponiveis.
 
-## CI Fails On Tests
+## CI Falha Nos Testes
 
-Check whether the failing test assumes:
+Verifique se o teste que falhou assume:
 
-- A fixed timezone.
-- Shared global state.
-- A specific test execution order.
-- A tenant fixture that was not created.
-- A database or cache service that is not started in CI.
+- Timezone fixa.
+- Estado global compartilhado.
+- Ordem especifica de execucao.
+- Fixture de tenant que nao foi criada.
+- Servico de banco ou cache que nao foi iniciado na CI.
 
-Tests for tenant isolation should create their own tenants and records instead of relying on pre-existing local data.
+Testes de isolamento de tenant devem criar seus proprios tenants e registros, em vez de depender de dados locais preexistentes.
 
-## Database Connection Fails
+## Falha Na Conexao Com Banco
 
-Check:
+Verifique:
 
-- Connection string value.
-- DNS or container service name.
-- Port exposure.
-- SSL mode requirements.
-- Database user permissions.
-- Migration state.
+- Valor da connection string.
+- DNS ou nome do servico no container.
+- Exposicao de porta.
+- Requisitos de modo SSL.
+- Permissoes do usuario do banco.
+- Estado das migrations.
 
-For local Docker, the default database URL points to the `mysql` compose service:
+No Docker local, a URL padrao do banco aponta para o servico Compose `mysql`:
 
 ```bash
 mysql://logistics:logistics_password@mysql:3306/logistics_saas
 ```
 
-This URL is for containers on the Docker network. For DBeaver or another Windows client, use:
+Essa URL e para containers na rede Docker. Para DBeaver ou outro cliente Windows, use:
 
 ```text
 Host: localhost
@@ -97,30 +97,30 @@ User: logistics
 Password: logistics_password
 ```
 
-In staging and production, avoid manual schema changes. Use the migration process owned by the application.
+Em staging e producao, evite alteracoes manuais de schema. Use o processo de migration controlado pela aplicacao.
 
-## Tenant Leakage Suspected
+## Suspeita De Vazamento Entre Tenants
 
-Immediate checks:
+Verificacoes imediatas:
 
-- Identify request ID, tenant ID, user ID, and endpoint.
-- Confirm tenant context resolution from auth token, host, or request metadata.
-- Inspect queries for missing tenant predicates.
-- Inspect cache keys for missing tenant scope.
-- Check background job payloads for tenant context.
+- Identifique request ID, tenant ID, user ID e endpoint.
+- Confirme a resolucao do contexto de tenant a partir do token de auth, host ou metadados da requisicao.
+- Inspecione queries em busca de predicados de tenant ausentes.
+- Inspecione chaves de cache em busca de escopo de tenant ausente.
+- Verifique payloads de jobs em background quanto ao contexto de tenant.
 
-Containment actions:
+Acoes de contencao:
 
-- Disable affected feature flag if available.
-- Stop affected worker queue if leakage is async.
-- Preserve logs and audit records.
-- Patch tests to reproduce the leakage before release.
+- Desabilite a feature flag afetada, se disponivel.
+- Pare a fila worker afetada se o vazamento for assincrono.
+- Preserve logs e registros de auditoria.
+- Ajuste testes para reproduzir o vazamento antes da release.
 
-## Production Incident Checklist
+## Checklist De Incidente Em Producao
 
-- Confirm whether the issue is global or tenant-specific.
-- Check error rate, latency, saturation, and queue depth.
-- Compare current deployment version with last known good version.
-- Review recent migrations and configuration changes.
-- Decide between rollback, feature flag disablement, or forward fix.
-- Record timeline and follow-up actions after recovery.
+- Confirme se o problema e global ou especifico de tenant.
+- Verifique taxa de erro, latencia, saturacao e profundidade de fila.
+- Compare a versao atual do deploy com a ultima versao conhecida como estavel.
+- Revise migrations recentes e mudancas de configuracao.
+- Decida entre rollback, desabilitar feature flag ou aplicar correcao progressiva.
+- Registre linha do tempo e acoes de acompanhamento apos a recuperacao.

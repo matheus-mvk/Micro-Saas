@@ -1,4 +1,4 @@
-# Public and Private Data Matrix
+# Matriz De Dados Publicos E Privados
 
 ## Objetivo
 
@@ -44,4 +44,3 @@ Classificar dados para orientar acesso, armazenamento, logging, exportacao, anal
 - Resultados gerados por IA herdam a classificacao mais restritiva dos dados de entrada.
 - Embeddings, caches semanticos e memorias devem ser particionados por tenant.
 - Metricas globais devem ser agregadas e revisadas contra reidentificacao.
-

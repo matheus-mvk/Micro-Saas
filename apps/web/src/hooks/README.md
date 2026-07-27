@@ -1,3 +1,3 @@
 # Hooks
 
-Reusable hooks live here only after at least two components need the same browser behavior.
+Hooks reutilizaveis ficam aqui somente depois que pelo menos dois componentes precisarem do mesmo comportamento de navegador.

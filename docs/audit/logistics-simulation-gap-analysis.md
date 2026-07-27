@@ -1,16 +1,16 @@
-# Logistics Simulation Gap Analysis
+# Analise De Lacunas Da Simulacao Logistica
 
-Date: 2026-07-25
+Data: 2026-07-25
 
-Scope: read-only analysis of freight simulation, pricing and downstream logistics operation.
+Escopo: analise read-only de simulacao de frete, precificacao e operacao logistica downstream.
 
-## Current State
+## Estado Atual
 
-The current repository has only one persistence model related to simulation:
+O repositorio atual possui somente um modelo de persistencia relacionado a simulacao:
 
-- `FreightSimulation` in `apps/api/prisma/schema.prisma`.
+- `FreightSimulation` em `apps/api/prisma/schema.prisma`.
 
-The seed creates one calculated demo row with static values:
+A seed cria uma linha demo calculada com valores estaticos:
 
 - origin postal code `01001000`
 - destination postal code `20040002`
@@ -20,112 +20,112 @@ The seed creates one calculated demo row with static values:
 - estimated deadline `3`
 - metadata route text
 
-There is no simulation controller, service, domain pricing engine, carrier service model, coverage model, rate table model, rate band model, simulation option model, selection model, shipment model, tracking model or frontend simulation page.
+Nao ha controller de simulacao, service, motor de precificacao de dominio, modelo de servico de transportadora, modelo de cobertura, modelo de tabela de frete, modelo de faixa de frete, modelo de opcao de simulacao, modelo de selecao, modelo de shipment, modelo de tracking ou pagina frontend de simulacao.
 
-## Required Flow vs Current Evidence
+## Fluxo Exigido Vs Evidencia Atual
 
-| Requirement | Current status | Evidence | Gap |
+| Requisito | Status atual | Evidencia | Lacuna |
 | --- | --- | --- | --- |
-| Optional customer | PARTIALLY_IMPLEMENTED | `FreightSimulation.customerId` exists | No endpoint validates customer by tenant or preserves customer snapshot. |
-| Origin/destination addresses | PARTIALLY_IMPLEMENTED | Postal code fields exist | No full address, city/state/country, coordinates or snapshots. |
-| Multiple volumes | NOT_IMPLEMENTED | No volume table/model | No quantity, weight/dimensions per package or volume aggregation. |
-| Real weight | PARTIALLY_IMPLEMENTED | `realWeightKg` exists | No input validation or calculation from multiple volumes. |
-| Cubic weight | PARTIALLY_IMPLEMENTED | `cubicWeightKg` exists | No formula, factor source, unit conversion or tests. |
-| Chargeable weight | NOT_IMPLEMENTED | No field/engine | Must use max(real, cubic) or documented carrier rule. |
-| Carrier/service eligibility | NOT_IMPLEMENTED | No carrier service/coverage models | Cannot filter active services, weight limits or coverage. |
-| Rate table lookup | NOT_IMPLEMENTED | No rate table model | Cannot select active/vigency/version/range. |
-| Fee breakdown | NOT_IMPLEMENTED | No option/breakdown model | No base, minimum, per kg, ad valorem, GRIS, toll, insurance, discount or total breakdown. |
-| Multiple options | NOT_IMPLEMENTED | No simulation option table | Cannot compare carriers/services, cheapest or fastest option. |
-| Unavailable reasons | NOT_IMPLEMENTED | No eligibility engine | Cannot explain no coverage, inactive service or weight limits. |
-| Deterministic calculation | NOT_IMPLEMENTED | Values are seeded directly | No pure pricing service or unit tests. |
-| Historical preservation | PARTIALLY_IMPLEMENTED | Stored estimated fields and metadata JSON | No rate version, option breakdown, rule snapshots or address snapshots. |
-| Select option | NOT_IMPLEMENTED | No option/selection field | Cannot select, unselect or audit selection. |
-| Create shipment | NOT_IMPLEMENTED | No shipment model/API | Cannot transform simulation into operation. |
-| History list/detail | NOT_IMPLEMENTED | No endpoint/page | Cannot query or inspect persisted simulation records. |
-| Dashboard integration | PARTIALLY_IMPLEMENTED | Dashboard counts simulations and average estimated price | Missing required logistics KPIs and filters. |
+| Cliente opcional | PARTIALLY_IMPLEMENTED | `FreightSimulation.customerId` existe | Nenhum endpoint valida cliente por tenant ou preserva snapshot do cliente. |
+| Enderecos de origem/destino | PARTIALLY_IMPLEMENTED | Campos de postal code existem | Sem endereco completo, cidade/estado/pais, coordenadas ou snapshots. |
+| Multiplos volumes | NOT_IMPLEMENTED | Sem tabela/modelo de volume | Sem quantidade, peso/dimensoes por pacote ou agregacao de volumes. |
+| Peso real | PARTIALLY_IMPLEMENTED | `realWeightKg` existe | Sem validacao de entrada ou calculo a partir de multiplos volumes. |
+| Peso cubado | PARTIALLY_IMPLEMENTED | `cubicWeightKg` existe | Sem formula, fonte do fator, conversao de unidade ou testes. |
+| Peso taxavel | NOT_IMPLEMENTED | Sem campo/engine | Deve usar max(real, cubado) ou regra documentada da transportadora. |
+| Elegibilidade de transportadora/servico | NOT_IMPLEMENTED | Sem modelos de carrier service/coverage | Nao consegue filtrar servicos ativos, limites de peso ou cobertura. |
+| Busca de tabela de frete | NOT_IMPLEMENTED | Sem modelo de tabela de frete | Nao consegue selecionar tabela ativa/vigencia/versao/range. |
+| Breakdown de taxas | NOT_IMPLEMENTED | Sem modelo de opcao/breakdown | Sem breakdown de base, minimo, por kg, ad valorem, GRIS, pedagio, seguro, desconto ou total. |
+| Multiplas opcoes | NOT_IMPLEMENTED | Sem tabela de opcao de simulacao | Nao consegue comparar transportadoras/servicos, opcao mais barata ou mais rapida. |
+| Motivos de indisponibilidade | NOT_IMPLEMENTED | Sem motor de elegibilidade | Nao consegue explicar sem cobertura, servico inativo ou limites de peso. |
+| Calculo deterministico | NOT_IMPLEMENTED | Valores sao inseridos diretamente na seed | Sem servico puro de precificacao ou testes unitarios. |
+| Preservacao historica | PARTIALLY_IMPLEMENTED | Campos estimados armazenados e metadata JSON | Sem versao de tabela, breakdown de opcao, snapshots de regra ou snapshots de endereco. |
+| Selecionar opcao | NOT_IMPLEMENTED | Sem campo de opcao/selecao | Nao consegue selecionar, desselecionar ou auditar selecao. |
+| Criar shipment | NOT_IMPLEMENTED | Sem modelo/API de shipment | Nao consegue transformar simulacao em operacao. |
+| Listagem/detalhe de historico | NOT_IMPLEMENTED | Sem endpoint/pagina | Nao consegue consultar ou inspecionar registros persistidos de simulacao. |
+| Integracao com dashboard | PARTIALLY_IMPLEMENTED | Dashboard conta simulacoes e preco estimado medio | Faltam KPIs logisticos exigidos e filtros. |
 
-## Pricing Engine Gaps
+## Lacunas Do Motor De Precificacao
 
-The repository lacks a domain service responsible for:
+O repositorio nao possui servico de dominio responsavel por:
 
-- normalizing units;
-- calculating total physical weight;
-- calculating total volume;
-- calculating cubic weight;
-- calculating chargeable weight;
-- selecting coverage;
-- selecting rate table and rate band;
-- applying minimum value;
-- applying base price and per-kg price;
-- applying ad valorem, GRIS, toll, insurance, extra fees and discounts;
-- calculating deadline and estimated delivery date;
-- returning an explainable breakdown;
-- preserving rule version and inputs.
+- normalizar unidades;
+- calcular peso fisico total;
+- calcular volume total;
+- calcular peso cubado;
+- calcular peso taxavel;
+- selecionar cobertura;
+- selecionar tabela de frete e faixa de frete;
+- aplicar valor minimo;
+- aplicar preco base e preco por kg;
+- aplicar ad valorem, GRIS, pedagio, seguro, taxas extras e descontos;
+- calcular prazo e data estimada de entrega;
+- retornar breakdown explicavel;
+- preservar versao de regra e entradas.
 
-## Required Data Model Additions
+## Adicoes Obrigatorias Ao Modelo De Dados
 
-The implementation prompt should require, at minimum:
+O prompt de implementacao deve exigir, no minimo:
 
 - `CarrierService`
 - `ServiceCoverage`
 - `FreightRateTable`
-- `FreightRateVersion` or explicit version fields
+- `FreightRateVersion` ou campos explicitos de versao
 - `FreightRateBand`
-- `FreightRateAdditionalFee` or structured fee configuration
+- `FreightRateAdditionalFee` ou configuracao estruturada de taxas
 - `FreightSimulationVolume`
 - `FreightSimulationOption`
-- `FreightSimulationSelectedOption` or selected option relation
-- address snapshot structures for simulation and shipment
+- `FreightSimulationSelectedOption` ou relacao de opcao selecionada
+- estruturas de snapshot de endereco para simulacao e shipment
 - `Shipment`
 - `ShipmentVolume`
 - `TrackingEvent`
 
-## Required Endpoints
+## Endpoints Obrigatorios
 
-Minimum endpoints for simulation completion:
+Endpoints minimos para completar simulacao:
 
 - `POST /api/v1/freight-simulations`
 - `GET /api/v1/freight-simulations`
 - `GET /api/v1/freight-simulations/:id`
 - `POST /api/v1/freight-simulations/:id/select-option`
 - `POST /api/v1/freight-simulations/:id/shipments`
-- supporting endpoints for carriers/services/coverage/rate tables.
+- endpoints de apoio para transportadoras/servicos/cobertura/tabelas de frete.
 
-All endpoints must derive `tenantId` from the authenticated context and must never accept tenant selection from the frontend.
+Todos os endpoints devem derivar `tenantId` do contexto autenticado e nunca aceitar selecao de tenant pelo frontend.
 
-## Required Frontend Screens
+## Telas Frontend Obrigatorias
 
-- simulation form with origin/destination, CEP lookup, optional customer, cargo value and multiple volumes;
-- results comparison with cheapest/fastest flags;
-- option detail drawer/modal with full breakdown;
-- unavailable services/reasons;
-- history listing with filters and pagination;
-- history detail page;
-- create shipment action and success feedback.
+- formulario de simulacao com origem/destino, consulta de CEP, cliente opcional, valor da carga e multiplos volumes;
+- comparacao de resultados com flags de menor preco/menor prazo;
+- drawer/modal de detalhe da opcao com breakdown completo;
+- servicos/motivos indisponiveis;
+- listagem de historico com filtros e paginacao;
+- pagina de detalhe de historico;
+- acao de criar shipment e feedback de sucesso.
 
-## Acceptance Criteria For Simulation
+## Criterios De Aceite Para Simulacao
 
-A simulation is complete only when the evaluator can:
+Uma simulacao esta completa somente quando o avaliador puder:
 
-1. login as `administrador@dev.com`;
-2. create or select a customer;
-3. fill origin and destination by CEP and edit manually;
-4. add multiple volumes with quantity, weight and dimensions;
-5. calculate real, cubic and chargeable weight deterministically;
-6. identify eligible active carriers/services by coverage and limits;
-7. locate a current rate table and weight band;
-8. calculate all fee components with Decimal-safe precision;
-9. generate multiple persisted options;
-10. display cheapest and fastest options;
-11. display full explainable breakdown;
-12. persist original inputs, volumes, rule versions and options;
-13. list and filter history from the database;
-14. select one option transactionally;
-15. create a shipment from the selected option;
-16. audit simulation creation and selection;
-17. prevent cross-tenant access;
-18. pass unit, integration and e2e tests.
+1. fazer login como `administrador@dev.com`;
+2. criar ou selecionar um cliente;
+3. preencher origem e destino por CEP e editar manualmente;
+4. adicionar multiplos volumes com quantidade, peso e dimensoes;
+5. calcular peso real, cubado e taxavel de forma deterministica;
+6. identificar transportadoras/servicos ativos elegiveis por cobertura e limites;
+7. localizar tabela de frete e faixa de peso vigentes;
+8. calcular todos os componentes de taxa com precisao Decimal-safe;
+9. gerar multiplas opcoes persistidas;
+10. exibir opcoes mais barata e mais rapida;
+11. exibir breakdown completo e explicavel;
+12. persistir entradas originais, volumes, versoes de regra e opcoes;
+13. listar e filtrar historico a partir do banco;
+14. selecionar uma opcao transacionalmente;
+15. criar shipment a partir da opcao selecionada;
+16. auditar criacao de simulacao e selecao;
+17. impedir acesso cross-tenant;
+18. passar testes unitarios, integration e e2e.
 
-## Risk
+## Risco
 
-The current UI and dashboard can give the impression that simulation exists, but the only simulation data is seed data and there is no functional freight calculation journey. This must be treated as `PARTIALLY_IMPLEMENTED`, not complete.
+A UI atual e o dashboard podem dar a impressao de que a simulacao existe, mas os unicos dados de simulacao sao dados de seed e nao ha jornada funcional de calculo de frete. Isso deve ser tratado como `PARTIALLY_IMPLEMENTED`, nao como completo.

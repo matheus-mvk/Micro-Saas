@@ -1,177 +1,177 @@
-# Implementation Sequence
+# Sequencia De Implementacao
 
 Status: `IN_DESIGN`
 
-This is a dependency-ordered sequence, not a calendar.
+Esta sequencia esta ordenada por dependencias, nao por calendario.
 
-## 1. Identity and Access
+## 1. Identidade E Acesso
 
-Prerequisites: approve auth decisions, cookie policy, tenant resolution, role model.
+Pre-requisitos: aprovar decisoes de autenticacao, politica de cookies, resolucao de tenant e modelo de roles.
 
-Backend: login, refresh rotation, logout, session revocation, `/me`, auth guard deriving context from verified credentials.
+Backend: login, rotacao de refresh token, logout, revogacao de sessao, `/me` e auth guard derivando contexto de credenciais verificadas.
 
-Frontend: login mutation, session provider, protected dashboard, MFA/OAuth placeholders by contract.
+Frontend: mutation de login, session provider, dashboard protegido e placeholders contratuais para MFA/OAuth.
 
-Security: anti-enumeration, rate limiting, HttpOnly cookies, CSRF, audit.
+Seguranca: anti-enumeracao, rate limiting, cookies HttpOnly, CSRF e auditoria.
 
-Tests: auth success/failure, refresh reuse, logout, disabled user, tenant disabled.
+Testes: sucesso/falha de autenticacao, reuso de refresh token, logout, usuario desativado e tenant desativado.
 
-Skill: update `auth` and `security`.
+Skill: atualizar `auth` e `security`.
 
-ADR: authentication details if decisions change.
+ADR: detalhar autenticacao caso as decisoes mudem.
 
-Done when: no private route trusts user/tenant/role headers.
+Concluido quando: nenhuma rota privada confiar em headers de usuario, tenant ou role enviados pelo cliente.
 
-## 2. Tenant and Authorization
+## 2. Tenant E Autorizacao
 
-Prerequisites: identity context.
+Pre-requisitos: contexto de identidade.
 
-Backend: tenant context, branch scope, permission checks by action/resource.
+Backend: contexto de tenant, escopo por filial e verificacoes de permissao por acao/recurso.
 
-Frontend: visible tenant context and forbidden states.
+Frontend: contexto visivel de tenant e estados de acesso proibido.
 
-Tests: cross-tenant denial and RBAC matrix.
+Testes: negacao entre tenants e matriz RBAC.
 
-Done when: tenant-scoped repository conventions are proven by tests.
+Concluido quando: convencoes de repositorios tenant-scoped estiverem comprovadas por testes.
 
-## 3. Users
+## 3. Usuarios
 
-Prerequisites: auth and authorization.
+Pre-requisitos: autenticacao e autorizacao.
 
-Backend: invite/list/update/deactivate/change role use cases.
+Backend: casos de uso para convite, listagem, atualizacao, desativacao e troca de role.
 
-Frontend: user table, invite flow, role change confirmation.
+Frontend: tabela de usuarios, fluxo de convite e confirmacao de troca de role.
 
-Security: audit every role/status change.
+Seguranca: auditar toda mudanca de role/status.
 
-Done when: ADMIN can manage tenant users without cross-tenant leaks.
+Concluido quando: `ADMIN` conseguir gerenciar usuarios do tenant sem vazamentos entre tenants.
 
-## 4. Customers and Addresses
+## 4. Clientes E Enderecos
 
-Prerequisites: tenant-scoped repositories and audit.
+Pre-requisitos: repositorios tenant-scoped e auditoria.
 
-Backend: customer/address use cases with pagination, filters, soft deactivate.
+Backend: casos de uso de cliente/endereco com paginacao, filtros e desativacao logica.
 
-Frontend: customer list/detail/form, address management.
+Frontend: lista, detalhe, formulario de cliente e gerenciamento de enderecos.
 
-Integrations: optional ViaCEP/BrasilAPI lookup.
+Integracoes: consulta opcional por ViaCEP/BrasilAPI.
 
-Done when: customer data supports future shipment snapshots.
+Concluido quando: dados de clientes suportarem snapshots futuros de embarques.
 
-## 5. Carriers and Carrier Services
+## 5. Transportadoras E Servicos
 
-Prerequisites: customers patterns reused only where real.
+Pre-requisitos: reutilizar padroes de clientes somente quando fizer sentido.
 
-Backend: carrier and service use cases.
+Backend: casos de uso de transportadora e servico.
 
-Frontend: carrier/service list and edit flows.
+Frontend: fluxos de listagem e edicao de transportadoras/servicos.
 
-Done when: carrier service can be referenced by pricing/simulation.
+Concluido quando: servico de transportadora puder ser referenciado por precificacao/simulacao.
 
-## 6. Freight Pricing
+## 6. Precificacao De Frete
 
-Prerequisites: carrier services and approved rate model.
+Pre-requisitos: servicos de transportadora e modelo aprovado de tabela de frete.
 
-Backend: rate table draft/publish/version, calculation service.
+Backend: rascunho/publicacao/versionamento de tabela e servico de calculo.
 
-Frontend: rate table upload/manual screens as approved.
+Frontend: telas aprovadas para upload/manual de tabelas.
 
-Tests: decimals, validity, min freight, tenant isolation.
+Testes: decimais, vigencia, frete minimo e isolamento de tenant.
 
-Done when: pricing engine returns explainable calculations for MVP scenarios.
+Concluido quando: motor de precificacao retornar calculos explicaveis para cenarios MVP.
 
-## 7. Freight Simulation and Options
+## 7. Simulacao De Frete E Opcoes
 
-Prerequisites: pricing, customers, carriers.
+Pre-requisitos: precificacao, clientes e transportadoras.
 
-Backend: create simulation, calculate options, persist rule versions.
+Backend: criar simulacao, calcular opcoes e persistir versoes de regras.
 
-Frontend: simulation form and comparison matrix.
+Frontend: formulario de simulacao e matriz comparativa.
 
-Integrations: route distance provider with fallback.
+Integracoes: provedor de distancia por rota com fallback.
 
-Done when: user can compare options without creating shipment automatically.
+Concluido quando: usuario puder comparar opcoes sem criar automaticamente um shipment.
 
 ## 8. Shipments
 
-Prerequisites: simulation option model or manual creation decision.
+Pre-requisitos: modelo de opcao de simulacao ou decisao de criacao manual.
 
-Backend: create shipment from option/manual/import, address/package snapshots.
+Backend: criar shipment a partir de opcao/manual/importacao, snapshots de endereco e volumes.
 
-Frontend: shipment list/detail.
+Frontend: lista e detalhe de shipment.
 
-Tests: transaction from selected option and tenant isolation.
+Testes: transacao a partir da opcao selecionada e isolamento de tenant.
 
-Done when: shipment is operationally separate from simulation.
+Concluido quando: shipment estiver operacionalmente separado da simulacao.
 
 ## 9. Tracking
 
-Prerequisites: shipment, status machine, audit, realtime auth.
+Pre-requisitos: shipment, maquina de status, auditoria e autenticacao realtime.
 
-Backend: append events, update current status transactionally, idempotency.
+Backend: anexar eventos, atualizar status atual transacionalmente e idempotencia.
 
-Frontend: timeline and manual event form.
+Frontend: linha do tempo e formulario manual de evento.
 
-Tests: invalid transition, duplicate, out-of-order, correction, WebSocket.
+Testes: transicao invalida, duplicidade, fora de ordem, correcao e WebSocket.
 
-Done when: tracking timeline is immutable and current status is consistent.
+Concluido quando: a linha do tempo de tracking for imutavel e o status atual permanecer consistente.
 
-## 10. Imports and Workers
+## 10. Importacoes E Workers
 
-Prerequisites: target modules and storage decision.
+Pre-requisitos: modulos de destino e decisao de armazenamento.
 
-Backend: upload validation, ImportJob, row processing workers.
+Backend: validacao de upload, `ImportJob` e workers de processamento por linha.
 
-Frontend: import wizard and progress view.
+Frontend: assistente de importacao e tela de progresso.
 
-Infrastructure: dedicated worker service.
+Infraestrutura: servico dedicado de worker.
 
-Done when: one approved import type runs safely end to end.
+Concluido quando: um tipo de importacao aprovado rodar com seguranca de ponta a ponta.
 
 ## 11. Realtime
 
-Prerequisites: auth/session and resource authorization.
+Pre-requisitos: autenticacao/sessao e autorizacao por recurso.
 
-Backend: authenticated Socket.IO handshake, resource rooms, versioned events.
+Backend: handshake autenticado do Socket.IO, salas por recurso e eventos versionados.
 
-Frontend: import/tracking subscriptions and polling fallback.
+Frontend: assinaturas de importacao/tracking e fallback por polling.
 
-Done when: client cannot join arbitrary tenant rooms.
+Concluido quando: cliente nao conseguir entrar em salas arbitrarias de tenant.
 
 ## 12. Dashboard
 
-Prerequisites: simulations, shipments, tracking, imports.
+Pre-requisitos: simulacoes, shipments, tracking e importacoes.
 
-Backend: tenant-scoped aggregations by period.
+Backend: agregacoes tenant-scoped por periodo.
 
-Frontend: filters, KPIs, priority lists, drill-down.
+Frontend: filtros, KPIs, listas prioritarias e drill-down.
 
-Done when: all numbers come from real data and show source/period.
+Concluido quando: todos os numeros vierem de dados reais e exibirem fonte/periodo.
 
 ## 13. Insights
 
-Prerequisites: dashboard metrics and historical data.
+Pre-requisitos: metricas de dashboard e dados historicos.
 
-Backend: deterministic rules, insight lifecycle, dismiss/read.
+Backend: regras deterministicas, ciclo de vida de insight, dispensar/marcar como lido.
 
-Frontend: explainable insight panels.
+Frontend: paineis de insight explicaveis.
 
-Done when: insight shows rule, source, confidence/relevance, and action.
+Concluido quando: insight exibir regra, fonte, confianca/relevancia e acao.
 
-## 14. Audit Querying
+## 14. Consulta De Auditoria
 
-Prerequisites: audit writes across modules.
+Pre-requisitos: escritas de auditoria nos modulos.
 
-Backend: query/export audit trail with filters.
+Backend: consulta/exportacao de trilha de auditoria com filtros.
 
-Frontend: audit table and entity audit drawer.
+Frontend: tabela de auditoria e drawer de auditoria por entidade.
 
-Done when: sensitive actions are traceable without exposing secrets.
+Concluido quando: acoes sensiveis forem rastreaveis sem expor segredos.
 
-## 15. Landing Final, Observability, Deploy, Hardening
+## 15. Landing Final, Observabilidade, Deploy E Hardening
 
-Prerequisites: product claims backed by implemented modules.
+Pre-requisitos: claims de produto sustentados pelos modulos implementados.
 
-Work: final landing content, metrics/tracing, image slimming, CI image build, migration deploy, backups, smoke tests, production secret handling.
+Trabalho: conteudo final da landing, metricas/tracing, reducao de imagens, build de imagem em CI, deploy de migrations, backups, smoke tests e tratamento de segredos de producao.
 
-Done when: public deployment and operational runbook are approved.
+Concluido quando: deploy publico e runbook operacional estiverem aprovados.
