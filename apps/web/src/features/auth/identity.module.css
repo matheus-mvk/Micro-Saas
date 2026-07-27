@@ -41,6 +41,27 @@
   gap: 0.75rem;
 }
 
+.actionLink,
+.actionLinkSecondary {
+  align-items: center;
+  border-radius: var(--radius);
+  display: inline-flex;
+  font-weight: 800;
+  min-height: 44px;
+  padding: 0 1rem;
+  text-decoration: none;
+}
+
+.actionLink {
+  background: var(--color-green);
+  color: #fff;
+}
+
+.actionLinkSecondary {
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
+}
+
 .panel {
   display: grid;
   gap: 1rem;
@@ -48,6 +69,32 @@
   border-radius: var(--radius);
   background: #fff;
   padding: 1rem;
+}
+
+.detailList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.detailList div {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+}
+
+.detailList dt {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.detailList dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .notice,

@@ -101,7 +101,7 @@ export function AppShell({ children, user }: { children: ReactNode; user: Sessio
               <Link className={styles.profileLink} href="/settings/profile">
                 {user.name}
               </Link>
-              <Link className={styles.tenantLink} href="/onboarding">
+              <Link className={styles.tenantLink} href={'/settings/company' as never}>
                 {user.tenant.name}
               </Link>
             </div>
