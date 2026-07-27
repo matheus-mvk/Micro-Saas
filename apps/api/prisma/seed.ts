@@ -40,6 +40,7 @@ const scrypt = promisify(scryptCallback);
 
 const DEMO_PASSWORD = '@DEV1512';
 const DEMO_SLUGS = ['alpha-logistics', 'beta-transportes', 'demo-logistics', 'satellite-logistics'];
+const SEED_TRANSACTION_TIMEOUT_MS = 180_000;
 
 interface BranchSeed {
   city: string;
@@ -164,7 +165,7 @@ async function removeDemoTenants(): Promise<void> {
     await tx.tenantSettings.deleteMany({ where: { tenantId: { in: tenantIds } } });
     await tx.branch.deleteMany({ where: { tenantId: { in: tenantIds } } });
     await tx.tenant.deleteMany({ where: { id: { in: tenantIds } } });
-  });
+  }, { timeout: SEED_TRANSACTION_TIMEOUT_MS });
 }
 
 async function seedTenant(data: DemoTenantData, passwordHash: string, tenantOffset: number): Promise<void> {
@@ -653,7 +654,7 @@ async function seedTenant(data: DemoTenantData, passwordHash: string, tenantOffs
     await createImportHistory(tx, tenant.id, admin.id, manager.id, data.slug, customers, carriers);
     await createInsights(tx, tenant.id, data.slug, customers, carriers, branches);
     await createAuditTrail(tx, tenant.id, data.slug, users, customers, carriers);
-  });
+  }, { timeout: SEED_TRANSACTION_TIMEOUT_MS });
 }
 
 async function createRateTableWithDetails(

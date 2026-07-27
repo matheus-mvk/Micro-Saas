@@ -45,7 +45,9 @@ ALTER TABLE `freight_simulations`
   ADD COLUMN `created_by_id` CHAR(36) NULL,
   ADD COLUMN `chargeable_weight_kg` DECIMAL(10, 3) NULL,
   ADD COLUMN `total_volume_m3` DECIMAL(12, 6) NULL,
-  ADD COLUMN `desired_ship_date` DATETIME(3) NULL,
+  ADD COLUMN `desired_ship_date` DATETIME(3) NULL;
+
+ALTER TABLE `freight_simulations`
   ADD CONSTRAINT `fs_branch_fk` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fs_created_by_fk` FOREIGN KEY (`created_by_id`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
