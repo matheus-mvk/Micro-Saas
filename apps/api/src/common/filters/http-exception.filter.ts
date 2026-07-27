@@ -30,7 +30,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   }
 
   private toErrorResponse(exception: unknown, request: RequestWithContext): ApiErrorResponse {
-    const requestId = request.context.requestId;
+    const requestId = request.context?.requestId ?? 'unavailable';
     const timestamp = new Date().toISOString();
     const path = request.url;
 
@@ -79,9 +79,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const metadata = {
       method: request.method,
       path: request.url,
-      requestId: request.context.requestId,
-      tenantId: request.context.tenantId,
-      userId: request.context.userId,
+      requestId: request.context?.requestId,
+      tenantId: request.context?.tenantId,
+      userId: request.context?.userId,
     };
 
     if (exception instanceof Error) {

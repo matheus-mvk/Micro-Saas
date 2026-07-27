@@ -17,8 +17,8 @@ export class RequestLoggingInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(() => {
         this.logger?.info({
-          requestId: request.context.requestId,
-          correlationId: request.context.correlationId,
+          requestId: request.context?.requestId,
+          correlationId: request.context?.correlationId,
           method: request.method,
           path: request.url,
           durationMs: Date.now() - startedAt,
