@@ -74,3 +74,7 @@ Estado atual:
 Regra obrigatoria para proximos modulos:
 
 - Todo repository/use case tenant-scoped deve combinar `id` do recurso com `tenantId` vindo do contexto autenticado.
+
+## Matriz Atual De Acesso
+
+A matriz operacional atual de roles, rotas e funcionalidades esta documentada em [access-control-matrix.md](access-control-matrix.md). Atualize os dois documentos quando novos perfis, regras internas de service ou decorators `@Roles(...)` forem adicionados.

@@ -12,19 +12,42 @@ Fundacao de uma plataforma SaaS multi-tenant para inteligencia logistica e anali
 
 ## Inicio rapido
 
+Requisitos minimos:
+
+- Node.js 20 recomendado. Prisma 6.19.x exige pelo menos Node 18.18.
+- pnpm 9.15.x via Corepack.
+- MySQL compativel com Prisma provider `mysql`.
+- Redis para cache, rate limit, filas BullMQ e realtime.
+
 ```bash
+corepack enable
 pnpm install
 cp .env.example .env
 pnpm db:generate
+pnpm db:deploy
 pnpm dev
 ```
 
-Para ambiente Docker/Compose, aplique migrations com deploy:
+Para ambiente Docker/Compose:
 
 ```bash
-pnpm db:deploy
-pnpm db:seed
+cp .env.example .env
+docker compose config
+docker compose up --build
 ```
+
+No Docker Compose local, o servico `api` executa `pnpm --filter @logistics/api db:deploy` e, em ambiente nao producao, `pnpm --filter @logistics/api db:seed` antes de iniciar o NestJS. Portanto, ao subir o ambiente com Docker, as migrations sao aplicadas e os tenants/usuarios demo sao recriados automaticamente.
+
+Contas criadas automaticamente pela seed no tenant `alpha-logistics`:
+
+- `administrador@dev.com` — `ADMIN`;
+- `admin.test@dev.com` — `ADMIN`;
+- `manager.test@dev.com` — `MANAGER`;
+- `operator.test@dev.com` — `OPERATOR`.
+
+Senha padrao para todas: `@DEV1512`.
+
+Observacao: a seed demo remove e recria os tenants demonstrativos (`alpha-logistics`, `beta-transportes`, `demo-logistics`, `satellite-logistics`). Nao use esses tenants para dados manuais que precisam ser preservados.
 
 Servicos padrao:
 
@@ -33,6 +56,12 @@ Servicos padrao:
 - Web: `http://localhost:3000`
 - MySQL interno para containers: `mysql:3306`
 - MySQL externo pelo Windows/DBeaver: `localhost:3307`
+
+Guias completos:
+
+- Setup local, Docker, producao e TiDB: [docs/infrastructure/setup-runbook.md](docs/infrastructure/setup-runbook.md)
+- Matriz de acesso e funcionalidades por perfil: [docs/security/access-control-matrix.md](docs/security/access-control-matrix.md)
+- Contas de teste e SQL manual para TiDB: [docs/development/access-test-accounts.md](docs/development/access-test-accounts.md)
 
 ## Validacao
 
@@ -55,6 +84,21 @@ Depois de aplicar migrations e seed, use:
 - Tenant: `alpha-logistics`
 
 O seed também cria usuários `ADMIN`, `MANAGER` e `OPERATOR`, incluindo supervisor, operador, analista, visualizador, usuário desativado e o segundo tenant `beta-transportes` para cenários de isolamento. A documentação completa da base de homologação está em [docs/development/demo-seed.md](docs/development/demo-seed.md).
+
+## Contas de teste por perfil
+
+Para validar todos os tipos reais de acesso do projeto, use a senha padrão `@DEV1512` nas contas abaixo:
+
+| Perfil | E-mail | Tenant/Fonte |
+| --- | --- | --- |
+| `ADMIN` | `administrador@dev.com` | Seed demo em `alpha-logistics` e SQL manual de desbloqueio |
+| `ADMIN` | `admin.test@dev.com` | Seed demo em `alpha-logistics` e SQL manual de contas de teste |
+| `MANAGER` | `manager.test@dev.com` | Seed demo em `alpha-logistics` e SQL manual de contas de teste |
+| `OPERATOR` | `operator.test@dev.com` | Seed demo em `alpha-logistics` e SQL manual de contas de teste |
+
+Essas contas também fazem parte da seed demo em `alpha-logistics`, então ficam disponíveis no ambiente local depois de rodar `pnpm db:seed` ou subir a API pelo Docker Compose. O SQL manual cria os pre-requisitos de chave estrangeira na ordem correta (`tenants`, `tenant_settings`, `tenant_onboarding`, `branches`, `users`) e usa hashes `scrypt` reais compativeis com o `PasswordService`. Se `administrador@dev.com` ja existir no mesmo tenant, o `INSERT` desse usuario falhara pela constraint unica de e-mail por tenant; nesse caso, use somente os usuarios faltantes ou atualize o usuario existente.
+
+Quando o Prisma CLI local estiver bloqueado por versao de Node, use Docker/CI com Node 20 para migrations. Para desbloqueio administrativo pontual em TiDB Cloud, ha SQL manual revisado em [docs/development/access-test-accounts.md](docs/development/access-test-accounts.md).
 
 ## Escopo atual
 

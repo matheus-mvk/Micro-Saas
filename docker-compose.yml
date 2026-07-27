@@ -52,6 +52,10 @@ services:
       NODE_OPTIONS: ${API_NODE_OPTIONS:---max-old-space-size=256}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+    command:
+      - sh
+      - -c
+      - pnpm --filter @logistics/api db:deploy && if [ "$${NODE_ENV}" != "production" ] || [ "$${ALLOW_DEMO_SEED}" = "true" ]; then pnpm --filter @logistics/api db:seed; fi && node apps/api/dist/src/main.js
     mem_limit: ${API_MEM_LIMIT:-512m}
     ports:
       - "${API_PORT:-3333}:3333"

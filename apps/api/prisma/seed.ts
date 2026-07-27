@@ -1072,6 +1072,9 @@ function alphaTenant(): DemoTenantData {
       { branchIndex: 2, email: 'analista@alphalogistics.dev', name: 'Bruno Meireles - Analista', role: UserRole.MANAGER },
       { branchIndex: 3, email: 'visualizador@alphalogistics.dev', name: 'Lívia Sampaio - Visualizadora', role: UserRole.OPERATOR },
       { branchIndex: 4, email: 'inativo@alphalogistics.dev', name: 'Usuário Desativado Homologação', role: UserRole.OPERATOR, status: UserStatus.DISABLED },
+      { branchIndex: 0, email: 'admin.test@dev.com', name: 'Admin Teste - Visão Administrativa', role: UserRole.ADMIN },
+      { branchIndex: 1, email: 'manager.test@dev.com', name: 'Manager Teste - Visão Gerencial', role: UserRole.MANAGER },
+      { branchIndex: 2, email: 'operator.test@dev.com', name: 'Operator Teste - Visão Operacional', role: UserRole.OPERATOR },
     ],
     branches: [
       branch('Matriz São Paulo', 'SP-MTZ', '01001000', 'Praça da Sé', '100', 'Sé', 'São Paulo', 'SP', true),

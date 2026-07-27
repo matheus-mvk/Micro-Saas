@@ -43,7 +43,10 @@ Tenant Alpha Logistics:
 - `operador@alphalogistics.dev` — OPERATOR;
 - `analista@alphalogistics.dev` — MANAGER;
 - `visualizador@alphalogistics.dev` — OPERATOR;
-- `inativo@alphalogistics.dev` — OPERATOR desativado.
+- `inativo@alphalogistics.dev` — OPERATOR desativado;
+- `admin.test@dev.com` — ADMIN para teste direto da visão administrativa;
+- `manager.test@dev.com` — MANAGER para teste direto da visão gerencial;
+- `operator.test@dev.com` — OPERATOR para teste direto da visão operacional.
 
 Tenant Beta Transportes:
 
@@ -58,9 +61,10 @@ Observação: o schema atual possui apenas `ADMIN`, `MANAGER` e `OPERATOR`. Os p
 
 ## Conteúdo por tenant
 
-Cada tenant recebe:
+Conteúdo principal:
 
-- 6 usuários;
+- Alpha Logistics recebe 9 usuários, incluindo as contas diretas de teste por perfil;
+- Beta Transportes recebe 6 usuários;
 - 5 filiais em estados/cidades reais;
 - 6 clientes com endereço principal;
 - 5 transportadoras;
